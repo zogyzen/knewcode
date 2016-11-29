@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_web_inner_var" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="_one_level\;_two_level\;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/modules/kc_web_inner_var" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option host_application="D:/mycode/knewcode_project/trunk/debug/kc_web_debug.exe" />
+				<Option run_host_application_in_terminal="0" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/modules/kc_web_inner_var" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add option="-DWIN32" />
+			<Add directory="../../include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_system-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_filesystem-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_date_time-mgw53-1_61.a" />
+		</Linker>
+		<Unit filename="activator.cpp" />
+		<Unit filename="activator.h" />
+		<Unit filename="inner_var.cpp" />
+		<Unit filename="inner_var.h" />
+		<Unit filename="one_level/invar_get.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_get.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_page.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_page.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_path.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_path.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_post.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_post.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_user.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/invar_user.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="std.h" />
+		<Unit filename="two_level/invar_cookie.cpp">
+			<Option virtualFolder="_two_level/" />
+		</Unit>
+		<Unit filename="two_level/invar_cookie.h">
+			<Option virtualFolder="_two_level/" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

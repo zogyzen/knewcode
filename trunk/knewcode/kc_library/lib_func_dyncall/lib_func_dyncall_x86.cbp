@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="lib_func_dyncall" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../lib/lib_func_dyncall" prefix_auto="0" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Debug/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../lib/lib_func_dyncall" prefix_auto="0" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Release/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add directory="../../include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-static-libstdc++" />
+		</Linker>
+		<Unit filename="kc_asm.cpp" />
+		<Unit filename="kc_asm.h" />
+		<Unit filename="kc_asm_x86.s" />
+		<Unit filename="kc_func_dyncall.cpp" />
+		<Unit filename="kc_func_dyncall.h" />
+		<Unit filename="std.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

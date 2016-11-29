@@ -1,0 +1,24 @@
+<!-- interfaceÓï¾ä -->
+<!--<%
+	#interface<IHelloWorld>;
+	#string HelloWorld(#int&);
+%>-->
+
+<!-- loadÓï¾ä -->
+<!--<%
+	#load $mod1 = "bin/hello_world_cpp";
+	#interface<IHelloWorld> CreateInf();
+	#void FreeInf(#interface&);
+%>-->
+
+<!--<%
+	#interface $iWebs = $mod1.CreateInf();
+%>-->
+
+<!--<%
+	#include "<lib>/service/so_webservice.kc";
+%>-->
+
+<!--<%
+	$mod1.FreeInf($iWebs);
+%>-->

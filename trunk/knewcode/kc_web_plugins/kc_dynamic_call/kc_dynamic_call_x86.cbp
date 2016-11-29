@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_dynamic_call" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="_parm_item\;_parm_item\one_level\;_parm_item\two_level\;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/Modules/kc_dynamic_call" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/Modules/kc_dynamic_call" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add option="-DWIN32" />
+			<Add directory="../../include" />
+			<Add directory="../../kc_library" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_system-mgw53-1_61.a" />
+			<Add library="../../lib/lib_func_dyncall.a" />
+		</Linker>
+		<Unit filename="activator.cpp" />
+		<Unit filename="activator.h" />
+		<Unit filename="dyn_call.cpp" />
+		<Unit filename="dyn_call.h" />
+		<Unit filename="parm_item/one_level/parm_bool.cpp">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_bool.h">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_double.cpp">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_double.h">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_int.cpp">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_int.h">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_string.cpp">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/one_level/parm_string.h">
+			<Option virtualFolder="_parm_item/one_level/" />
+		</Unit>
+		<Unit filename="parm_item/parm_item_if.h">
+			<Option virtualFolder="_parm_item/" />
+		</Unit>
+		<Unit filename="parm_item/two_level/parm_interface.cpp">
+			<Option virtualFolder="_parm_item/two_level/" />
+		</Unit>
+		<Unit filename="parm_item/two_level/parm_interface.h">
+			<Option virtualFolder="_parm_item/two_level/" />
+		</Unit>
+		<Unit filename="std.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

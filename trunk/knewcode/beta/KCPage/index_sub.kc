@@ -1,0 +1,20 @@
+﻿
+<!-- load语句 -->
+<!--<%
+	#load $mod5 = "/bin/hello_world_c";
+	#double HelloWorld(#double, #int&);
+%>-->
+
+<!-- 定义 -->
+<!--<%
+	#int $m5 = 101;
+%>-->
+
+<img src="<!--<% #print $$post["file01"]; %>-->" alt="<!--<% #print $$post["file01"]; %>-->" width="300px"><br>
+<!--<% #print $mod1.HelloWorld(1.3, $m); %>--><br>
+<!--<% #print "子页"; %>--><br>
+
+<!-- include语句 -->
+<!--<%
+	#include --private--  "index.kc";  { 包含子页文件；可以是表达式。 }
+%>-->

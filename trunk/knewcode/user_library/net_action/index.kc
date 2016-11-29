@@ -1,0 +1,18 @@
+<!--<%
+	#include "<lib>/net/net_action.kc";
+%>-->
+
+
+<html>
+<head>
+<title><% #print "test"; %></title>
+</head>
+
+<body>
+
+<!--<%
+	#print $kc_net_work_inf.SyncHttpGet("qt.gtimg.cn", "/q=sz000001", 80);
+%>-->
+
+</body>
+</html>

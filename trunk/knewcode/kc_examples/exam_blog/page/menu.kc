@@ -1,0 +1,11 @@
+<nav id="nav">
+	<ul>
+		<li <!--<% #print $$get["page"] == "" && (!$kc_session_inf.Exists("Account") || $$get["my"] != "1"), "class='current_page_item'"; %>--> ><a href="index.kc">All Content</a></li>
+		<!--<% #if $kc_session_inf.Exists("Account"); %>-->
+			<li <!--<% #print $$get["page"] == "" && $$get["my"] == "1", "class='current_page_item'"; %>--> ><a href="index.kc?my=1">My Content</a></li>
+			<li <!--<% #print $$get["page"] == "_speak", "class='current_page_item'"; %>--> ><a href="index.kc?page=_speak">Speak</a></li>
+		<!--<% #else; %>-->
+			<li <!--<% #print $$get["page"] == "_enroll", "class='current_page_item'"; %>--> ><a href="index.kc?page=_enroll">Enroll</a></li>
+		<!--<% #end-if; %>-->
+	</ul>
+</nav>

@@ -1,0 +1,33 @@
+<!-- interfaceÓï¾ä -->
+<!--<%
+	#interface<IHelloWorld>;
+	#string HelloWorld(#int&);
+	#string HelloKC(#string);
+%>-->
+
+<!-- loadÓï¾ä -->
+<!--<%
+	#load $mod1 = "bin/hello_world_cpp";
+	#interface<IHelloWorld> CreateInf();
+%>-->
+
+<!-- ¶¨Òå -->
+<!--<%
+	#int $m = 10;
+	#interface $in = $mod1.CreateInf();
+	#string $str = $in.HelloWorld($m);
+%>-->
+
+<html>
+<head>
+<title><% #print $str + $m %></title>
+</head>
+
+<body>
+
+<!-- Êä³ö -->
+<bt>
+<!--<% #print $in.HelloKC("KC") %>-->
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<section class="is-text-style1">
+	<div class="inner">
+		<p>	
+			<!--<% #if $$post["login_submit"] == "Login"; %>-->
+				<font color="red"><!--<% $infBlog.UserLogin($$post["TxtAccount"], $$post["TxtPass"]); %>--></font>
+			<!--<% #else-if $$post["logout_submit"] == "Logout"; %>-->
+				<!--<%
+					$kc_session_inf.Remove("Account");
+					$kc_session_inf.Remove("Name");
+				%>-->
+			<!--<% #end-if; %>-->
+			
+			<form action="index.kc?my=1" method="post">
+				<!--<% #if !$kc_session_inf.Exists("Account"); %>-->
+					<table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:12px; color:#555555;">
+						<tr height="36">
+							<td width="20"><b>Account</b></td>
+							<td><input type="text" name="TxtAccount" size="20"></td>
+						</tr>
+						<tr height="36">
+							<td><b>Pass</b></td>
+							<td><input type="password" name="TxtPass" size="20"></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><input name="login_submit" type="submit" value="Login" /></td>
+						</tr>
+					</table>
+				<!--<% #else; %>-->
+					<table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:12px; color:#555555;">
+						<tr height="36">
+							<td width="20"></td>
+							<td><b>Hello  <!--<% #print $kc_session_inf.Get("Name"); %>--><b>(<!--<% #print $kc_session_inf.Get("Account"); %>-->)</td>
+						</tr>
+						<tr>
+							<td ></td>
+							<td><input name="logout_submit" type="submit" value="Logout" /></td>
+						</tr>
+					</table>
+				<!--<% #end-if; %>-->
+			</form>
+		</p>
+	</div>
+</section>

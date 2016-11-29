@@ -1,0 +1,33 @@
+<!-- http://127.0.0.1:8090/test_db.kc?a=1&b=ok -->
+
+<!--<%
+	#include "<lib>/db/db_action.kc";
+%>-->
+
+<!-- 定义 -->
+<!--<%
+	#interface $parm = $kc_db_work_inf.NewParms($$page["this"]);
+	$parm.AddInt("a", $$get["a"]);
+	$parm.AddString("b", $$get["b"]);
+	#interface $db = $kc_db_work_inf.CreateDBAction($$page["this"], "Test_DB", "sqlite3", $$path["/test_db.db"]);
+	$db.ExecSQLLckWithParm("insert into test(a, b) values(:a, :b)", $parm);
+	#interface $dbset = $db.SelectToSet("select * from test", "test");
+%>-->
+
+<html>
+<head>
+<title><% #p "test db"; %></title>
+</head>
+
+<body>
+
+<!--<% #while $dbset.Next(); %>-->
+	<% #p $dbset.Row().ValueByName("b").AsString(); %>***
+<!--<% #end-while; %>-->
+
+<!--<% #if $dbset.RowCount() > 20; %>-->
+	<% $db.ExecSQLLck("delete from test"); %>
+<!--<% #end-if; %>-->
+
+</body>
+</html>

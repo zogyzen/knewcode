@@ -1,0 +1,113 @@
+<!--<% #note %>--><!-- kc_db_i.h --><!--<% #end-note %>-->
+
+<!--<%
+	#interface<IDBType>;
+	#int DBType();
+	#string Name();
+	#interface<IDBTypeList> DBTypeList();
+%>-->
+
+<!--<%
+	#interface<IDBTypeList>;
+	#int Count();
+	#bool Exists(#string);
+	#interface<IDBType> DBType(#int);
+	#interface<IDBType> DBTypeByName(#string);
+	#int Index(#string);
+%>-->
+
+<!--<%
+	#interface<IDBValue>;
+	#interface<IDBType> DBType();
+	#bool IsNULL();
+	#void SetNULL();
+	#int AsInt();
+	#void SetInt(#int);
+	#double AsDouble();
+	#void SetDouble(#double);
+	#string AsString();
+	#void SetString(#string);
+	#string AsEncode(#string, #string);
+	#void SetEncode(#string, #string, #string);
+	#interface<IDBValueList> DBValueList();
+%>-->
+
+<!--<%
+	#interface<IDBValueList>;
+	#interface<IDBTypeList> DBTypeList();
+	#interface<IDBValue> Value(#int);
+	#interface<IDBValue> ValueByName(#string);
+%>-->
+
+<!--<%
+	#interface<IDBParms> : <IDBValueList>;
+	#interface<IDBValue> AddInt(#string, #int);
+	#interface<IDBValue> AddDouble(#string, #double);
+	#interface<IDBValue> AddString(#string, #string);
+	#interface<IDBValue> AddEncode(#string, #string, #string, #string);
+	#bool Remove(#int);
+	#bool RemoveByName(#string);
+	#bool Clear();
+%>-->
+
+<!--<%
+	#interface<IDBRow> : <IDBValueList>;
+	#bool AssignTo(#interface<IDBParms>);
+	#interface<IDBTable> Table();
+%>-->
+
+<!--<%
+	#interface<IDBRowsBase>;
+	#string Name();
+	#interface<IDBTypeList> Fields();
+	#interface<IDBRow> Row();
+	#int RowIndex();
+	#bool Next();
+	#bool Eof();
+%>-->
+
+<!--<%
+	#interface<IDBTable> : <IDBRowsBase>;
+%>-->
+
+<!--<%
+	#interface<IDBSet> : <IDBRowsBase>;
+	#int RowCount();
+	#bool Empty();
+	#interface<IDBRow> RowBy(#int);
+	#bool Prev();
+	#bool Move(#int);
+	#interface<IDBRow> First();
+	#interface<IDBRow> Last();
+%>-->
+
+<!--<%
+	#interface<IDBAction>;
+	#interface<IDBTable> Select(#string, #string);
+	#interface<IDBTable> SelectWithParm(#string, #interface<IDBParms>, #string);
+	#string GetValue(#string);
+	#string GetValueWithParm(#string, #interface<IDBParms>);
+	#interface<IDBSet> SelectToSet(#string, #string);
+	#interface<IDBSet> SelectToSetWithParm(#string, #interface<IDBParms>, #string);
+	#interface<IDBSet> CreateDBSet(#interface<IDBTable>);
+	#void ReleaseDBSet(#interface<IDBSet>);
+	#int ExecSQL(#string);
+	#int ExecSQLWithParm(#string, #interface<IDBParms>);
+	#int ExecSQLLck(#string);
+	#int ExecSQLLckWithParm(#string, #interface<IDBParms>);
+%>-->
+
+<!--<%
+	#interface<IKCDBWork>;
+	#interface<IDBAction> CreateDBAction(#interface, #string, #string, #string);
+	#interface<IDBParms> NewParms(#interface);
+%>-->
+
+<!--<%
+	#load --private-- $kc_db_work = "<lib>/db/db_action";
+	#interface<IKCDBWork> GetDBInf(#string);
+%>-->
+
+<!--<%
+	#interface --static-- $kc_db_work_inf = $kc_db_work.GetDBInf($$path["<lib>/db"]);
+%>-->

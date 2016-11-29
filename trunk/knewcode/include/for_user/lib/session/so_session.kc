@@ -1,0 +1,23 @@
+<!--<% #note %>--><!-- kc_session_i.h --><!--<% #end-note %>-->
+
+<!--<%
+	#interface<IKCSession>;
+	#bool Set(#string, #string);
+	#string Get(#string);
+	#bool Remove(#string);
+	#bool Exists(#string);
+%>-->
+
+<!--<%
+	#interface<IKCSessionWork>;
+	#interface<IKCSession> GetSession(#interface);
+%>-->
+
+<!--<%
+	#load --private-- $kc_session_work = "<lib>/session/so_session";
+	#interface<IKCSessionWork> GetWorkInf();
+%>-->
+
+<!--<%
+	#interface --static-- $kc_session_inf = $kc_session_work.GetWorkInf().GetSession($$page["this"]);
+%>-->

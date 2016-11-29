@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<Config>
+	<Parameters>
+		<logging Level="debug" />	<!-- trace、debug、info、warning、error -->
+		<hint_file File="hint_file/en.xml" />
+	</Parameters>
+	<Directories>
+		<lib Path="lib" />
+	</Directories>
+	<Modules>
+		<kc_web_main Path="modules" Activation="2" />
+		<kc_web_tag_parse Path="modules" Activation="2" />
+		<kc_web_page_data Path="modules" Activation="2" />
+		<kc_web_page_data_syntax Path="modules" Activation="2" />
+		<kc_web_page_data_expr Path="modules" Activation="2" />
+		<kc_web_page_data_idname Path="modules" Activation="2" />
+		<kc_web_inner_var Path="modules" Activation="2" />
+		<kc_dynamic_call Path="modules" Activation="2" />
+	</Modules>
+</Config>

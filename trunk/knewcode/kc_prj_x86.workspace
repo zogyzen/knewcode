@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="kc_prj">
+		<Project filename="kc_web_platform/kc_web_debug/kc_web_debug_x86.cbp" />
+		<Project filename="kc_web_platform/kc_apache_mod/kc_apache_mod_x86.cbp" />
+		<Project filename="kc_web_platform/kc_fastcgi_mod/kc_fastcgi_mod_x86.cbp" />
+		<Project filename="../kc_framework/kc_framework/kc_framework_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_main/kc_web_main_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_tag_parse/kc_web_tag_parse_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_page_data/kc_web_page_data_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_page_data_syntax/kc_web_page_data_syntax_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_page_data_expr/kc_web_page_data_expr_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_page_data_idname/kc_web_page_data_idname_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_web_inner_var/kc_web_inner_var_x86.cbp" />
+		<Project filename="kc_library/lib_func_dyncall/lib_func_dyncall_x86.cbp" />
+		<Project filename="kc_web_plugins/kc_dynamic_call/kc_dynamic_call_x86.cbp">
+			<Depends filename="kc_library/lib_func_dyncall/lib_func_dyncall_x86.cbp" />
+		</Project>
+		<Project filename="user_library/db_action/db_action_x86.cbp" />
+		<Project filename="user_library/net_action/net_action_x86.cbp" />
+		<Project filename="user_library/so_session/so_session_x86.cbp" />
+		<Project filename="user_library/so_webservice/so_webservice_x86.cbp" />
+		<Project filename="user_library/util_algorithm/util_algorithm_x86.cbp" />
+		<Project filename="kc_examples/load_test/load_test_x86.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_web_page_data_expr" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="_one_level\;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/Modules/kc_web_page_data_expr" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/Modules/kc_web_page_data_expr" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-unknown-pragmas" />
+			<Add option="-Wno-attributes" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add option="-DWIN32" />
+			<Add directory="../../include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_system-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_filesystem-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_date_time-mgw53-1_61.a" />
+		</Linker>
+		<Unit filename="activator.cpp" />
+		<Unit filename="activator.h" />
+		<Unit filename="expr_item_if.cpp" />
+		<Unit filename="expr_item_if.h" />
+		<Unit filename="one_level/binary_and.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_and.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_divi.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_divi.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_equl.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_equl.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_less.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_less.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_lseq.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_lseq.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_modu.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_modu.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_more.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_more.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_mreq.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_mreq.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_mult.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_mult.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_nteq.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_nteq.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_or.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_or.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_plus.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_plus.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_subt.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_subt.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_xor.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/binary_xor.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_const.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_const.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_func.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_func.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_invar.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_invar.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_var.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/operand_var.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_not.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_not.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_sub.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_sub.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_ykh.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/unary_ykh.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="std.h" />
+		<Unit filename="work_expr_tree.cpp" />
+		<Unit filename="work_expr_tree.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,1 @@
+LoadModule dlib_kc_module /home/zogy/mycode/knewcode_project/trunk/debug/kc_apache_mod.so

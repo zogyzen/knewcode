@@ -1,0 +1,15 @@
+<!--<% #note %>--><!-- kc_webservice_i.h --><!--<% #end-note %>-->
+
+<!--<%
+	#interface<IKCWebService>;
+	#bool RunSoap(#interface);
+%>-->
+
+<!--<%
+	#load --private-- $kc_webs_work = "<lib>/service/so_webservice";
+	#interface<IKCWebService> GetWorkInf();
+%>-->
+
+<!--<%
+	$kc_webs_work.GetWorkInf().RunSoap($$page["this"]);
+%>-->

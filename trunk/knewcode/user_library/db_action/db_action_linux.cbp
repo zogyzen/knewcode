@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="db_action" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/lib/db/db_action" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/lib/db/db_action" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add directory="../../include" />
+			<Add directory="../../../../library/linux/boost_1_61/" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/linux/soci-3.2.3/core" />
+		</Compiler>
+		<Linker>
+			<Add option="-static-libstdc++" />
+			<Add option="-lrt" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_system.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_locale.a" />
+			<Add library="../../../../library/linux/soci-3.2.3/lib/soci.a" />
+		</Linker>
+		<Unit filename="action_db.cpp" />
+		<Unit filename="action_db.h" />
+		<Unit filename="parms_db.cpp" />
+		<Unit filename="parms_db.h" />
+		<Unit filename="row_db.cpp" />
+		<Unit filename="row_db.h" />
+		<Unit filename="std.h" />
+		<Unit filename="table_db.cpp" />
+		<Unit filename="table_db.h" />
+		<Unit filename="table_set.cpp" />
+		<Unit filename="table_set.h" />
+		<Unit filename="type_db.cpp" />
+		<Unit filename="type_db.h" />
+		<Unit filename="value_db.cpp" />
+		<Unit filename="value_db.h" />
+		<Unit filename="work_db.cpp" />
+		<Unit filename="work_db.h" />
+		<Unit filename="work_db_i.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

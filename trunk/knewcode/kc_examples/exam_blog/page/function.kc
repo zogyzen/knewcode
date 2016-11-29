@@ -1,0 +1,27 @@
+<!--<%
+	#include "<lib>/session/so_session.kc";
+	#include "<lib>/util/util_algorithm.kc";
+%>-->
+
+<!-- IExamBlog -->
+<!--<%
+	#interface<IExamBlog>;
+	#bool EnrollUser(#string, #string, #string, #string);
+	#bool UserLogin(#string, #string);
+	#bool SaySomething(#string, #string, #string, #string);
+	#interface<IDBTable> SelectBlog(#int, #int);
+	#int SelectBlogCount(#int);
+%>-->
+
+<!--<%
+	#load $modBlog = "/bin/exam_blog";
+	#interface<IExamBlog> CreateInf(#interface, #interface, #interface, #interface, #interface);
+	#void FreeInf(#interface);
+%>-->
+
+<!--<%
+	$kc_db_work_inf.CreateDBAction($$page["this"], "BlogConnect", 20, "sqlite3", $$path["/"] + "db/exam_blog.s3db");
+	#interface $db = $kc_db_work_inf.GetDBAction($$page["this"], "BlogConnect");
+	#interface $parm = $kc_db_work_inf.NewParms($$page["this"]);
+	#interface $infBlog = $modBlog.CreateInf($$page["this"], $db, $parm, $kc_session_inf, $kc_algorithm_inf);
+%>-->

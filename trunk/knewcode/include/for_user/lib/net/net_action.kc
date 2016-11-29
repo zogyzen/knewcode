@@ -1,0 +1,20 @@
+<!--<% #note %>--><!-- net_action_i.h --><!--<% #end-note %>-->
+
+<!--<%
+	#interface<IKCNetAction>;
+	#string SyncHttpGet(#string, #string, #int);
+%>-->
+
+<!--<%
+	#interface<IKCNetWork>;
+	#interface<IKCNetAction> GetNetAction(#interface);
+%>-->
+
+<!--<%
+	#load --private-- $kc_net_work = "<lib>/net/net_action";
+	#interface<IKCNetWork> GetWorkInf();
+%>-->
+
+<!--<%
+	#interface --static-- $kc_net_work_inf = $kc_net_work.GetWorkInf().GetNetAction($$page["this"]);
+%>-->

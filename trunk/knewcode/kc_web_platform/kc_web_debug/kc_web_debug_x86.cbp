@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_web_debug" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/kc_web_debug" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/kc_web_debug" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-U__STRICT_ANSI__" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add option="-D_WIN32_WINNT=0x0501" />
+			<Add option="-DWIN32" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-lws2_32" />
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_system-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_filesystem-mgw53-1_61.a" />
+		</Linker>
+		<Unit filename="main.cpp" />
+		<Unit filename="request_respond.cpp" />
+		<Unit filename="request_respond.h" />
+		<Unit filename="std.h" />
+		<Unit filename="web_work.cpp" />
+		<Unit filename="web_work.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

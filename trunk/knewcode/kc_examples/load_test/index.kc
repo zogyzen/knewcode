@@ -1,0 +1,31 @@
+<!-- interfaceÓï¾ä -->
+<!--<%
+	#interface<IHelloWorld>;
+	#string Test(#string);
+%>-->
+<!-- loadÓï¾ä -->
+<!--<%
+	#load $mod1 = "bin/load_test";
+	#interface<IHelloWorld> CreateInf(#interface);
+	#void FreeInf(#interface&);
+%>-->
+<!-- ¶¨Òå -->
+<!--<%
+	#string $m = "tom";
+	#interface $in = $mod1.CreateInf($$page["this"]);
+	#delay<TotalPageFinish> $mod1.FreeInf($in);
+%>-->
+
+<html>
+<head>
+<title><% #print $m; %></title>
+</head>
+
+<body>
+
+<!-- Êä³ö -->
+<bt>
+<!--<% #print $in.Test($m); %>-->
+
+</body>
+</html>

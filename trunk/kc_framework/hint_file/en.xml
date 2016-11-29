@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+
+<Hint>
+	<Unknown_exception String="Unknown exception" />
+	<Method_Not_Allowed String="Method Not Allowed" />
+	<Start_framework String="***** Start %1% ***** - %2%" />
+	<End_framework String="***** End %1% ***** - %2%" />
+	<Repeat_to_install_ String="Repeat to install - " />
+	<Install_Bundle_ String="Install Bundle - " />
+	<Install_Bundle_Success_ String="Install Bundle Success - " />
+	<Uninstall_Bundle_ String="Uninstall Bundle - " />
+	<Can_t_find_the_bundle_ String="Can't find the bundle - " />
+	<The_service_GUID_is_null_ String="The service GUID is null - " />
+	<Repeat_to_register_service_ String="Repeat to register service - " />
+	<Register_Service_ String="Register Service - " />
+	<Register_Service_Success_ String="Register Service Success - " />
+	<Unregister_Service_ String="Unregister Service - " />
+	<Take_Reference_Service String="Take Reference Service." />
+	<Free_Reference_Service String="Free Reference Service." />
+	<Can_t_get_the_function_ String="Can't get the function - " />
+	<The_service_don_t_exist_ String="The service don't exist - " />
+	<The_path_config_don_t_exist_ String="The path config don't exist - " />
+
+	<Reander_page_ String=">>>>> Reander page begin - " />
+	<Reander_page_end_ String="<<<<< Reander page end - " />
+	<Get_full_name_of_the_local_file_ String="Get full name of the local file - " />
+	<Don_t_exists_file_ String="Don't exists file - " />
+	<Read_file_failure_ String="Read file failure - " />
+	<Don_t_exists_data_ String="Don't exists data - " />
+	<Null_Point_Data_ String="Null Point Data - " />
+	<Register_Data_ String="Register Data - " />
+	<Repeat_Register_Data_ String="Repeat Register Data - " />
+	<Push_Jmp_Point_ String="Push Jmp Point - " />
+	<Pop_Jmp_Point_ String="Pop Jmp Point - " />
+	
+	<Parse_page_ String="Parse page - " />
+	<Syntax_errors String="Syntax errors, at line - %1%, with the syntax ID %2%.\r\n%3%" />
+	
+	<Not_Set_operand_ String="Not Set operand, at line - " />
+	<Identifier_definition_does_not_exist String="Identifier definition does not exist [%1%], at line - %2% " />
+	<Action_syntax_item String="Action syntax item - %1%,  [L: %2%][I: %3%] " />
+	<Create_page_ String="Create page - " />
+	<Action_page_ String="Action page - " />
+	<Action_Delay_Syntax_ String="Action Delay Syntax - " />
+	<Read_Page_File_ String="Read Page File - " />
+	<SIGFPE_Signo String="SIGFPE" />
+	<SIGSEGV_Signo String="SIGSEGV" />
+	<Exception_Signo_ String="Exception Signo - " />
+	<Circular_reference String="Circular reference [%1%], begin at line - %2% " />
+	<Load_library_failure String="Load library [%1%] failure, at line - %2% " />
+	<The_load_library_interface_is_nullptr String="The load library [%1%] interface is nullptr, at line - %2% " />
+	<Don_t_create_the_page_ String="Don't create the page - " />
+	
+	<Unmatch_Syntax_Item String="Unmatch Syntax Item [%1%], at line - %2% " />
+	<Can_t_create_Syntax_Item String="Can't create Syntax Item [%1%], at line - %2% " />
+	<There_are_no_corresponding_statement String="There are no corresponding statement [%1%], at line - %2% " />
+	<Next_statements_do_not_correspond String="Next statements do not correspond [%1%], at line - %2% " />
+	<The_condition_must_be_Boolean_type String="The condition must be Boolean type [%1%], at line - %2% " />
+	<Statement_does_not_correspond_on String="Statement does not correspond on [%1%], at line - %2% " />
+	<Can_t_define_void_variable String="Can't define void variable, at line - " />
+	<The_path_must_be_string_type_ String="The path must be string type, at line - " />
+	<Don_t_exists_load_include_file String="Don't exists [%1%] file [%2%], at line - %3% " />
+	<The_value_of_the_variable_is_not_specified String="The value of the variable is not specified [%1%], at line - %2% " />
+	<Identifiers_are_not_a_variable String="Identifiers are not a variable [%1%], at line - %2% " />
+	<Identifiers_are_not_a_base_type_variable String="Identifiers are not a base type variable [%1%], at line - %2% " />
+	<Identifiers_are_not_a_interface_variable String="Identifiers are not a interface variable [%1%], at line - %2% " />
+	
+	<Not_set_operand String="Not set operand, Unary operator is %1%, at line - %2% " />
+	<Not_set_left_operand String="Not set left operand, Binary operator is %1%, at line - %2% " />
+	<Not_set_right_operand String="Not set right operand, Binary operator is %1%, at line - %2% " />
+	<Operand_node_cannot_be_empty_ String="Operand node cannot be empty, at line - " />
+	<Operator_node_cannot_be_empty_ String="Operator node cannot be empty, at line - " />
+	<The_operand_can_only_be_specific_type String="The operand can only be %1% type, left-hand operand is [%2%], right-hand operand is [%3%], at line - %4% " />
+	<The_operand_can_only_be_specific_type_unary String="The operand can only be %1% type, operand is [%2%], at line - %3% " />
+	<The_divisor_can_t_be_0_ String="The divisor can't be 0, at line - " />
+	<Don_t_exists_function_library_or_interface String="Don't exists function library (or interface) [%1%], at line - %2% " />
+	<Inconsistent_number_of_formal_parameters_and_arguments String="Inconsistent number of formal parameters and arguments [%1%], at line - %2% " />
+	<Parameter_can_t_be_a_void_type String="Parameter[%1%] can't be a void type [%2%], at line - %3% " />
+	<Argument_can_t_be_a_void_type String="Argument[%1%] can't be a void type [%2%], at line - %3% " />
+	<The_value_of_the_array_index_is_not_specified String="The value of the array index[%1%] is not specified, at line - %2% " />
+	<The_array_index_is_empty_ String="The array index is empty, at line - " />
+	<Don_t_exists_variable String="Don't exists variable[%1%], at line - %2% " />
+
+	<Not_load_dynamic_libraries String="Not load dynamic libraries [%1%], at line - %2% " />
+	<Not_set_dynamic_libraries String="Not set dynamic libraries [%1%], at line - %2% " />
+	<Can_t_access_functions String="Can't access functions [%1%], at line - %2% " />
+	<Function_is_not_defined String="Function is not defined [%1%], at line - %2% " />
+	<Type_mismatch String="Type mismatch. Variable[%1%], value[%2%], at line - %3% " />
+	<Type_unmatch String="Type unmatch. Variable[%1%], at line - %2% " />
+	<Can_t_be_assigned_to_the_interface String="Non-interface type[%1%] can't be assigned to the interface[%2%], at line - %3% " />
+	<The_interface_is_nullptr_ String="The interface is nullptr - " />
+	
+	<Add_inner_variable_failure String="Add inner variable failure [%1%], at line - %2% " />
+	<Isn_t_a_inner_variables String="Isn't a inner variables [%1%], at line - %2% " />
+	<The_array_index_of_inner_variable_is_empty String="The array index of inner variable is empty [%1%], at line - %2% " />
+	<Don_t_exists_inner_variable String="Don't exists inner variable [%1%], at line - %2% " />
+	<The_wrong_file_path_type_by_inner_variable_post String="The wrong file path type[%1%], by inner variable post[%2%], at line - %3% " />
+	<Datetime_Format_Error String="Datetime Format Error [%1%][yyyy-MM-dd hh:mm:ss], at line - %2% " />
+	
+	<Parameter_type_unknown_ String="Parameter type unknown - " />
+	<Is_not_an_interface_type String="Is not an interface type" />
+	
+	<Don_t_exists_connect_pool_ String="Don't exists connect pool - " />
+	<Array_index_out_of_bounds String="Array index out of bounds." />
+	<Don_t_exists_field_ String="Don't exists field - " />
+	<Repeating_Field_ String="Repeating field - " />
+	<The_field_value_is_NULL_ String="The field value is NULL - " />
+	<The_field_type_don_t_match_ String="The field type don't match - " />
+</Hint>

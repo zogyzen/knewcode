@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_web_main" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/modules/kc_web_main" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option host_application="D:/mycode/knewcode_project/trunk/debug/kc_web_debug.exe" />
+				<Option run_host_application_in_terminal="0" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/modules/kc_web_main" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add directory="../../include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/linux/boost_1_61/" />
+		</Compiler>
+		<Linker>
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_system.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_thread.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_filesystem.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_date_time.a" />
+		</Linker>
+		<Unit filename="activator.cpp" />
+		<Unit filename="activator.h" />
+		<Unit filename="kc_web_work.cpp" />
+		<Unit filename="kc_web_work.h" />
+		<Unit filename="request_respond.cpp" />
+		<Unit filename="request_respond.h" />
+		<Unit filename="std.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

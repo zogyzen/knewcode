@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_fastcgi_mod" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/kc_fastcgi_mod" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/kc_fastcgi_mod" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-m32" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add option="-DWIN32" />
+			<Add directory="../../../../library/windows/fcgi-2.4.1-SNAP/include" />
+			<Add directory="../../../../library/windows/boost_1_61_x86/include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../include" />
+		</Compiler>
+		<Linker>
+			<Add option="-m32" />
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/windows/fcgi-2.4.1-SNAP/lib/libfcgi_static.a" />
+			<Add library="ws2_32" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_system-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_filesystem-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_date_time-mgw53-1_61.a" />
+			<Add library="../../../../library/windows/boost_1_61_x86/lib/libboost_thread-mgw53-mt-1_61.a" />
+		</Linker>
+		<Unit filename="fastcgi_work.cpp" />
+		<Unit filename="fastcgi_work.h" />
+		<Unit filename="kc_fastcgi_mod.cpp" />
+		<Unit filename="request_respond.cpp" />
+		<Unit filename="request_respond.h" />
+		<Unit filename="std.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

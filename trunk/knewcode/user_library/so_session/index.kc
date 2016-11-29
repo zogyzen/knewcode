@@ -1,0 +1,20 @@
+<!--<%
+	#include "<lib>/session/so_session.kc";
+%>-->
+<!--<%
+	$kc_session_inf.Set("MySession", "Session test2");
+%>-->
+
+<html>
+<head>
+<title><% #print "test"; %></title>
+</head>
+
+<body>
+
+<form action="index_sumit.kc">
+<input name="submit" type="submit" value="submit" />
+</form>
+
+</body>
+</html>

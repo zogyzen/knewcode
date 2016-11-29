@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="kc.examples">
+		<Project filename="hello_world_c/hello_world_x86.cbp" />
+		<Project filename="hello_world_cpp/hello_world_x86.cbp" />
+		<Project filename="page_info_test/page_info_x86.cbp" />
+		<Project filename="exam_blog/src/exam_blog_x86.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

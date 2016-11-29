@@ -1,0 +1,47 @@
+<div id="content">
+    <div id="content-inner">
+
+        <article class="is-post is-post-excerpt">
+			<!--<% #bool $bFinish = #false; %>-->
+
+            <header>
+                <h2><a href="#">Enroll user</a></h2>
+                <span class="byline">Test ...</span>
+				<!--<% #if $$post["enroll_submit"] == "Submit"; %>-->
+					<span class="byline"><font color="red">
+						<!--<% $bFinish = $infBlog.EnrollUser($$post["TxtName"], $$post["TxtAccount"], $$post["TxtPass"], $$post["TxtPass2"]); %>-->
+					</font></span>
+				<!--<% #end-if; %>-->
+            </header>
+            <p>
+				<!--<% #if !$bFinish; %>-->
+					<form method="post">
+						<table width="80%" border="0" cellspacing="0" cellpadding="0" style="font-size:14px; color:#555555;">
+							<tr height="50">
+								<td width="50"><b>Name: </b></td>
+								<td><input type="text" name="TxtName"></td>
+							</tr>
+							<tr height="50">
+								<td><b>Account: </b></td>
+								<td><input type="text" name="TxtAccount"></td>
+							</tr>
+							<tr>
+								<td><b>Password: </b></td>
+								<td><input type="password" name="TxtPass"></td>
+							</tr>
+							<tr height="50">
+								<td></td>
+								<td><input type="password" name="TxtPass2"></td>
+							</tr>
+							<tr height="50">
+								<td></td>
+								<td><input name="enroll_submit" type="submit" value="Submit" /></td>
+							</tr>
+						</table>
+					</form>
+				<!--<% #end-if; %>-->
+            </p>
+        </article>
+
+    </div>
+</div>

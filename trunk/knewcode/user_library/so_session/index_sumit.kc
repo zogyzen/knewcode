@@ -1,0 +1,21 @@
+<!--<%
+	#include "<lib>/session/so_session.kc";
+%>-->
+
+<html>
+<head>
+<title><% #print "test"; %></title>
+</head>
+
+<body>
+
+<!-- Êä³ö -->
+<br>
+
+<!--<%
+	#print $kc_session_inf.Get("MySession");
+%>-->
+<br>
+
+</body>
+</html>

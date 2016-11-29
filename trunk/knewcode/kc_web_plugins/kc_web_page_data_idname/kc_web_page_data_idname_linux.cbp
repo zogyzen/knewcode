@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="kc_web_page_data_idname" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="_two_level/;_one_level/;" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../../debug/modules/kc_web_page_data_idname" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../../release/modules/kc_web_page_data_idname" prefix_auto="0" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-local-typedefs" />
+			<Add option="-Wno-unknown-pragmas" />
+			<Add option="-Wno-attributes" />
+			<Add option="-Wno-deprecated-declarations" />
+			<Add directory="../../include" />
+			<Add directory="../../../../kc_framework/trunk/include" />
+			<Add directory="../../../../library/linux/boost_1_61/" />
+		</Compiler>
+		<Linker>
+			<Add option="-static-libstdc++" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_system.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_thread.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_filesystem.a" />
+			<Add library="../../../../library/linux/boost_1_61/lib/libboost_date_time.a" />
+		</Linker>
+		<Unit filename="activator.cpp" />
+		<Unit filename="activator.h" />
+		<Unit filename="idname_item_if.cpp" />
+		<Unit filename="idname_item_if.h" />
+		<Unit filename="one_level/func_lib.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/func_lib.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_bool.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_bool.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_double.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_double.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_int.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_int.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_string.cpp">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="one_level/var_string.h">
+			<Option virtualFolder="_one_level/" />
+		</Unit>
+		<Unit filename="std.h" />
+		<Unit filename="two_level/var_interface.cpp">
+			<Option virtualFolder="_two_level/" />
+		</Unit>
+		<Unit filename="two_level/var_interface.h">
+			<Option virtualFolder="_two_level/" />
+		</Unit>
+		<Unit filename="work_idname_item.cpp" />
+		<Unit filename="work_idname_item.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

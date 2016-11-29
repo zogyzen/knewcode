@@ -1,0 +1,32 @@
+<!--<%
+	#include "<lib>/db/db_action.kc";
+%>-->
+<!--<%
+	$kc_db_work_inf.CreateDBAction($$page["this"], "MyConnectPG", 20, "postgresql", "host=127.0.0.1 dbname=postgres user=postgres password=pass");
+	#interface $db = $kc_db_work_inf.GetDBAction($$page["this"], "MyConnectPG");
+	#interface $parm = $kc_db_work_inf.NewParms($$page["this"]);
+	$parm.AddInt("a", 119);
+	{$db.ExecSQL("delete from test");}
+	$db.ExecSQLWithParm("insert into test(a) values(:a)", $parm);
+	#interface $tab_kc = $db.SelectWithParm("select * from test where a = :a", $parm, "table1");
+%>-->
+
+<html>
+<head>
+<title><% #print "test"; %></title>
+</head>
+
+<body>
+
+<!-- Êä³ö -->
+<br>
+
+<% #while $tab_kc.Next(); %>
+<!--<%
+	#print $tab_kc.RowPos().Value(0).AsInt();
+%>-->
+<br>
+<% #end-while; %>
+
+</body>
+</html>

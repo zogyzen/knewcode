@@ -1,0 +1,57 @@
+﻿<div id="content">
+    <div id="content-inner">
+        <!-- Post -->
+		<!--<%
+			#int $iMy = $$get["my"];
+			#int $iPage = $$get["i"];
+			#int $iPageCount = $infBlog.SelectBlogCount($iMy);
+			#interface $tab = $infBlog.SelectBlog($iPage, $iMy);
+		%>-->
+		<!--<% #while $tab.Next(); %>-->
+			<article class="is-post is-post-excerpt">
+				<header>
+					<h2><!--<% #print $tab.RowPos().ValueByName("s_title").AsString(); %>--></h2>
+					<span class="byline"><!--<% #print $tab.RowPos().ValueByName("s_titleSub").AsString(); %>--></span>
+				</header>
+				<div class="info">
+					<span class="date"><!--<% #print $tab.RowPos().ValueByName("d_input").AsString(); %>--></span>
+					<div class="jiathis_style_32x32">
+						<ul class="stats">
+							<li><a class="jiathis_button_qzone fa"></a></li>&nbsp;
+							<li><a class="jiathis_button_tsina fa"></a></li>
+						</ul>
+					</div>
+					<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+				</div>
+				<!--<% #string $sImg = $tab.RowPos().ValueByName("s_image").AsString(); %>-->
+				<!--<% #if $sImg != ""; %>-->
+					<a href="<!--<% #print $sImg; %>-->" class="image image-full"><img src="<!--<% #print $sImg; %>-->" alt="" /></a>
+				<!--<% #end-if; %>-->
+				<p>
+					<!--<% #print $tab.RowPos().ValueByName("s_content").AsString(); %>-->
+				</p>
+			</article>
+		<!--<% #end-while; %>-->
+
+        <!-- Pager -->
+        <div class="pager">
+			<!--<% #if $iPage > 0; %>-->
+				<a href="index.kc?my=<!--<% #print $iMy; %>-->&i=<!--<% #print $iPage - 1; %>-->" class="button previous">Prev Page</a>
+			<!--<% #end-if; %>-->
+			<!--<% #if $iPageCount > 1; %>-->
+				<div class="pages">
+					<!--<% #int $i = 1; %>-->
+					<!--<% #while $i <= $iPageCount; %>-->
+						<a <!--<% #print $iPage == $i - 1, "class='active'"; %>-->
+							href="index.kc?my=<!--<% #print $iMy; %>-->&i=<!--<% #print $i - 1; %>-->"><!--<% #print $i; %>--></a>
+						<!--<% $i = $i + 1; %>-->
+					<!--<% #end-while; %>-->
+				</div>
+			<!--<% #end-if; %>-->
+			<!--<% #if $iPage < $iPageCount - 1; %>-->
+				<a href="index.kc?my=<!--<% #print $iMy; %>-->&i=<!--<% #print $iPage + 1; %>-->" class="button next">Next Page</a>
+			<!--<% #end-if; %>-->
+        </div>
+
+    </div>
+</div>

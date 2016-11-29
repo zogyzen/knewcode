@@ -1,0 +1,90 @@
+﻿<!-- 开始 -->
+
+<!-- load语句 -->
+<!--<%
+	#load --private-- $mod1 = "/bin/hello_world_c";
+	#double HelloWorld(#double, #int&);
+%>-->
+
+<!-- interface语句 -->
+<!--<%
+	#interface<IHelloWorld> --private--;
+	#int HelloWorld(#int&);
+%>-->
+
+<!-- load语句 -->
+<!--<%
+	#load $mod2 = "/bin/hello_world_cpp";
+	#interface<IHelloWorld> CreateInf();
+	#void FreeInf(#interface<IHelloWorld>&);
+%>-->
+
+<!-- load语句 -->
+<!--<%
+	#load $mod3 = "<lib>/bin/page_info_test";
+	#string ThisTest(#interface);
+%>-->
+
+<!-- 定义 -->
+<!--<%
+	#int --private-- $m = 10;
+	#double $j = $mod1.HelloWorld(1.3, $m);
+	#bool $b = #true;
+	#string $str = "test ok";
+	$$user["in"] = $mod2.CreateInf();
+	#interface $in2 = $$user["in"];
+%>-->
+
+<html>
+<head>
+<title><% #print $str; {KC例子} %></title>
+</head>
+
+<!--<%
+	$m = 20; {$m = 20 + 10;}
+	$str = "index_sub.kc";
+	$$post["file01"] = "tmp01/" + $$post["file01"];
+	$$cookie["file01"] = "";
+%>-->
+
+<body>
+
+<!-- 输出 -->
+<!--<% #print $in2.HelloWorld($m) + "	2222"; %>--><br>
+<!--<% #print $mod3.ThisTest($$page["this"]); %>--><br>
+<!--<% #print $$get["a"]; %>--><br>
+
+<!-- include语句 -->
+<!--<%
+	#include $str;  { 包含子页文件；可以是表达式。 }
+%>-->
+<!--<% #print $mod5.HelloWorld(1.3, $m); %>--><br>
+<!--<% #print $m5; %>--><br>
+
+<!--<% #print $$cookie["file01"] + "	option"; %>--><br>
+
+<!-- 注解 -->
+<!--<% #note %>-->注解<!--<% #end-note %>-->
+
+<input type="text" name="T1" size="50" value="<% #print $j; %>"><br>
+<input type="text" name="T2" size="50" value="<% #print $m; %>"><br>
+
+<form action="http://127.0.0.1:8090/?a=中文" method="post" enctype="multipart/form-data">
+<input name="file01" type="file" size="50" /><br>
+<input name="text01" type="text" value="中国abcdefg" size="20" /><br>
+<textarea name="text02" cols="45" rows="5"></textarea><br>
+<input name="submit" type="submit" value="submit" /><br>
+<input name="chk01" type="checkbox" value="" /><br>
+<select name="sel01">
+  <option value="1">a</option>
+  <option value="2">b</option>
+</select><br>
+</form>
+
+
+</body>
+</html>
+
+<!--<%
+	$mod2.FreeInf($in2);
+%>-->

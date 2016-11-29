@@ -1,0 +1,24 @@
+<!--<% #note %>--><!-- util_algorithm_i.h --><!--<% #end-note %>-->
+
+<!--<%
+	#interface<IKCAlgorithmAction>;
+	#string GetNowString();
+	#bool SetStringAgent(#string, #string);
+	#string GetStringAgent(#string);
+	#string GBK2utf8(#string);
+	#string utf82GBK(#string);
+%>-->
+
+<!--<%
+	#interface<IKCUtilWork>;
+	#interface<IKCAlgorithmAction> GetAlgorithmAction(#interface);
+%>-->
+
+<!--<%
+	#load --private-- $kc_util_work = "<lib>/util/util_algorithm";
+	#interface<IKCUtilWork> GetWorkInf();
+%>-->
+
+<!--<%
+	#interface --static-- $kc_algorithm_inf = $kc_util_work.GetWorkInf().GetAlgorithmAction($$page["this"]);
+%>-->
