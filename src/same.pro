@@ -254,6 +254,7 @@ unix {
     }else{
         BOOSTPTH = $$LIBRARYPTH3RD/linux/boost/x64_clang18
     }
+    message(BOOSTPTH: $$BOOSTPTH)
 
     # boost库的路径
     INCLUDEPATH += $$BOOSTPTH
