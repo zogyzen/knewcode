@@ -7,7 +7,7 @@ message($$PWD)
 INCLUDEPATH += $$PWD/include
 
 # 第三方库的路径
-LIBRARYPTH3RD = $$PWD/../../MY2602KnewcodeLibrary
+LIBRARYPTH3RD = $$PWD/../../knewcodeLibrary
 message(LIBRARYPTH3RD: $$LIBRARYPTH3RD)
 
 #OBJECTS_DIR += $$PWD/../obj
