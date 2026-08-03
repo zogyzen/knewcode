@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="kingbase">
+	<!-- 返回单个数据集 -->
+	<main method="select" content="select * from test" />	
+
+	<!-- 插入数据 -->
+	<Insert method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		begin
+			insert into test values(:name, :age, now(), 1.72);
+
+			:errCode := 0;
+			:errMsg := '成功';
+			:logMsg = '日志';
+		end;
+	</Insert>
+
+	<!-- 删除数据 -->
+	<Delete method="delete" content="delete from test where name = :name" />
+</Controllers>

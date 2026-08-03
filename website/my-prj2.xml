@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+
+<!--
+	注1：配置中的本地相对路径。
+		以“>”开头的相对路径，以框架模块路径为基准路径。如，>logs
+		非“>”开头的相对路径，以配置的网站根路径为基准路径（网站根路径默认为本配置文件所在目录）。
+-->
+<Config>
+	<!-- 全局参数 -->
+	<Parameters>
+		<!-- 服务器编号 -->
+		<srvID id="1" />
+		<!-- 日志模块。 trace、debug、info、warning、error -->
+		<logging so=">so_log_my" flushMS="3666" Level="trace" fileSize="2" dir="./logs" />
+		<!-- 默认超时时间（秒） -->
+		<timeout seconds="7200" />
+		<!-- 多语言 -->
+		<hint_file File="cn" />
+		<!-- customer：客户或系统标识。 服务控制器别名（Modules.kc_webapi_work.SrvCtrl.default）的默认值，以及功能分支（Modules.kc_webapi_work.Controllers.grpBranchCtrl）的默认值。 secretKey：暂未启用。 -->
+		<sys_flag customer="MingYe" secretKey="123" />
+	</Parameters>
+	
+	<!-- 内置web服务器参数 -->
+	<WebServer threadCount="128">
+		<!-- 端口 -->
+		<port http="8080" https="8443" />
+		<!-- SSL配置（目前不支持SNI。如果存在多域名的虚拟主机，请申请多域名合一的ssl证书） -->
+		<ssl key="./ssl/private.key" cert="./ssl/fullchain.pem" />
+		<!-- 主页目录。 sysName系统名称。 root本地根路径。 index主页（相对路径）。 其他错误页面的路径相对于root配置的本地根路径。 -->
+		<page sysName="xx系统" root="./frontend/dist/" index="index.html" _404="err/404.html" _403="err/403.html" _50="err/50x.html" />
+		<!-- 虚拟路径。 url链接上的路径。 local本地路径。 -->
+		<virtualPath>
+			<!-- 测试页路径 -->
+			<test url="/test" local="./backend/test" />
+		</virtualPath>
+		<!-- 多域名的虚拟主机 -->
+		<virtualHost>
+			<!-- 特定域名 -->
+			<mydomain domainName="localhost">
+				<!-- 主页目录 -->
+				<page sysName="xx子系统" root="./frontend/dist" index="index.html" _404="err/404.html" _50="err/50x.html" />
+				<!-- 虚拟路径 -->
+				<virtualPath>
+					<test url="/test" local="./backend/test/" />
+				</virtualPath>
+			</mydomain>
+			<mydomain domainName="de.localhost">
+				<!-- 主页目录 -->
+				<page sysName="xx子系统2" root="D:\work\WSA2601QMS\trunk\platform\website\frontend\dist" index="index.html" _404="err/404.html" _50="err/50x.html" />
+				<!-- 虚拟路径 -->
+				<virtualPath>
+					<test url="/test" local="D:\work\WSA2601QMS\trunk\backend\test" />
+				</virtualPath>
+			</mydomain>
+		</virtualHost>
+		<!-- 其他配置。 deniedUrlExtName禁止访问文件的扩展名。 -->
+		<other deniedUrlExtName=".sql|.xml|.log|.dll|.so" />
+	</WebServer>
+	
+	<!-- 加载模块 -->
+	<Modules>
+		<!-- 模块的属性 —— 
+						Path：所在目录。
+						Activation：0不加载，1加载但不启用，2启用。
+						srv：服务GUID的简化别名。如果一个插件有多个服务，则可以设定多个简化别名，用逗号分隔，按顺序对应。别名冲突，后来的无效。
+		-->
+		
+		<!-- 脚本执行 -->
+		<kc_chai_script Path="" Activation="2">
+			<!-- 附加库：脚本库文件、C++扩展模块 -->
+			<addition>
+				<F1 file="./chai/sample.chai" />
+				<L1 so=">so_chai_sys" classPrefix="Std" />
+				<L2 so=">so_chai_sql">
+					<!-- 服务控制器类（主要针对各数据库插件）。 用于生成对应服务和控制器的脚本类 -->
+					<CKingbase bundle="kc_sql_postgresql" ctrl="kingbase" />
+					<Cywglxxxt srvCtrl="ywglxxxt" jsonCaseSensitive="false" charset="UTF-8" />
+					<Cdingeglyw srv="SQLSrv" ctrl="kingbase" />
+				</L2>
+			</addition>
+		</kc_chai_script>
+		
+		<!-- session模块 -->
+		<kc_session_cookie Path="" Activation="2" srv="Session">
+			<controllers ShareMemSize="128" MapFileSize="8" Flag="2">								<!-- 共享内存的大小(ShareMemSize)（单位：兆），默认128。映射文件的大小(MapFileSize)（单位：兆），默认8。Flag用于共享内存名称。 -->
+				<config cctype="mapped_file" mapped_file="kc_session_cookie" isGlobal="true" />		<!-- 存储类型(cctype)：shared_memory（默认，变量存放在共享内存中，有过期设置）、mapped_file（变量存放在映射文件中，无过期设置）、local_ctrl（变量的读写通过本地控制器，程序控制过期设置） -->
+				<global Expire="1d" isGlobal="true" nameCaseSensitive="false" />					<!-- 超时(Expire)（默认1d）：d-天。h-小时。s-秒。是否全局(isGlobal)（默认是false）；为true，对所有请求开放。session名称区不区分大小写(nameCaseSensitive)，需配置成与数据库的参数名称一致。默认不区分。 -->
+				<sys cctype="local_ctrl">															<!-- 变量的读取通过本地控制器（一般是操作数据库的控制器） -->
+					<get uri="/inside/session.kc?act=get" />
+					<set uri="/inside/session.kc?act=set" />
+					<del uri="/inside/session.kc?act=del" />
+				</sys>
+				<user cctype="local_ctrl">
+					<get uri="/inside/session.kc?act=get" />
+					<set uri="/inside/session.kc?act=set" />
+					<del uri="/inside/session.kc?act=del" />
+				</user>
+			</controllers>
+		</kc_session_cookie>
+		
+		<!-- SSE和Websocket模块 -->
+		<kc_h5_sse_ws Path="" Activation="2" srv="SSEWS">
+			<controllers>
+				<sse type="sse" SendMQSize="10240" SessionCtrl="global" RunPing="true" Flag="" />
+				<ws type="websocket" SendMQSize="10240" SessionCtrl="global" RunPing="true" />
+			</controllers>
+		</kc_h5_sse_ws>
+		
+		<!-- 文件处理模块 -->
+		<kc_os_file Path="" Activation="2" srv="OSFile">
+			<controllers>
+				<!-- 文件上传下载模块 -->
+				<updown type="updown" />
+				<!-- xml配置文件模块 -->
+				<xml type="xml" />
+				<!-- 磁盘文件管理模块 -->
+				<disk type="disk" />
+				<!-- 文件上下载转发模块 -->
+				<relay type="relay" />
+			</controllers>
+		</kc_os_file>
+		
+		<!-- 执行系统命令模块 -->
+		<kc_os_exec Path="" Activation="2" />
+		
+		<!-- 转发模块 -->
+		<kc_request_relay Path="" Activation="2" />
+		
+		<!-- postgresql数据库模块 -->
+		<kc_sql_postgresql Path="" Activation="2" srv="SQLSrv">
+			<controllers>		<!-- parmCaseSensitive：参数名称区不区分大小写可配置，默认不区分（建议配置为不区分大小写）。 encrypt：连接串默认不加密。 dynTmpTableName：过程返回的临时表数据集，临时表名称是否动态可变，默认不变（针对金仓数据库，建议设置为可变）。  -->
+				<connect1 str="hostaddr=127.0.0.1 port=20244 dbname=qlnavdb user=postgres password=myKnewcode options='-c search_path=public'" parmCaseSensitive="false" />
+				<sample str="hostaddr=127.0.0.1 port=25303 dbname=samplekc user=postgres password=myKnewcode" parmCaseSensitive="false" />
+				<connectArm str="hostaddr=127.0.0.1 port=5432 dbname=postgres user=postgres password=myKnewcode" parmCaseSensitive="false" />
+				<connect3 str='postgresql://postgres:myKnewcode@127.0.0.1:25303/samplekc?options=-c%20search_path%3Dschema1%2Cpublic' parmCaseSensitive="false" />
+				<!-- 人大金仓 -->
+				<kingbase str="hostaddr=172.16.1.252 port=54321 dbname=planwater user=system password=myKnewcode" parmCaseSensitive="false" dynTmpTableName="true" />
+				<kingbase2 str="GIwyn0nFHPc4cYywaAZ9PgGPBs600gvS+26AEDdh3IlH4UfiFgLfJpFH+aYQl2R2+v7/6Cajiwe5hd+JLDQWFhBPW8JU7Im/1//ZxLjM0OclztxR5EKNAH25FVHYsXgY" parmCaseSensitive="false" encrypt="true" />
+				<kingbase3 str="hostaddr=172.16.1.252 port=54321 dbname=planwater user=system password=myKnewcode options='-c search_path=test'" parmCaseSensitive="false" dynTmpTableName="true" />
+				<kingbase4 str="postgresql://system:myKnewcode@sql.apikc.cn:15021/planwater?options=-c%20search_path%3Dschema1%2Cywglxxxt" parmCaseSensitive="false" />
+				<kingbase5 str="hostaddr=sql.apikc.cn port=15021 dbname=planwater user=system password=myKnewcode options='-c search_path=dingeglyw'" parmCaseSensitive="false" />
+			</controllers>
+		</kc_sql_postgresql>
+		
+		<!-- Oracle数据库模块 -->
+		<kc_sql_oracle Path="" Activation="2" srv="SQLSrvOra">
+			<controllers>		<!-- oracle的参数名称不区分大小写。连接串默认不加密 -->
+				<import str="planwater_user/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)))" />
+				<connect1 str="planwater_user/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)(SQLNET.ALLOWED_LOGON_VERSION_SERVER=19)))" />
+				<connect2 str="planwater_user/myKnewcode@172.16.1.252:1521/swtpdb" charset="ZHS16GBK" ncharset="AL32UTF8" maxConnNum="50" />
+			</controllers>
+		</kc_sql_oracle>
+		
+		<!-- ODBC数据库模块（主要针对SQL Server） -->
+		<kc_sql_odbc Path="" Activation="2" srv="SQLSrvMS">
+			<controllers>		<!-- mssql的参数名称区分大小写（建议全小写）。连接串默认不加密 -->
+				<connect1 str="Driver={SQL Server};Server=172.16.1.252;Database=test;Uid=sa;Pwd=myKnewcode" dbType="mssql" />
+				<connect2 str="Driver={SQL Server};Server=.;Database=test;Uid=sa;Pwd=myKnewcode" dbType="mssql" />
+			</controllers>
+		</kc_sql_odbc>
+		
+		<!-- 达梦数据库模块 -->
+		<kc_sql_dm Path="" Activation="2" srv="dmdbms">
+			<controllers>		<!-- 达梦数据库的参数名称不区分大小写。连接参数默认不加密 -->
+				<connect1 srv="172.16.1.252:5236" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" />
+			</controllers>
+		</kc_sql_dm>
+		
+		<!-- sqlite数据库模块 -->
+		<kc_sql_sqlite Path="" Activation="2" srv="SQLSrvSqlite">
+			<controllers>
+				<!-- 使用静态的数据库文件 -->
+				<connect1 str="./db/test.db" />
+				<!-- 使用动态的参数（全局的参数或输入的参数），指定的数据库文件 -->
+				<connect2 type="param" str="sqliteDB" />
+			</controllers>
+		</kc_sql_sqlite>
+
+		<!-- webapi主模块 -->
+		<kc_webapi_work Path="" Activation="2">
+			<!-- 服务控制器别名（主要针对各数据库插件）。default：默认的控制器别名，api未指定控制器的话，取该默认值；不设置的话，默认取“Config.Parameters.sys_flag.customer”的值。 valsName：默认的返回数据集的名称，默认为vals。 -->
+			<SrvCtrl default="ywglxxxt" valsName="vals">
+				<ywglxxxt bundle="kc_sql_postgresql" ctrl="kingbase" />
+				<dingeglyw srv="SQLSrv" ctrl="kingbase" />
+			</SrvCtrl>
+			<!-- 转发服务器。 not、all、no-ctrl -->
+			<!-- <relay ctrl="relay1" server="192.168.1.100" type="not" /> -->
+			<!-- 
+				needToken：登录账号的session
+				grpBranchCtrl：功能分支。可修改。不设置的话，默认取“Config.Parameters.sys_flag.customer”的值
+				jsonLibrary：json解析的库，有cJSON和yyjson选项，默认CJSON。
+				jsonCaseSensitive：针对cJSON库，json名称区不区分大小写，最好配置成与数据库的参数名称一致。默认不区分
+				charset：服务器端统一使用UTF8编码，与客户端交互，是否需要转成其他编码。默认为UTF8，也就是不转换编码
+			-->
+			<Controllers needToken="KC__SESSION_sys__LoginUID" grpBranchCtrl="MY" jsonLibrary="cJSON" jsonCaseSensitive="false" backSessionID="true" charset="UTF-8" keepAliveTimeout="300" recursionLayerMax="128">
+				<!-- 系统初始化控制器（服务启动时执行一次） -->
+				<init uri="" />
+				<!-- 检查权限的控制器 -->
+				<checkToken uri="/inside/token.kc?act=check" />
+				<!-- 每次客户端调用的预备执行控制器 -->
+				<prep uri="" />
+				<!-- 每次客户端调用的结束处理控制器 -->
+				<postp uri="" />
+			</Controllers>
+			<!-- 
+				授权可访问的webapi的uri路径。如果未指定，则所有的uri路径都可访问。
+				uri：虚拟目录。
+				localDir：对应的本地目录。如未指定，则从web服务器（如，apache）获取
+				grant：是否授权。默认true。（内部访问不受限制）
+				flag：标记。（用于区分虚拟目录对应的web应用。一般为：域名+端口。如果未指定，则该虚拟目录对应所有web应用。）
+			-->
+			<GrantUriPath>
+				<api uri="/myapp/api" localDir="./backend/api" grant="true" flag="" />
+				<api uri="/api" localDir="./backend/api" grant="true" />
+				<test uri="/test" localDir="./backend/test" grant="true" />
+				<test2 uri="/test2" localDir="./backend/test2" grant="true" />
+				<inside uri="/inside" localDir="./backend/inside" grant="false" />
+				<bin uri="/bin" localDir=">" grant="false" />
+				<rpt uri="/rpt" localDir="./backend/rpt" grant="true" />
+			</GrantUriPath>
+			<!-- 定时任务（只能一个进程执行）：interval - 两次执行的间隔（秒）。manaFlag - 单例运行的排他标识。 -->
+			<TaskTimeExec interval="30000" manaFlag="KC__SESSION_global__taskManaFlag">
+				<GetTasks uri="/inside/task.kc?act=GetTasks" />
+				<FinishTask uri="/inside/task.kc?act=FinishTask" />
+			</TaskTimeExec>
+			<!-- 添加动态的响应头信息 -->
+			<Header>
+				<!-- 允许跨域访问 -->
+				<h1 key="Access-Control-Allow-Origin" value="KC__CONST__Origin" />
+				<!-- 客户端的ip和端口 -->
+				<h2 key="Clent-IP-Port" value="KC__CONST__ClientIpPort" />
+				<!-- 客户端链接的当前编号 -->
+				<h3 key="Unique-ConnID" value="KC__CONST__UniqueConnID" />
+				<!-- 服务器时间 -->
+				<h4 key="Srv-Now" value="KC__CONST__SrvDatatime" />
+				<!-- <h5 key="Srv-Timestamp" value="KC__CONST__SrvTimestamp" /> -->
+			</Header>
+		</kc_webapi_work>
+
+		<!-- 主模块 -->
+		<kc_web_main Path="" Activation="2">
+			<!-- 添加固定的响应头信息 -->
+			<Header>
+				<h0 key="Server" value="Tongweb7" />
+				<!-- 允许跨域访问 -->
+				<h1 key="Access-Control-Allow-Credentials" value="true" />
+				<h2 key="Access-Control-Allow-Methods" value="GET, POST, OPTIONS, PUT, DELETE" />
+				<h3 key="Access-Control-Allow-Headers" value="x-requested-with,content-type" />
+				<!-- 允许访问私有网络 -->
+				<h4 key="Access-Control-Allow-Private-Network" value="true" />
+				<!-- 允许客户端读取的头 -->
+				<h5 key="Access-Control-Expose-Headers" value="Content-Disposition" />
+			</Header>
+		</kc_web_main>
+	</Modules>
+</Config>

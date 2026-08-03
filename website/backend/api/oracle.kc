@@ -1,0 +1,239 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers srv="SQLSrvOra" ctrl="connect1" jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" method="procedures">
+	<main method="select" content="select * from test" attach='{"dbset-inner":"true"}' />	
+
+	<main2 method="select" ctrl="connect1" content="select '中01中02中03中04中05中06中07中08中09中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27中28中29中30中31' 中文 from dual" />	
+
+	<AddSession type="bundle" srv="IKCSessionCookie_B6E289BB-ADB8-55F8-CF31-BD411D2F52BF" ctrl="user" method="set" attach=''>		<!-- set, get, del -->
+	</AddSession>
+	
+	<SelectData method="select" attach ="">	<!-- select, update, delete, insert, batch, procedures, create -->
+		select * from tab1 where field1 = :parm1 and field2 = :KC__SESSION_sys__LoginUID and field3 = :KC__SESSION_user__Var and field4 = :KC__GLOBAL_CONSTANT__connection_client_ip;
+		#@order#
+		#include "~/dir/index.kc"#
+		#include "~/dir/index.kc?act=seldb"#
+	</SelectData>
+	
+	<VerfyData attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}'>
+		declare
+		  v_count int;
+		begin
+		  select count(1) into v_count from ys_yg_yonghuxx where s_yonghuh = :s_yonghuh;
+		  if v_count > 0 THEN
+			:errCode := 1;
+			:errMsg := '用户号重复';
+			:KC__SESSION_user__Var := 2;
+		  end if;
+		end;
+	</VerfyData>
+	
+	<ResultCN attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}'>
+		begin
+			/*
+			123中文
+			*/
+			:errCode := 1;
+			:errMsg := '返回中文字符123';
+		end;
+	</ResultCN>
+	
+	<KeepAlive attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}' keepAlive="on">
+		declare
+			v_count int;
+		begin
+			:KC__ACT__keepAlive := 'off';
+		end;
+	</KeepAlive>
+	
+	<ReturnVal attach='{"outParms":{"errCode":"int","errMsg":"varchar2","val":"varchar2"}}'>
+		begin
+			:val := :KC__ACT__ActionID;
+		end;
+	</ReturnVal>
+	
+	<Select type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="Select" attach='' needToken="false">
+		--select '中??abc' a, Translate('中??abc' USING NCHAR_CS) b, utl_raw.cast_to_nvarchar2(utl_raw.cast_to_raw('中??abc')) c from dual
+		--select '中1?abc' a, to_nchar('中2?abc') b, Translate('中3?abc' USING NCHAR_CS) c from dual
+		-- 按账户密码查询
+		--select '1????※???abc按账户密码查询 ' a from dual
+		select a.s_yonghuh, b.s_val6 from t_yg_yonghuxx a, t_sy_parms b where b.s_class = 'MajorBigYonghu' and a.s_yonghuh = b.s_parm and a.i_y = 2021 and a.i_m = 7 and a.s_yonghuh = '1402525'
+	</Select>
+		
+	<SelectProc method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","vals":"cursor"}}' needToken="false">
+		begin
+			/*按账户密码查询*/
+			-- 按账户密码查询
+			--OPEN :vals for select 1 id, '中1??abc' a, to_nchar('中2??abc') b, Translate('中3??abc' USING NCHAR_CS) c from dual;
+			
+			OPEN :vals for select * from AS_USERINFO;
+
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</SelectProc>
+
+	<MutlSelect type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach='{"outParms":{"rset1":"cursor","rset2":"cursor"}}'>
+		begin
+		  OPEN :rset1 for select * from YS_JX_ZHANDIAN;
+		  OPEN :rset2 for select * from YS_JX_GUANLIK;
+		end;
+	</MutlSelect>
+	
+	<!-- 临时对象的例子 -->
+	<CreatePackage1 type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="create" attach=''>
+		CREATE OR REPLACE PACKAGE ##KCTmp__parms IS
+			wjid int;
+			function f_parm return int;
+		end;
+	</CreatePackage1>
+	<CreatePackage2 type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="create" attach=''>
+		create OR REPLACE package body ##KCTmp__parms as
+		  function f_parm return int is begin return wjid; end;
+		end;
+	</CreatePackage2>
+	<CreateView1 type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="create" attach=''>
+		CREATE OR REPLACE VIEW ##KCTmp__v_t_wj_xx as
+  		select * from T_WJ_LX t where t.i_wjlx = ##KCTmp__parms.f_parm
+	</CreateView1>
+	<SelectView1 type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach='{"outParms":{"rset1":"cursor"}}'>
+		begin
+		  	##KCTmp__parms.wjid := :wjid;
+			OPEN :rset1 for select * from ##KCTmp__v_t_wj_xx;
+		end;
+	</SelectView1>
+	<SelectByView1 type="group" exec="order" needToken="false">	<!-- order, parallel, branch -->
+		<C1 url="sample_oracle.kc?act=CreatePackage1" />
+		<C2 url="sample_oracle.kc?act=CreatePackage2" />
+		<C3 url="sample_oracle.kc?act=CreateView1" />
+		<C4 url="sample_oracle.kc?act=SelectView1" />
+	</SelectByView1>
+
+	<!--
+	create or replace procedure p_temp_procedure
+	(
+		   v_zhandian varchar2,
+		   v_result out int,
+		   cur_arg out sys_refcursor,
+		   cur_arg2 out sys_refcursor
+	) is
+	begin
+		   v_result := 10;
+		   open cur_arg for select * from ys_jx_guanlik where s_zhandian = v_zhandian;
+		   open cur_arg2 for select * from ys_jx_zhandian;
+	end;
+	-->
+	<SP_Test type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach ='{"outParms":{"v_result":"int","cur_arg":"cursor","cur_arg2":"cursor"}}'>
+		begin
+			p_temp_procedure(:v_zhandian, :v_result, :cur_arg, :cur_arg2);
+		end;
+	</SP_Test>
+	
+	<BatchImport type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="batch" attach ="">	<!-- select, update, delete, insert, batch, procedures -->
+		insert into T_tmp_tablename(a, b, c) values(:a, :b, :c)
+	</BatchImport>
+	
+	<Login type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar2"},"parmsType":{"KC__SESSION_sys__Token":"clob","txt":"clob"}}' needToken="false">
+		declare
+		  v_count int;
+		begin
+		  select count(1) into v_count from as_userinfo where account = :account;
+		  if v_count > 0 THEN
+			:errCode := 0;
+			:errMsg := '登录成功';
+			:KC__SESSION_sys__LoginUID := account;
+			:KC__SESSION_sys__Token := account;
+			return;
+		  end if;
+		  :errCode := 1;
+		  :errMsg := '登录失败';
+		end;
+	</Login>
+	<Logout type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar2"}}'>
+		begin
+		  :KC__SESSION_sys__LoginUID := '';
+		  :KC__SESSION_sys__Token := '';
+		  :errCode := 0;
+		  :errMsg := '登出成功';
+		end;
+	</Logout>
+	
+	<UpFile type="bundle" srv="IKCUpDown_B6E289BB-ADB8-93F8-CF31-BD411D2F52BF" ctrl="" method="upfile" attach=''>
+		$before: "wj.kc?act=GetFileSort";
+		$path: "/upload/lh/" || $GetDate("yyyymm");
+		$file: @s_laihanh || "_" || @i_wjlx || "_" || $GetNO() || "_" || @kc__act__sort || "." || $GetExt();
+		$after: "wj.kc?act=InsertUpFile";
+	</UpFile>
+	
+	<SSO_VerifyToken type="so" file="~/subDir/so_token" ctrl="" method="SSO_VerifyToken" attach ="http://127.0.0.1/verify.aspx" needToken="false">
+	</SSO_VerifyToken>
+	
+	<Test type="so" file="~/subDir/test" ctrl="" method="test" attach="">
+	</Test>
+
+	<GroupExec type="group" exec="order">	<!-- order, parallel, branch -->
+		<C1 url="/sample.kc?act=SelectData" />
+		<C2 url="/sample.kc?act=SelectData" />
+
+		<if url="/sample.kc?act=CheckCondition">
+			<then>
+			</then>
+			<else>
+			</else>
+		</if>
+		
+		<while url="/sample.kc?act=CheckCondition">
+		</while>
+
+	</GroupExec>
+	
+	<SSOask type="bundle" srv="IKCRelayREST_A5E289BB-AD99-92F8-CF31-BD411D2F52BA" ctrl="" method="get" attach=''>	<!-- get, post, sendmail, relay -->
+		$server: http://31.16.14.133:9100
+		$path: /api-u/user/current
+		$parm: access_token=@token
+	</SSOask>
+	<SSOdeal type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach ='{"outParms":{"v_result":"int","cur_arg":"cursor","cur_arg2":"cursor"}}'>
+		begin
+			p_temp_procedure(:v_zhandian, :v_result, :cur_arg, :cur_arg2);
+		end;
+	</SSOdeal>
+	<SSO type="group" exec="order">	<!-- order, parallel, branch -->
+		<C1 url="/sample_oracle.kc?act=SSOask" />
+		<C2 url="/sample_oracle.kc?act=SSOdeal" />
+	</SSO>
+	
+	<!-- 临时视图-->
+	<TmpCreateView type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="create" attach=''>
+		CREATE OR REPLACE VIEW ##KCTmp__chaxun as
+		select :a a from dual
+	</TmpCreateView>
+	<TmpCreateViewQuery type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="select" attach=''>
+		select * from ##KCTmp__chaxun
+	</TmpCreateViewQuery>
+	<TmpCreateViewTest type="group" exec="order" needToken="false">
+		<C1 url="?act=TmpCreateView" />
+		<C2 url="?act=TmpCreateViewQuery" />
+	</TmpCreateViewTest>
+	
+	<!-- 临时包函数 -->
+	<TmpCreatePck type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="package">
+		<declare>
+			s_var varchar2(100);
+			function fn_test(i int) return varchar2;
+		</declare>
+		function fn_test(i int)
+		return varchar2 is
+		begin
+			s_var := 'v = ' || i;
+			return s_var;
+		end;
+	</TmpCreatePck>
+	<TmpCreatePckQuery type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="select" attach=''>
+		select ##KCTmp__TmpCreatePck.fn_test(1) a from dual
+	</TmpCreatePckQuery>
+	<TmpCreatePckTest type="group" exec="order" needToken="false">
+		<C1 url="?act=TmpCreatePck" />
+		<C2 url="?act=TmpCreatePckQuery" />
+	</TmpCreatePckTest>
+
+</Controllers>

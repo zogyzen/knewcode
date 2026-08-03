@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+<Hint>
+	<EachPrefix String="● " />
+	<_error String=" - 错误 ❌" />
+	<Unknown_exception String="❌ 未知错误" />
+	<Method_Not_Allowed String="❌ 未知方法" />
+	<Start_framework String="***** 启动框架 %1% ***** - %2%" />
+	<Start_framework_success String="😁 启动框架成功" />
+	<End_framework String="***** 结束框架 %1% ***** - %2%" />
+	<Repeat_to_install_ String="⚠️ 重复安装模块 - " />
+	<Install_Bundle_ String="模块安装 - " />
+	<Install_Bundle_Success_ String="模块安装成功 - " />
+	<Install_Bundle_Fail_ String="❌ 模块安装失败 - " />
+	<Uninstall_Bundle_ String="卸载模块 - " />
+	<Can_t_find_the_bundle_ String="❌ 不能发现模块 - " />
+	<The_service_GUID_is_null_ String="❌ 服务的唯一标识GUID为空 - " />
+	<Repeat_to_register_service_ String="⚠️ 重复注册服务 - " />
+	<Register_Service_ String="服务注册 - " />
+	<Register_Service_Success_ String="服务注册成功 - " />
+	<Unregister_Service_ String="注销服务 - " />
+	<Take_Reference_Service String="引用服务." />
+	<Free_Reference_Service String="释放服务引用." />
+	<Can_t_get_the_function_ String="❌ 不能获取函数 - " />
+	<The_service_don_t_exist_ String="❌ 服务不存在 - " />
+	<The_path_config_don_t_exist_ String="❌ 配置文件不存在 - " />
+
+	<Reander_page_ String=">>>>> 开始展现页面 - " />
+	<Reander_page_end_ String="<<<<< 页面展现结束 - " />
+	<Get_full_name_of_the_local_file_ String="得到本地文件全名 - " />
+	<Don_t_exists_file_ String="❌ 文件不存在 - " />
+	<Read_file_failure_ String="❌ 读文件失败 - " />
+	<Don_t_exists_data_ String="❌ 数据不存在 - " />
+	<Null_Point_Data_ String="❌ 空指针 - " />
+	<Register_Data_ String="注册数据 - " />
+	<Repeat_Register_Data_ String="⚠️ 重复注册数据 - " />
+	<Push_Jmp_Point_ String="信号跳转点压栈 - " />
+	<Pop_Jmp_Point_ String="信号跳转点弹栈 - " />
+	
+	<Create_page_ String="创建页面 - " />
+	<Action_page_ String="执行页面 - " />
+	<Action_Delay_Syntax_ String="执行延迟脚本 - " />
+	<Read_Page_File_ String="读页面文件 - " />
+	<SIGFPE_Signo String="❌ 浮点、算术溢出、除0等错误" />
+	<SIGSEGV_Signo String="❌ 段错误，非法地址访问" />
+	<Exception_Signo_ String="触发信号量 - " />
+	<Circular_reference_ String="⚠️ 递归引用 - " />
+	<Load_library_failure_ String="❌ 加载动态库失败 - " />
+	<Don_t_create_the_page_ String="❌ 不能创建页面 - " />
+
+	<The_interface_is_nullptr_ String="❌ 接口为空 - " />
+	
+	<Parameter_type_unknown_ String="❌ 未知的形参类型 - " />
+	<Is_not_an_interface_type String="❌ 不是接口类型" />
+	<json_format_error_ String="❌ json格式错误，靠近：　" />
+	<kc_format_error_ String="❌ %s格式错误，在%d行" />
+	
+	<Don_t_exists_connect_pool_ String="❌ 不存在连接池 - " />
+	<Array_index_out_of_bounds String="❌ 数组越界" />
+	<Don_t_exists_field_ String="⚠️ 不存在字段 - " />
+	<Repeating_Field_ String="⚠️ 字段重复 - " />
+	<Repeating_Create_DB_Action_ String="⚠️ 重复创建数据库接口 - " />
+	<The_field_value_is_NULL_ String="⚠️ 字段值为空 - " />
+	<The_field_type_don_t_match_ String="⚠️ 字段类型不匹配 - " />
+
+	<Not_Assigned_Controller_ String="⚠️ 未指派控制器 - " />
+	<No_Controller_ String="⚠️ 不存在控制器 - " />
+	<Controller_Type_Error_ String="⚠️ 控制器类型错误 - " />
+	<No_Access_ String="⚠️ 无权限 - " />
+
+	<Database_Connection_ String="数据库连接 - " />
+	<Database_Connection_Error_ String="❌ 数据库连接错误 - " />
+	<Database_Type_Error_ String="⚠️ 数据库类型错误 - " />
+	<SQL_Empty_ String="⚠️ SQL语句为空 - " />
+	<SQL_Error_ String="⚠️ SQL语句错误 - " />
+	<Parm_Error_ String="⚠️ 参数错误或缺少参数 - " />
+	<No_Login String="⚠️ 未登录" />
+	<Need_Func_Return_Value String="⚠️ 函数格式错误，名字中不能带特殊字符，需要有返回值" />
+
+	<Create_Fail_ String="❌ 创建失败 - " />
+	<Remove_Fail_ String="❌ 删除失败 - " />
+	<Repeating_Define_ String="⚠️ 重复定义 - " />
+	<Request_Failed_ String="❌ 请求失败 - " />
+</Hint>

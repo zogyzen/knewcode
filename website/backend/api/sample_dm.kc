@@ -1,0 +1,82 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrvDM" ctrl="connect1">
+	<!-- 返回单个数据集 -->
+	<main content="select * from test" />	
+
+	<UpdData type="bundle" srv="SQLSrvDM" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+			update city set city_name = :name where city_id = :city;
+			:errCode = 1;
+			:errMsg = '结果';
+		end;
+	</UpdData>
+
+	<Select type="bundle" srv="SQLSrvDM" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+		<!-- begin select :KC__SESSION_sys__Ftype a, * from city where region_id = :id;
+		select * from city where region_id = :id2; end -->
+		begin 
+			select * from test;
+			update test set a = '您好' where id = 1;
+			select * from test; 
+			update test set a = '中文' where id = 1;
+		end
+	
+	</Select>
+	
+	<Login type="bundle" srv="SQLSrvDM" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","s_zhandianh":"varchar2","parms":{"username":"varchar2","isAdmin":"int"}}}' needToken="false">
+		declare
+		  v_count int;
+		  
+          v_data varchar(2000);
+		begin
+		  -- 按账户密码查询
+		  select count(1) into v_count from DE_SY_USERINFO where ACCOUNT = :account and PWS=:pws; 
+		  
+		  /* 账户密码正确 */
+		  if v_count > 0 THEN
+			
+			:isAdmin := F_IS_ADMIN(:account);
+
+			:KC__SESSION_sys__Ftype :=:f_type;
+			:KC__SESSION_sys__LoginUID := :account;
+			:KC__SESSION_sys__Token := :account;
+			
+			
+			 select USERNAME into :username from DE_SY_USERINFO where ACCOUNT = :account;
+			
+			-- 日志
+			/*
+			INSERT INTO DE_LG_BIAOCZJL(s_caozuor, s_ip, S_SESSIONID, S_LIULANQI, s_tablename, s_caozuoxw, S_KEY)
+			VALUES(:KC__SESSION_sys__Token, :KC__GLOBAL_CONSTANT__connection_client_ip, :KC__SESSION__KCSSID, :KC__GLOBAL_CONSTANT__User_Agent, 'DE_SY_USERINFO', '登录', :KC__SESSION_sys__LoginUID);
+			*/
+            v_data :=:KC__SESSION_sys__Token || ',' || :KC__GLOBAL_CONSTANT__connection_client_ip || ',' || :KC__SESSION__KCSSID || ',' || :KC__GLOBAL_CONSTANT__User_Agent|| ',' || :KC__SESSION_sys__LoginUID;
+
+			:errCode := 0;
+			:errMsg := '登录成功：' || v_data;
+
+		  else
+			:errCode := 1;
+			:errMsg := '用户或密码不正确!';
+
+		  end if;
+		end;
+	</Login>
+
+	<Logout type="bundle" srv="SQLSrvDM" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar2"}}' needToken="false">
+		begin
+			if not :KC__SESSION_sys__LoginUID is null then
+			-- 日志
+				INSERT INTO DE_LG_BIAOCZJL(s_caozuor, s_ip, S_SESSIONID, S_LIULANQI, s_tablename, s_caozuoxw, S_KEY)
+				VALUES(:KC__SESSION_sys__Token, :KC__GLOBAL_CONSTANT__connection_client_ip, :KC__SESSION__KCSSID, :KC__GLOBAL_CONSTANT__User_Agent, 'DE_SY_USERINFO', '退出', :KC__SESSION_sys__LoginUID);
+			end if;
+
+			:KC__SESSION_sys__LoginUID := '';
+			:KC__SESSION_sys__Token := '';
+
+			:errCode := 0;
+			:errMsg := '退出' || :KC__GLOBAL_CONSTANT__User_Agent;
+		end;
+	</Logout>
+
+</Controllers>

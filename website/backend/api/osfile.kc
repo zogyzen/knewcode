@@ -1,0 +1,127 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<!--用户文件上传-->
+	<UploadFileBefore type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}}' needToken="false">
+		declare
+		  v_OldFileName varchar2(300);
+		  v_ExtName varchar2(300);
+		  v_FrmPos int;
+		  
+		begin
+		  v_OldFileName := :KC__GLOBAL_CONSTANT__filename;
+		  v_ExtName := substr(v_OldFileName, f_instr_back(v_OldFileName, '.') + 1);
+		  v_FrmPos := :KC__GLOBAL_CONSTANT__MultiFormDataPos;
+		  --v_OldFileName := '123';
+		  
+		   :KC__ACT__dir := '/upload/zlsyh';
+		   :KC__ACT__file := v_FrmPos || '_' || v_OldFileName || '.' || v_ExtName;
+		end;
+	</UploadFileBefore>
+	<UploadFile type="bundle" srv="IKCUpDown_B6E289BB-ADB8-93F8-CF31-BD411D2F52BF" ctrl="updown1" method="upfile" attach='{"Charset":"gbk"}' needToken="false">
+	    $before: "?act=UploadFileBefore";
+		$path: @KC__ACT__dir;
+		$file: @KC__ACT__file;
+		$after: "?act=UploadFileAfter";
+	</UploadFile>
+	<UploadFileAfter type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}' needToken="false">
+		begin		  
+		  :errCode := 0;
+		  :errMsg := '文件上传成功';
+		end;
+	</UploadFileAfter>
+
+	<CheckCondition type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int"}}' needToken="false">
+		begin		  
+		  :errCode := case when 1 >= :KC__CONST__MultiFormDataCount then 1 else 0 end;
+		end;
+	</CheckCondition>
+	<PumpYonghuXX type="group" exec="order" needToken="false">
+		<if url="index2.kc?act=CheckCondition">
+			<then>
+				<C3 url="index2.kc?act=UploadFile" />
+			</then>
+		</if>
+	</PumpYonghuXX>
+	
+	<!--用户下载文件-->
+	<DownloadFileBefore type="bundle" srv="SQLSrv" ctrl="sample" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}}' needToken="false">
+		begin
+			:KC__ACT__filename = 'ys01000.lrxml';
+			:KC__ACT__file_url = '/rpt/ys01000.lrxml';
+			:errCode = 0;
+		end;
+	</DownloadFileBefore>
+	<DownloadFile type="bundle" srv="OSFile" ctrl="updown" method="downfile" needToken="false">
+	    $before: ?act=DownloadFileBefore;
+		$filename: @KC__ACT__filename;
+		<!-- $content: abc; -->
+		$url: @KC__ACT__file_url;
+		$type: "application/octet-stream";
+	</DownloadFile>
+
+	<!-- 转发数据 -->
+	<RelayDataBefore type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"usr":"temp-table-array","errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+	        CREATE TEMP TABLE usr as
+			select a.i_user, a.s_account, a.s_nickname s_nc, a.j_other->'sex' sex, a.j_other->'from' "from", a.s_headimg headimg, a.s_summary,
+					to_char(a.d_active, 'YYYY-MM-DD hh24:mi:ss') d_active
+			from t_bas_user a
+			where 1 = 1
+			;
+			
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</RelayDataBefore>
+	<RelayData type="bundle" srv="RelayREST" ctrl="" method="post" attach='' needToken="false">
+		$before: "?act=RelayDataBefore";
+		$server: "https://127.0.0.1:5665";
+		$path: "/test2/index2.kc";
+		$parm: "act=VerfyData";
+		$data: @KC__JSON__usr;
+		$after: "?act=RelayDataAfter";
+	</RelayData>
+	<RelayDataAfter type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</RelayDataAfter>
+
+	<RelayDataSim type="bundle" srv="RelayREST" ctrl="" method="post" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+		$server: "http://127.0.0.1:23117";
+		$path: "/apisf/08_fapiao/dzfp_new.kc";
+		$parm: "act=MakePushData";
+		$data: {"fpqqlsh":"42550000000000000000000000000004"};
+	</RelayDataSim>
+
+	<!-- 组操作，执行内置函数 -->
+	<SelPartJson type="group" exec="order" needToken="false">
+		<C1 url="?act=RelayDataBefore" />
+		<exec func="@resetJson" parm="@KC__JSON__usr" />
+	</SelPartJson>
+	
+	<GetArray type="bundle" srv="SQLSrvOra" ctrl="connect1" method="procedures" attach='{"outParms":{"dyh":"cursor-array","errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+	        open :dyh for
+			select * from ORDSYS.SI_VALUES_TAB
+			;
+			
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</GetArray>
+
+	<!-- 批量组操作 -->
+	<BatchGrpC1 type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach=''>
+		begin
+			insert into t_log_active(s_kcclnid, i_user, s_op, s_ctrl, s_ip, s_useragent, s_key, s_parm)
+			values(:KC__SESSION__KCCLNID, :id, '测试', :KC__CONST__the_request, :KC__CONST__client_host_port, :KC__CONST__User_Agent, :msg, :KC__JSON__);		
+		end;
+	</BatchGrpC1>
+	<BatchGrp type="group" method="batch" exec="order" needToken="false">
+		<C1 url="?act=BatchGrpC1" />
+	</BatchGrp>
+
+</Controllers>

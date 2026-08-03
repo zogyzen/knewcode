@@ -1,0 +1,168 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers type="bundle" srv="SQLSrv" ctrl="kingbase">
+	<!-- 转发数据 -->
+	<RelayDataBefore type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"usr":"temp-table-array","errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+	        CREATE TEMP TABLE usr as
+			select a.i_user, a.s_account, a.s_nickname s_nc, a.j_other->'sex' sex, a.j_other->'from' "from", a.s_headimg headimg, a.s_summary,
+					to_char(a.d_active, 'YYYY-MM-DD hh24:mi:ss') d_active
+			from t_bas_user a
+			where 1 = 1
+			;
+			
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</RelayDataBefore>
+	<RelayData type="bundle" bundle="kc_request_relay" method="post" attach='' needToken="false">
+		$before: "?act=RelayDataBefore";
+		$server: "https://127.0.0.1:5665";
+		$path: "/test2/index2.kc";
+		$parm: "act=VerfyData";
+		$data: @KC__JSON__usr;
+		$after: "?act=RelayDataAfter";
+	</RelayData>
+	<RelayDataAfter type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+		begin
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</RelayDataAfter>
+
+	<RelayDataSim type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
+		$server: "http://172.16.0.187:18088";
+		$path: "/api/login.kc";
+		$parm: "act=Login";
+		$data: {"wtype":1,"account":"99999","pws":"1"};
+		$headers: {"content-type": "application/json"};
+	</RelayDataSim>
+
+	<RelayDataParm type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
+		$server: "http://172.16.0.187:18088";
+		$path: "/api/login.kc";
+		$parm: "act=Login";
+		$data: @loginPrm;
+		$headers: {"content-type": "application/json;charset=UTF-8", "Cookie": "a=123"};
+	</RelayDataParm>
+	
+	<!-- 单点登录 $server: http://31.16.14.133:9100-->
+	<SSOask type="bundle" bundle="kc_request_relay" method="get" attach='' needToken="false">	<!-- get, post, sendmail, relay -->
+		$server: http://127.0.0.1:25393
+		$path: /api/login.kc
+		$parm: act=GetLoginID
+	</SSOask>
+	<SSOdeal  method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","parms":{"username":"varchar2"}},"defParms":{"userId":null,"name":null}}'>
+		declare
+			v_count int;
+			v_name varchar2(100);
+			v_account varchar2(100);
+			v_account_gsc varchar2(100);
+			v_zhandianh varchar2(100);
+			v_zhandianmc varchar2(100);
+
+		begin
+			v_account := :userId;
+			v_name := :name;
+			
+			if v_account is null then
+				:errCode := 1;
+				:errMsg :='未登录';
+				
+			else
+				select count(1) into v_count from as_userinfo t where username = v_name;
+				if v_count = 0 then
+					insert into as_userinfo(USERID, ACCOUNT, USERNAME, PWS, DEPARTMENT,S_YWYFZ)
+					values((select nvl(max(USERID), 0) + 1 from as_userinfo), (select nvl(max(USERID), 0) + 1 from as_userinfo), v_name, '1', '300','00')
+					;
+				end if;
+				
+				
+				select ACCOUNT into v_account_gsc from as_userinfo t where username = v_name;
+				
+				
+				
+				
+				:KC__SESSION_sys__LoginUID := :account;
+				:KC__SESSION_sys__Token := :account;
+				:KC__SESSION_sys__WType := :wtype;
+			 
+			 
+			 
+				
+			
+				:username := v_name;
+				:errCode := 0;
+				:errMsg :='成功';
+			end if;
+		end;
+	</SSOdeal>
+	<CheckToken type="group" exec="order" needToken="false">
+		<C1 url="?act=SSOask" />
+		<C2 url="?act=SSOdeal" />
+	</CheckToken>
+
+	<!-- 签名 -->
+	<signSelect method="select"  content="select * from t_sign_verify where i_status = 0" needToken="false" />
+	<signBefore method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' >
+		declare
+			v_id int;
+			v_origin_data varchar(500);
+			v_jprm jsonb;
+		  
+		begin
+			-- 参数
+			v_id = :i_id;
+			v_origin_data = :s_origin_data;
+		
+			-- 拼接调用签名api的参数
+			v_jprm = '{"certAlias": "sm2"}'::jsonb;
+			v_jprm = jsonb_set(v_jprm, '{b64OriginData}', ('"' || v_origin_data || '"')::jsonb);
+
+			:KC__ACT__signPrm = v_jprm;
+			:KC__ACT__i_id = v_id;
+			
+			:errCode = 0;
+			:errMsg = '';
+		end;
+	</signBefore>
+	<signRelay bundle="kc_request_relay" method="post" attach='{"timeout":3666}' Charset="UTF-8">
+		$server: "http://172.16.196.229:5001";
+		$path: "/api/svs/bss/signMessageDetach";
+		$data: @KC__ACT__signPrm;
+		$headers: {"content-type": "application/json;charset=utf-8"};
+	</signRelay>
+	<signAfter method="procedures" attach='{"defaultParms":{"errorCode":0, "message":"", "b64SignedMessage":"", "errCode":0, "errMsg":""}, "outParms":{"errCode":"int","errMsg":"varchar"}}' >
+		declare
+		  v_errorCode int;
+		  v_message varchar(500);
+		  v_b64SignedMessage varchar(4000);
+		  
+		begin
+			-- 签名api的反馈
+			v_errorCode = :errorCode + :errCode;
+			v_message = :message || :errMsg;
+			v_b64SignedMessage = :b64SignedMessage;
+			
+			-- 插入签名数据
+			if v_errorCode = 0 then
+				update t_sign_verify set i_status = 1, s_sign_data = v_b64SignedMessage, d_sign = now() where i_id = :KC__ACT__i_id::int;
+			else
+				update t_sign_verify set s_err_sign = v_message where i_id = :KC__ACT__i_id::int;
+			end if;
+			
+			:errCode = v_errorCode;
+			:errMsg = v_message;
+		end;
+	</signAfter>
+	<signDataOne type="group" exec="order" method="batch">
+		<C1 url="?act=signBefore" />
+		<C2 url="?act=signRelay" ignoreError="true" />
+		<C3 url="?act=signAfter" />
+	</signDataOne>
+	<signData type="group" exec="order" needToken="false">
+		<C1 url="?act=signSelect" />
+		<C2 url="?act=signDataOne" />
+	</signData>
+
+</Controllers>

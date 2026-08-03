@@ -1,0 +1,9 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<!-- 浪潮电子发票接口 -->
+<Controllers>	
+	<!-- 发票开具 -->
+	<fpkj type="so" file="~/subDir/so_soap" ctrl="" method="SSO_VerifyToken" attach ="http://127.0.0.1/verify.aspx" needToken="false">
+	</fpkj>	
+
+</Controllers>

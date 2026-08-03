@@ -1,0 +1,8 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<Add type="bundle" srv="Session" ctrl="global" method="set" attach="" needToken="false" />
+
+	<Get type="bundle" srv="Session" ctrl="global" method="get" attach="" needToken="false" />
+
+</Controllers>

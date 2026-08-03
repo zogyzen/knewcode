@@ -1,0 +1,11 @@
+{
+    global:
+        SetCBFuncPointer;
+        Init;
+        Free;
+        Request;
+        WriteLog;
+        GetThreadStaticSpace;
+    local:
+        *;
+};

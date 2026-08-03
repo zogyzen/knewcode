@@ -1,0 +1,52 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<!-- 获取 -->
+	<get type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar","val":"varchar"}}'>
+		declare
+			v_val varchar(500);
+			
+		begin
+			v_val := '';
+			select s_val into v_val from t_cln_session where s_kcssid = :KC__SESSION__KCSSID and s_ctrl = :ctrl and s_name = :name;
+			update t_cln_session set d_expire = CURRENT_TIMESTAMP::TIMESTAMP + '24 hour' where s_kcssid = :KC__SESSION__KCSSID and s_ctrl = :ctrl and s_name = :name;
+			
+			:val := v_val;
+			:errCode := 0;
+			:errMsg := '';
+		end;
+	</get>
+	
+	<!-- 设置 -->
+	<set type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar"}}'>
+		begin
+			INSERT INTO t_cln_session(s_kcclnid, s_kcssid, s_ctrl, s_name, s_fullname, s_val, d_expire)
+			VALUES (:KC__SESSION__KCCLNID, :KC__SESSION__KCSSID, :ctrl, :name, :fname, :val, CURRENT_TIMESTAMP::TIMESTAMP + '24 hour')
+			ON CONFLICT (s_kcssid, s_ctrl, s_name) DO UPDATE SET s_val = :val, d_expire = CURRENT_TIMESTAMP::TIMESTAMP + '24 hour';
+			
+			:errCode := 0;
+			:errMsg := '';
+		end;
+	</set>
+	
+	<!-- 删除 -->
+	<del type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar"}}'>
+		begin
+			delete from t_cln_session where s_kcssid = :KC__SESSION__KCSSID and s_ctrl = :ctrl and s_name = :name;
+
+			:errCode := 0;
+			:errMsg := '';
+		end;
+	</del>
+	
+	<!-- 清理 -->
+	<gc type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar"}}'>
+		begin
+			delete from t_cln_session where CURRENT_TIMESTAMP::TIMESTAMP >= d_expire;
+
+			:errCode := 0;
+			:errMsg := '';
+		end;
+	</gc>
+
+</Controllers>

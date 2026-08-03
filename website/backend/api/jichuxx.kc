@@ -1,0 +1,24 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<!-- 导入基础信息 -->
+<Controllers srv="SQLSrvOra" ctrl="import" jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle">
+	<!-- 涉水对象 -->
+	<selectSheShuiDXFromOracle method="procedures" attach='{"outParms":{"vals":"cursor","errCode":"int","errMsg":"varchar2"}}'>
+		begin
+			OPEN :vals for select * from YS_JX_SHESHUIDX order by s_daima;
+
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</selectSheShuiDXFromOracle>
+	<batchInsertSheShuiDXToKingbase srv="SQLSrv" ctrl="kingbase" method="batch">
+		INSERT INTO ys_jx_sheshuidx(s_daima, s_name, i_jlzt, s_caozuor, d_caozuosj, s_beiyong1, s_beiyong2, i_beiyong3, i_beiyong4)
+		SELECT :s_daima, :s_name, :i_jlzt, :s_caozuor, :d_caozuosj, :s_beiyong1, :s_beiyong2, :i_beiyong3, :i_beiyong4
+		WHERE NOT EXISTS (SELECT 1 FROM ys_jx_sheshuidx WHERE s_daima = :s_daima)
+	</batchInsertSheShuiDXToKingbase>
+	<importSheShuiDX type="group" exec="order">
+		<C1 url="?act=selectSheShuiDXFromOracle" />
+		<C2 url="?act=batchInsertSheShuiDXToKingbase" />
+	</importSheShuiDX>
+
+</Controllers>

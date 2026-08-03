@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>webapi传参测试</title>
+		<script type="text/javascript" src="knewcode.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			let ws = new CKcWS("ws://127.0.0.1:801/test2/sample_ws.kc?act=RegChat")
+			ws.onbegin = function(wsid)
+			{
+　　			console.log("onbegin: " + wsid);
+			}
+			ws.onmsg = function(wsid, json)
+			{
+		　　	console.log("onmsg: " + wsid + "\t" + json.RequestID);
+			}
+
+			function SendMsg() {
+				let aj = new CKcAjax;
+				aj.onsuccess = function(id, json)
+				{
+	　　			console.log("onsuccess: " + json.errMsg);
+				}
+				aj.onfailure = function(id, err)
+				{
+	　　			console.log("onfailure: " + err.errMsg);
+				}
+				var data = {"RequestID": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"};
+				var parm = 	{"parm": JSON.stringify(data)};
+				aj.post(0, "http://127.0.0.1:801/test2/sample_ws.kc?act=SendChat", JSON.stringify(parm));
+				//ws.close();
+			}
+		</script>
+		<button onclick="SendMsg()">Copy Text</button>
+	</body>
+</html>

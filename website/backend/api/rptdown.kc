@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" type="bundle" srv="SQLSrv" ctrl="connect1" >
+	<DownloadRptBefore type="bundle" srv="SQLSrv" ctrl="sample" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2"}}}' needToken="false">
+		declare
+		  v_rptid varchar(30);
+		  
+		begin
+			v_rptid := :rptid;
+
+			:KC__ACT__filename = v_rptid || '.lrxml';
+			:KC__ACT__file_url = '/rpt/' || v_rptid || '.lrxml';
+			
+			:errCode = 0;
+			--:errMsg = :KC__ACT__file_url;
+		end;
+	</DownloadRptBefore>
+	<DownloadRpt type="bundle" srv="OSFile" ctrl="updown" method="downfile">
+	    $before: ?act=DownloadRptBefore;
+		$filename: @KC__ACT__filename;
+		$url: @KC__ACT__file_url;
+		$type: "application/octet-stream";
+	</DownloadRpt>
+
+</Controllers>

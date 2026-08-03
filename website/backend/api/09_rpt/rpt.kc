@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" type="bundle" srv="SQLSrv" ctrl="connect1"  needToken="false" >
+	<!-- 报表的例子。控制器名称就是报表编号，规则为：两个字母 + 两位编号 + 三位编号。两个字母为：ys（用水）、dx（地下水）、db（地表水）。前面的两位编号为，报表大类的顺序号，从1开始。后面的三位编号为，报表的顺序号，从1开始。 -->
+	<!-- 单表的例子 -->
+	<ys00000 method="procedures" attach='{"outParms":{"gvar":"json", "tabs":"json", "main":"temp-table"}}'>	
+		declare	
+		begin
+			-- 全局变量
+			:gvar = '{"RptYear":"2026", "RptYwy":"测试用户"}'::json;
+			
+			-- 数据表列表
+			:tabs = '{"main": {}}'::json;
+			
+			-- 数据表
+			CREATE TEMP TABLE main as
+			select * from ys_jx_xingzhengq;		
+		end;
+	</ys00000>
+	<!-- 主子报表的例子（多重的嵌套主子报表，可相应的添加子表） -->
+	<ys01000 method="procedures" attach='{"outParms":{"gvar":"json", "tabs":"json", "main":"temp-table", "sub":"temp-table"}}'>	
+		declare	
+		begin
+			-- 全局变量
+			:gvar = '{"RptYear":"2027", "RptYwy":"测试用户"}'::json;
+			
+			-- 数据表列表
+			:tabs = '{
+				"main": {},
+				"sub": {"i_own": "main.i_func"}
+			}'::json;
+			
+			-- 主表
+			CREATE TEMP TABLE main as
+			select * from t_bas_func
+			where i_own is null;
+			
+			-- 子表
+			CREATE TEMP TABLE sub as
+			select * from t_bas_func a
+			where exists (select 1 from t_bas_func b where b.i_own is null and a.i_own = b.i_func);
+		
+		end;
+	</ys01000>
+
+</Controllers>

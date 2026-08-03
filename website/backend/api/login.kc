@@ -1,0 +1,201 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<!-- 账号登录 -->
+	<main type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar","username":"varchar","headphoto":"varchar","usertype":"int"}}' needToken="false">
+		declare
+			v_account varchar(50);
+			v_pass varchar(50);
+			v_user int;
+			v_username varchar(50);
+			v_photo varchar(500);
+			v_usertype int;
+
+		begin
+			-- 参数
+			v_account := :s_account;
+			v_pass := :s_pass;
+			
+			-- 验证账号密码
+			select a.i_user, a.s_nickname, a.s_headimg,a.i_usertype into v_user, v_username, v_photo, v_usertype
+			from t_bas_user a
+			where not a.s_pass is null and a.s_account = v_account and a.s_pass = v_pass
+			;
+			
+			if not v_user is null then
+				:KC__SESSION_sys__LoginUID := v_user;
+				:KC__SESSION_sys__LoginAccount := v_account;
+				:KC__SESSION_sys__LoginUName := v_username;
+				:KC__ACT__LoginState := '0';
+				:username = v_username;
+				--:headphoto = 'file:///d:/userphoto.png';
+				:headphoto = v_photo;
+
+				-- 登录日志
+				insert into t_log_active(s_kcclnid, i_user, s_op, s_ctrl, s_ip, s_useragent, s_key, s_parm)
+				values(:KC__SESSION__KCCLNID, v_user, 'login-jk', :KC__CONST__the_request, :KC__CONST__client_host_port, :KC__CONST__User_Agent, v_account, :KC__JSON__)
+				;
+				
+				:usertype = v_usertype;
+				:errCode := 0;
+				:errMsg := '登录成功';
+				
+			else
+				:errCode := 1;
+				:errMsg := '账号密码错误！';
+			end if;
+		end;
+	</main>
+	<Login type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar","username":"varchar","headphoto":"varchar","usertype":"int"}}' needToken="false">
+		declare
+			v_account varchar(50);
+			v_pass varchar(50);
+			v_user int;
+			v_username varchar(50);
+			v_photo varchar(500);
+			v_usertype int;
+
+		begin
+			-- 参数
+			v_account := :s_account;
+			v_pass := :s_pass;
+			
+			-- 验证账号密码
+			select a.i_user, a.s_nickname, a.s_headimg,a.i_usertype into v_user, v_username, v_photo, v_usertype
+			from t_bas_user a
+			where not a.s_pass is null and a.s_account = v_account and a.s_pass = v_pass
+			;
+			
+			if not v_user is null then
+				:KC__SESSION_sys__LoginUID := v_user;
+				:KC__SESSION_sys__LoginAccount := v_account;
+				:KC__SESSION_sys__LoginUName := v_username;
+				:KC__ACT__LoginState := '0';
+				:username = v_username;
+				--:headphoto = 'file:///d:/userphoto.png';
+				:headphoto = v_photo;
+
+				-- 登录日志
+				insert into t_log_active(s_kcclnid, i_user, s_op, s_ctrl, s_ip, s_useragent, s_key, s_parm)
+				values(:KC__SESSION__KCCLNID, v_user, 'login-jk', :KC__CONST__the_request, :KC__CONST__client_host_port, :KC__CONST__User_Agent, v_account, :KC__JSON__)
+				;
+				
+				:usertype = v_usertype;
+				:errCode := 0;
+				:errMsg := '登录成功';
+				
+			else
+				:errCode := 10005;
+				:errMsg := '账号或密码错误！';
+			end if;
+		end;
+	</Login>
+	
+	<!-- 退出 -->
+	<Logout type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"varchar2"}}' needToken="false">
+		begin
+			:KC__SESSION_sys__LoginUID := '';
+			:KC__SESSION_sys__LoginAccount := '';
+			:KC__SESSION_sys__LoginUName := '';
+
+			:errCode := 0;
+			:errMsg := '用户退出';
+		end;
+	</Logout>
+	
+	<!-- 限制频繁操作 -->
+	<TimeLimit type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures">
+		<attach>
+			{
+				"outParms":{"errCode":"int","errMsg":"varchar2"},
+				"replace":{"KC__SESSION_sys__LoginUID":"OnlyName"}
+			} 
+		</attach>
+		declare
+			v_tmLast varchar(100);
+			v_tmThis varchar(100);
+			v_interval int;
+
+		begin
+			-- 用户上次获取数据的时间
+			v_tmLast = :KC__SESSION_global__#@KC__SESSION_sys__LoginUID#_tmLast;
+			-- 这次调用的时间
+			v_tmThis = to_char(now(), 'yyyy-MM-dd hh24:mi:ss');
+			
+			-- 从参数表里取出时限
+			insert into t_sys_parm(s_group, s_parm, s_parm_cn, i_sort, i_type)
+            values('ExternalJK', 'ExternalJK', '外部接口信息', 0, 1)
+			ON conflict(s_group, s_parm) DO NOTHING;
+			insert into t_sys_parm(s_group, s_parm, s_parm_cn, i_sort, i_type, i_val, s_remark, i_del)
+            values('ExternalJK', 'CallTimeLimit', '接口调用间隔限制', 1, 1, 600, '单位：秒', 0)
+			ON conflict(s_group, s_parm) DO NOTHING;
+			select i_val into v_interval from t_sys_parm where s_group = 'ExternalJK' and s_parm = 'CallTimeLimit' and i_del = 0;
+			
+			-- 未超过时限
+			if '' != v_tmLast and v_interval > extract(epoch FROM (now() - to_timestamp(v_tmLast, 'yyyy-MM-dd hh24:mi:ss'))) then
+				:errCode := 1;
+				:errMsg := '距上次操作未超过规定时间（' || v_interval || '秒）';
+				-- 保存用户这次调用的时间
+				:KC__SESSION_global__#@KC__SESSION_sys__LoginUID#_tmLast := v_tmThis;
+				return;
+			end if;
+			
+			-- 保存用户这次调用的时间
+			:KC__SESSION_global__#@KC__SESSION_sys__LoginUID#_tmLast := v_tmThis;
+			:errCode := 0;
+		end;
+	</TimeLimit>
+
+	<UpdatePassword type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" needToken="true">	
+		<attach>
+			{"outParms":{"errCode":"int","errMsg":"varchar","out_user":"int"}}
+		</attach>
+		
+		declare
+			v_user int;
+			v_pass		varchar;
+			v_old_pass		varchar;
+			v_old_pass2		varchar;
+			
+			v_old  jsonb;		
+			v_new  jsonb;
+		begin
+			v_user     = :KC__SESSION_sys__LoginUID::int;
+			v_pass 	   = :s_pass::varchar;
+			v_old_pass 	   = :s_old_pass::varchar;
+			
+			
+			
+			select s_pass into v_old_pass2 from t_bas_user where i_user = v_user;
+			
+			if v_old_pass2 = v_old_pass then
+			
+				select 
+					row_to_json(t) into v_old 
+				from (select s_pass from t_bas_user where i_user = v_user) t;
+			
+				update t_bas_user
+					set 
+					s_pass       = v_pass,
+					i_op    = :KC__SESSION_sys__LoginUID::int,
+					d_op    = now()
+				where i_user = v_user ;
+				
+				select 
+					row_to_json(t) into v_new 
+				from (select s_pass from t_bas_user where i_user = v_user) t;
+				
+				
+				insert into t_log_active(i_user, d_op,s_op, s_ctrl, s_ip, s_useragent, s_key, s_parm,s_kcclnid,i_status, j_data_old, j_data_new)
+				values(:KC__SESSION_sys__LoginUID::int, now(),'UpdatePassword', :KC__CONST__the_request, :KC__CONST__client_host_port, :KC__CONST__User_Agent, v_user, :KC__JSON__, :KC__SESSION__KCCLNID,0,v_old, v_new);
+				
+				:errCode := 0;
+				:errMsg := '修改成功!';
+			else 
+				:errCode := 1;
+				:errMsg := '旧密码错误!';
+			end if;
+			
+		end;   
+	</UpdatePassword>
+</Controllers>

@@ -1,0 +1,44 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<!-- 系统配置 -->
+<Controllers>
+	<!-- 获取实时执行的任务 -->
+	<GetTasks type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"rset1":"temp-table"}}' needToken="false">
+	<![CDATA[
+	    declare
+		    v_sj timestamp;
+			
+	    begin
+	    	-- 当前时间
+	    	v_sj := now();
+			
+	    	-- 刷新重置活动值的任务（下一天的0点执行）
+	    	update t_sys_task set i_status = 0, d_reserve = (current_date + 1)::TIMESTAMP + (i_task || ' min')::interval 
+			where i_status != 0 and i_task < 50;
+			
+	    	-- 刷新重置活动值的任务（下一分钟执行）
+	    	update t_sys_task set i_status = 0, d_reserve = to_timestamp(to_char(now(), 'yyyy-mm-dd hh24:mi'), 'yyyy-mm-dd hh24:mi') + '1 min'
+			where i_status != 0 and i_task between 50 and 99;
+
+	    	-- 待定任务列表
+			CREATE TEMP TABLE rset1 as
+			select i_task id, s_url url, s_req req, s_par par from t_sys_task
+			where i_status = 0 and v_sj >= d_reserve and i_del = 0
+			order by i_level, i_task desc;
+			-- 更新任务状态为“执行中”
+			update t_sys_task set d_start = now(), i_status = 1 where i_status = 0 and v_sj >= d_reserve;
+		end;
+	]]>
+	</GetTasks>
+	<!-- 标记任务执行结束 -->
+	<FinishTask type="bundle" srv="SQLSrv" ctrl="connect1" method="update" attach ="" needToken="false">
+		-- 更新任务状态为“执行完”
+		update t_sys_task set d_finish = now(), i_status = 2, s_respond = :errMsg where i_task = :id
+	</FinishTask>
+
+	<!-- 数据库备份 -->
+	<dbbak type="bundle" srv="OSExec" ctrl="cmd" method="cmdFile" attach='' needToken="false">
+		$file: ..\..\..\postgresql1621\bakdb.bat;
+	</dbbak>
+	
+</Controllers>

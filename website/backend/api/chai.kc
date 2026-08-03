@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" bundle="kc_chai_script">
+	<!-- 执行脚本 -->
+	<main2>
+		<!-- 附加库：脚本库、脚本库文件、C++扩展模块库 -->
+		<addition>
+			<C1 url="?act=func" />
+			<F1 file="chai.chai" />
+			<L1 so="/bin/so_chai_sys" classPrefix="Tst" />
+			<L2 so="/bin/so_chai_sql" classPrefix="Tst">
+				<!-- 服务控制器类（主要针对各数据库插件）。 用于生成对应服务和控制器的脚本类 -->
+				<CSQLite srv="SQLSrvSqlite" ctrl="connect1" />
+			</L2>
+		</addition>	
+		<!-- #include "./chai.kc?act=main2"# -->
+		var i2 = func(3);
+		<!-- var iErrCode = this.ExecUrlApi("pgsql.kc?act=main"); -->
+		var iErrCode = This.Request.GetInt("a");
+		This.Json.SetVal("ErrCode", iErrCode);
+		print("ErrCode: ${iErrCode}. Val: ${i2}");
+	</main2>
+	
+	<!-- 定义函数 -->
+	<func>
+		def func(x) {
+			return 2 * x;
+		}
+	</func>
+	
+	<main type="group" exec="order" needToken="false">
+		<C1 url="?act=func" />
+		<C2 url="?act=main2" />
+	</main>
+	
+	<main3 attach='{"defaultParms":{"p1":[null,{"p1":1}]}}'>
+		{
+			var iLast = This.GlobalVal.GetInt("KC__ACT__val1");
+			var clnIP = This.GlobalVal.GetStr("KC__CONST__connection_client_ip");
+			var iP1 = This.Attach.GetInt("defaultParms.p1.1.p1");
+			var iAge = This.Request.GetInt("info.age");
+			var sName = This.Request.GetStr("a");
+			var iC = This.JsonPrev.GetInt("a.1.c") + iLast;
+			This.GlobalVal.SetVal("KC__ACT__val1", iP1 + iC);
+			This.Json.SetVal("a.1.c", iP1 + iC);
+			This.Json.SetVal("a.1.d", iLast);
+			This.Json.AddArray("a.1.e");
+			This.Json.AddArray("a.1.e.10");
+			This.Json.SetVal("a.1.e.10.1.b", iP1);
+			This.Json.SetVal("a.1.e.40", sName);
+			This.Json.SetVal("a.a", clnIP);
+			//This.JsonPrev.SetVal(sName, 1.2);
+			print("Name: ${sName}. Age: ${iC}");
+		}
+	</main3>
+	<main4 type="group" exec="order" needToken="false">
+		<C1 url="?act=main3" />
+		<C2 url="?act=main3" />
+		<C3 url="?act=main3" />
+	</main4>
+	
+	<SoTest1>
+		<addition>
+			<L1 so="/bin/so_chai_sys" classPrefix="Test" />
+		</addition>	
+		{
+			var mth = TestKcMath();
+			var fVal = mth.Pow(2.1, 2.9);
+			This.Json.SetVal("fVal", fVal);
+			print("fVal: ${fVal}");
+		}
+	</SoTest1>
+	
+	<!-- 加密数据库连接串 -->
+	<EncryptDBConnStr>
+		{
+			var str = This.Request.GetStr("str");
+			str = This.Context.EncryptDBConnStr(str);
+			This.Json.SetVal("str", str);
+			print("str: ${str}");
+		}
+	</EncryptDBConnStr>
+	<DecryptDBConnStr>
+		{
+			var str = This.Request.GetStr("enc");
+			str = This.Context.DecryptDBConnStr(str);
+			This.Json.SetVal("str", str);
+			print("str: ${str}");
+		}
+	</DecryptDBConnStr>
+
+	<!-- SQLite脚本 -->
+	<SQLiteScript>
+		<addition>
+			<L2 so="/bin/so_chai_sql" classPrefix="Tst">
+				<!-- 服务控制器类（主要针对各数据库插件）。 用于生成对应服务和控制器的脚本类 -->
+				<CSQLite srv="SQLSrvSqlite" ctrl="connect1" />
+			</L2>
+		</addition>	
+		var sqlite = TstCSQLite(This);
+		This.Json.SetVal("a", 0);
+		sqlite.Query("select * from test where a = :a");
+	</SQLiteScript>
+
+</Controllers>

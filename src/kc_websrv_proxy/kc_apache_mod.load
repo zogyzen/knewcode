@@ -1,0 +1,1 @@
+LoadModule dlib_kc_module /home/zzj/KCMain/kc_apache_mod.so

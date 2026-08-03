@@ -1,0 +1,9 @@
+LIBRARY
+
+EXPORTS
+		SetCBFuncPointer
+		Init
+		Free
+		Request
+		WriteLog
+		GetThreadStaticSpace

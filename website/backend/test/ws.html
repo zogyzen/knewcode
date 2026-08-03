@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>WebSocket测试</title>
+	</head>
+	<body>
+        <div>
+			<br><input id="uriLogin" type="text" value="http://127.0.0.1:8080/api/login.kc" style="width:70%" />
+			<button onclick="login()">登录</button>
+			<input id="prmLogin" type="text" value='{"s_account":"admin","s_pass":"admin"}' style="width:70%" /><br><span id="stt"></span>
+			<br><input id="uri" type="text" value="ws://127.0.0.1:25368" style="width:70%" />
+			<button onclick="connectWs()">连接</button>
+			<button onclick="closeWs()">关闭</button>
+			<br>
+			<textarea id="prm" rows="6" style="width:70%">{"artid":0}</textarea>
+			<button onclick="sendMsg()">发送</button><br><span id="wsSendMsg"></span>
+		</div>
+		<div id="recv"></div>
+		<script type="text/javascript">
+			// 登录
+			function login() {
+				var uri = document.getElementById("uriLogin").value;
+				let prm = document.getElementById("prmLogin").value;
+				// 保存
+				localStorage.ajaxTestUriLogin = uri;
+				localStorage.ajaxTestPrmLogin = prm;
+				// ajax对象
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', uri, true);//请求方式，请求地址，是否异步
+				xhr.responseType = "text";  // 返回类型text
+				xhr.onload = function () {// 请求完成处理函数
+					let sResp = xhr.responseText;
+					document.getElementById("stt").innerText = sResp;
+				};
+				xhr.onerror = function (e) {
+					console.log(e);
+					document.getElementById("stt").innerText = e;
+				};
+				// 发送ajax请求
+				xhr.send(prm);
+			}
+			
+			// websocket链接
+			var socket;
+			function connectWs() {
+				var uri = document.getElementById("uri").value;
+				localStorage.wsTestUri = uri;
+
+				socket = new WebSocket(uri);
+				  // 连接成功
+				  socket.onopen = function() {
+					console.log('WebSocket connection established');
+				  };
+				  // 收到消息
+				  socket.onmessage = function(event) {
+					console.log('Received:', event.data);
+				  };
+				  // 连接关闭
+				  socket.onclose = function() {
+					console.log('WebSocket connection closed');
+				  };
+			}
+			function closeWs() {
+				socket.close(1000, 'Normal closure');
+			}
+			function sendMsg() {
+				var prm = document.getElementById("prm").value;
+				localStorage.wsTestPrm = prm;
+
+				let jsn = {
+					"webapiSrv": window.location.protocol + "//" + window.location.host,
+					"webapiUrl": "/api/09_rpt/rpt.kc",
+					"webapiDownUrl": "/api/rptdown.kc?act=DownloadRpt",
+					"webapiRptID": "ys01000",
+					"cookie": document.cookie,
+					"parmJson": JSON.parse(prm)
+				}
+				let prmStr = JSON.stringify(jsn);
+				document.getElementById("wsSendMsg").innerText = prmStr;
+				socket.send(prmStr);
+			}
+			
+			if (localStorage.ajaxTestUriLogin) document.getElementById("uriLogin").value = localStorage.ajaxTestUriLogin;
+			else document.getElementById("uriLogin").value = window.location.protocol + "//" + window.location.host + "/api/login.kc";
+			if (localStorage.ajaxTestPrmLogin) document.getElementById("prmLogin").value = localStorage.ajaxTestPrmLogin;
+			if (localStorage.wsTestUri) document.getElementById("uri").value = localStorage.wsTestUri;
+			if (localStorage.wsTestPrm) document.getElementById("prm").value = localStorage.wsTestPrm;
+		</script>
+	</body>
+</html>

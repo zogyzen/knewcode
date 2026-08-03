@@ -1,0 +1,50 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers needToken="false" type="bundle" bundle="kc_os_exec">
+	<before type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach=''>
+		begin
+			:KC__ACT__cmd := 'cmd /c dir';
+		end;
+	</before>
+	<after type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar","result":"varchar"}}'>
+		begin
+			:errCode := 0;
+			:errMsg := '成功';
+			:result := :KC__ACT__result;
+		end;
+	</after>
+	<example method="console" attach=''>
+		$before: "?act=before";
+		$cmd: @KC__ACT__cmd;
+		$result: @KC__ACT__result;
+		$after: "?act=after";
+	</example>
+
+
+	<main method="console" attach=''>
+		$cmd: cmd /c dir;
+	</main>
+
+	<!-- 执行脚本 -->
+	<execbat method="cmdFile" attach=''>
+		$file: .\osexec.bat;
+	</execbat>
+	
+	<!-- 执行转发 -->
+	<CurlBefore type="bundle" srv="SQLSrv" ctrl="kingbase" method="procedures">
+		begin
+			:KC__ACT__cmd = 'curl -k http://127.0.0.1:18088/api/sample.kc?act=main';
+		end;
+	</CurlBefore>
+	<Curl method="console">
+		$before: "?act=CurlBefore";
+		$cmd: @KC__ACT__cmd;
+		$after: "?act=CurlAfter";
+	</Curl>
+	<CurlAfter type="bundle" srv="SQLSrv" ctrl="kingbase" method="procedures" attach='{"outParms":{"result":"json"}}'>
+		begin
+			:result = :errMsg::json;
+		end;
+	</CurlAfter>
+	
+</Controllers>

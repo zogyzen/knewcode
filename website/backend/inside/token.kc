@@ -1,0 +1,12 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<!-- 检查权限 -->
+	<check type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}'>
+		begin
+			:errCode := 0;
+			:errMsg := '有权限：' || :KC__CONST__RootActUri;
+		end;
+	</check>
+
+</Controllers>

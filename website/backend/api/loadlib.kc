@@ -1,0 +1,7 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers file="/bin/so_excel" type="bundle" srv="SQLSrv" ctrl="connect1" needToken="false">
+	<!-- 路径前加“~”，表示以knewcode目录为起点，按相对路径查找动态库。不带“~”，但以“/”开头，表示从web的根目录为起点，按虚拟路径开始查找。否则，以本文件为起点，开始查找。-->
+	<main type="so" file="/bin/so_helloworld" />
+
+</Controllers>

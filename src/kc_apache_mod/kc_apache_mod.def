@@ -1,0 +1,8 @@
+LIBRARY
+
+EXPORTS
+        dlib_kc_handler
+		dlib_kc_register_hooks
+		get_mod_kc_path
+		get_mod_rt_path
+		

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="sample">
+	<!-- 返回单个数据集 -->
+	<main method="select" content="select * from test" />	
+
+	<!-- 插入数据 -->
+	<Insert method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		begin
+			insert into test values(:name, :age, now(), 1.72);
+
+			:errCode := 0;
+			:errMsg := 'Success';
+			:logMsg = 'log';
+		end;
+	</Insert>
+
+	<!-- 插入数据 -->
+	<Query method="procedures" attach='{"outParms":{"tab":"temp-table","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		begin
+			CREATE TEMP TABLE tab as
+			select * from test;
+
+			:logMsg = 'log';
+			:errMsg = 'errMsg';
+		end;
+	</Query>
+
+	<!-- 删除数据 -->
+	<Delete method="delete" content="delete from test where name = :name" />
+</Controllers>

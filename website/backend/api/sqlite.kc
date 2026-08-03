@@ -1,0 +1,106 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrvSqlite" ctrl="connect1">
+	<main method="select" content="select * from test" /> 		<!-- select、insert、update、delete、batch、create -->
+	<main2 select="select * from test" /> 		<!-- select、insert、update、delete、batch、create -->
+	<insert method="insert" content="insert into test(a, b, c) values(:a, :b, :c)" />
+	<create method="create">
+		CREATE TABLE IF NOT EXISTS test (
+			a INTEGER,
+			b TEXT,
+			c numeric
+		)
+	</create>
+	<grp type="group" exec="order">
+		<C1 url="?act=create" />
+		<C2 url="?act=insert" />
+		<C3 url="?" />
+	</grp>
+
+	
+	<main2 ctrl="connect2" method="select" content="select * from test" /> 		<!-- select、insert、update、delete、batch、create -->
+	<insert2 ctrl="connect2" method="insert" content="insert into test(a, b, c) values(:a, :b, :c)" />
+	<create2 ctrl="connect2" method="create" attach='{"defaultParms":{"sqliteDB":"$:/"}}'>
+		CREATE TABLE IF NOT EXISTS test (
+			a INTEGER,
+			b TEXT,
+			c numeric
+		)
+	</create2>
+	<grp2 type="group" exec="order">
+		<C1 url="?act=create2" />
+		<C2 url="?act=insert2" />
+		<C3 url="?act=main2" />
+	</grp2>
+	
+	<!-- 批量导入1 -->
+	<setDBFile1 bundle="kc_chai_script">
+		{
+			var iYM = This.Request.GetStr("i_ym");
+			This.GlobalVal.SetVal("KC__ACT__sqliteDB", "db/db" + iYM + ".db");
+			This.GlobalVal.SetVal("KC__ACT__TableName", "zls202606");
+		}
+	</setDBFile1>
+	<createBatch1 ctrl="connect2" method="create" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}}'>
+		CREATE TABLE IF NOT EXISTS test (
+			a INTEGER PRIMARY KEY,
+			b TEXT,
+			c TEXT,
+			d numeric
+		)
+	</createBatch1>
+	<SelPgData1 srv="SQLSrv" ctrl="sample2" method="select" content="select * from test order by a" />	
+	<SelPgData2 srv="SQLSrv" ctrl="sample2" method="select" content="select * from test order by a" attach='{"dbsetParms":{"":"dbset-inner"}}' />	
+	<batchInsert1 ctrl="connect2" method="batch" attach='{"batchParm":{"hintRow":100000}}'>
+		INSERT INTO test(a, b, c, d)
+		SELECT :a, :b, :c, :d
+		WHERE NOT EXISTS (SELECT 1 FROM test WHERE a = :a)
+	</batchInsert1>
+	<batch1 type="group" exec="order">
+		<C1 url="?act=setDBFile1" />
+		<C2 url="?act=createBatch1" />
+		<C3 url="?act=SelPgData1" />
+		<C4 url="?act=batchInsert1" />
+	</batch1>
+	
+	<!-- 批量copy -->
+	<CopySrcData method="select" srv="SQLSrv" ctrl="sample2" content="select * from test order by a" />	
+	<CopySrcData2 method="select" srv="SQLSrv" ctrl="sample2" content="select * from test order by a" attach='{"dbset-inner":"true"}' />	
+	<CopySrcData3 method="select" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}}'>
+		select 12 age, 'jack2' name, 2.4 height
+		union
+		select 12 age, 'jack3' name, 2.4 height
+		union
+		select 11 age, 'tom' name, 3.4 height
+	</CopySrcData3>
+	<CopyDataToTable method="copy" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}, "copyParm":{"copyValsParm":"vals", "toTable":"test(age, height)", "primaryKey":["id"]}}' />
+	<CopyDataToTable2 method="copy" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}, "copyParm":{"copyValsParm":"vals", "toTable":"test(age, name, height)"}}' />
+	<CopyDataToTmpTable method="copy" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}, "copyParm":{"copyValsParm":"vals","copyFeildsParm":"feilds"}}' />
+	<CopyDataToTmpTable2 method="copy" ctrl="connect2">
+		<attach>
+			{
+				"sqliteParms":{"DB":"KC__ACT__sqliteDB"},
+				"copyParm":{"copyValsParm":"vals","copyFeildsParm":"fls"},
+				"defaultParms":{"fls":{"age": "int","height": "numeric","dt": "timestamp"}}
+			}
+		</attach>
+	</CopyDataToTmpTable2>
+	<CopyDataToTmpTable3 method="copy" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}}' />
+	<CopyDataToTmpTable4 method="copy" />
+	<CopyDataToTable4 method="copy" ctrl="connect2" attach='{"sqliteParms":{"DB":"KC__ACT__sqliteDB"}, "copyParm":{"toTable":"KC__ACT__TableName", "primaryKey":[]}}' />
+	<CopyDataEnd ctrl="connect2" method="select" content="select * from vals" />
+	<CopyDataEnd2 method="select" content="select * from vals" />
+	<CopyGroupExec type="group" exec="order" needToken="false">
+		<C1 url="?act=setDBFile1" />
+		<C2 url="?act=CopySrcData2" />
+		<C3 url="?act=CopyDataToTable4" />
+		<!-- <C4 url="?act=CopyDataEnd" /> -->
+	</CopyGroupExec>
+	
+	<TestLoop type="group" exec="order" needToken="false">
+		<C1 url="" />
+		<C2 url="?act=CopyDataToTmpTable4" />
+		<C3 url="?act=CopyDataEnd2" />
+	</TestLoop>
+
+</Controllers>

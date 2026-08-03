@@ -1,0 +1,6 @@
+LIBRARY
+
+EXPORTS
+	KC_mod_init
+	KC_mod_free
+	KC_mod_handler

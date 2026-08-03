@@ -1,0 +1,347 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="sample">
+	<!-- 例子1：返回单个数据集 -->
+	<main method="select" content="select * from test" />	
+	<main2 method="select" ctrl="sample" content="select * from t_sys_task" attach='{"dbsetParms":{"":"dbset-one"}}' />	
+	<main3 method="select" ctrl="connectArm" content="select * from test" />	
+
+	<main4 method="select" content="select '中1中2中3中4中5中6中7中8中9中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27中1中2中3中4中5中6中7中8中9中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27' a" />	
+
+	<!-- 插入数据 -->
+	<Insert method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		begin
+			insert into test values(:name, :age, now(), 1.72);
+
+			:errCode := 0;
+			:errMsg := 'Success';
+			:logMsg = 'log';
+		end;
+	</Insert>
+	<Insert2 method="batch" attach='{"parmsType":{"age":"int"}}'>
+		begin
+			insert into test values(:name, :age, now(), :height);
+		end;
+	</Insert2>
+	
+	<!-- 批量导入数据 -->
+	<selectYSSJFromOracle method="select" ctrl="kingbase" content="select * from ys_jh_yonghuyssj where i_y = :sly order by i_m, s_yonghuh" />
+	<batchInsertYSSJToKingbase srv="SQLSrv" ctrl="kingbase" method="batch" attach='{"batchParm":{"hintRow":1000,"savePoint":10}}'>
+	begin
+		INSERT INTO ys_jh_yonghuyssj
+		(
+			i_y, i_m, s_yonghuh, i_yuanjihua, i_jutiaoz, i_chutiaoz, i_shiyongjh, i_chaojianl, i_jijianjh, i_waigongjh,
+			i_huiguanl, i_shiyongsl, n_ysj, i_jiajiacs, n_chaojihje, i_jiajial, n_jiajiaje, i_gubiaos, i_fuyongl, n_fuyonglv,
+			n_danhao, i_fenbiaol, i_jlzt, s_beiyong1, s_beiyong2, s_beiyong3, s_beiyong4, i_chaojihsl
+		)
+		SELECT 
+			:i_y, :i_m, :s_yonghuh::varchar, COALESCE(:i_yuanjihua, '0'), :i_jutiaoz, :i_chutiaoz, COALESCE(:i_shiyongjh, '0'), COALESCE(:i_chaojianl, '0'), :i_jijianjh, :i_waigongjh,
+			:i_huiguanl, COALESCE(:i_shiyongsl, '0'), COALESCE(:n_ysj, '0'), COALESCE(:i_jiajiacs, '0'), COALESCE(:n_chaojihje, '0'), COALESCE(:i_jiajial, '0'), COALESCE(:n_jiajiaje, '0'), :i_gubiaos, :i_fuyongl, :n_fuyonglv,
+			:n_danhao, :i_fenbiaol, COALESCE(:i_jlzt, '0'), :s_beiyong1, :s_beiyong2, :s_beiyong3, :s_beiyong4, COALESCE(:i_chaojihsl, '0')
+		WHERE NOT EXISTS (SELECT 1 FROM ys_jh_yonghuyssj WHERE i_y = :i_y and i_m = :i_m and s_yonghuh = :s_yonghuh)
+			and EXISTS (select 1 from ys_yg_yonghuxx where i_y = :i_y and i_m = :i_m and s_yonghuh = :s_yonghuh);
+	end;
+	</batchInsertYSSJToKingbase>
+	<importYSSJ type="group" exec="order">
+		<C1 url="?act=selectYSSJFromOracle" />
+		<C2 url="?act=batchInsertYSSJToKingbase" />
+	</importYSSJ>
+
+	<!-- 两次查询，测试返回同名临时表、动态临时表名等情况 -->
+	<QueryVal1 method="procedures" ctrl="kingbase3" attach='{"outParms":{"tmp_r1":"dbset-inner","errCode":"int","errMsg":"varchar2"}}'>
+		begin
+			CREATE TEMP TABLE tmp_r1 as select * from test;
+
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</QueryVal1>
+	<QueryVal2 method="procedures" ctrl="kingbase3" attach='{"outParms":{"tmp_r2":"temp-table","errCode":"int","errMsg":"varchar2"}, "dynTmpTableName":["tmp_r1"]}'>
+		begin
+			CREATE TEMP TABLE tmp_r2 as select * from ##tmp_r1;
+
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</QueryVal2>
+	<QueryValAgain type="group" exec="order">
+		<C1 url="?act=QueryVal1" />
+		<!--<C1 url="?act=QueryVal1" />-->
+		<C2 url="?act=QueryVal2" />
+	</QueryValAgain>
+
+	<!-- 删除数据 -->
+	<Delete method="delete" content="delete from test where name = :name" />
+
+	<!-- 例子2：执行语句，返回多个数据集。如果needToken=true，表示未登录时调用，会报“未登录”错误 -->
+   <QueryDataset type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" needToken="false">
+		<attach>
+			{
+				"outParms":{"tmp_r1":"temp-table(i_plc int, s_plc varchar, j_parms json)","tmp_r2":"temp-table","errCode":"int","errMsg":"varchar","charset":"varchar"},
+				"replace":{"i_plc":"\\w+"}
+			}
+		</attach>
+		declare
+			v_v int;
+		begin
+			--update t_dev_io set s_io = :s_io where i_io = :i_io;
+			CREATE TEMP TABLE tmp_r1 as select * from t_dev_plc where i_plc = #@i_plc#;
+			CREATE TEMP TABLE tmp_r2 as select * from t_dev_io order by i_io;
+			:charset := 'UTF-8';
+			:errCode := 0;
+			:errMsg := '成功 - ' || :s_account;
+		end;
+    </QueryDataset>
+
+	<!-- 例子3：组操作和临时函数 -->
+   <Func_t1 type="bundle" srv="SQLSrv" ctrl="connect1" method="function" needToken="false">
+		create or replace function pg_temp.t1(str varchar)
+		returns varchar
+		as $t2$
+		begin
+			-- 函数体
+			return str || ' - ' || :i_user;
+		end $t2$ language plpgsql;   
+   </Func_t1>
+   <InVal type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"Val1":"varchar"}}' needToken="false">
+		begin
+			:Val1 := 'opq';
+		end;
+    </InVal>
+	<GetVal type="bundle" srv="SQLSrv" ctrl="connect1" method="select" attach='' needToken="false">
+		select pg_temp.t1(:s_account) a, :Val1 b
+	</GetVal>
+   <GroupExec type="group" exec="order" needToken="false">
+      <C1 url="/api/pgsql.kc?act=Func_t1" />		<!-- 绝对路径引用（从根路径开始） -->
+      <C2 url="pgsql.kc?act=InVal" />				<!-- 相对路径引用（从本文件所在目录开始） -->
+      <C3 url="?act=GetVal" />						<!-- 在本文件内部引用 -->
+   </GroupExec>
+
+	<!-- 例子4：依赖 -->
+   <Func_t2 type="bundle" srv="SQLSrv" ctrl="connect1" method="function" needToken="false">	<!-- 复杂的语句，放在单独的sql文件中 -->
+		#include "pgsql_func_t2.sql"#  
+   </Func_t2>
+	<GetVal2 type="bundle" srv="SQLSrv" ctrl="connect1" method="select" attach='' needToken="false" keepAlive="on">	<!-- 返回单个数据集 -->
+		<depend>
+			<C1 url="?act=Func_t2" />
+			<C2 url="?act=InVal" />
+		</depend>	
+		select a.*, :Val1 b from pg_temp.t2(:i_user) a
+	</GetVal2>
+
+
+
+
+
+	<!-- 例子1：执行语句，返回参数。控制器名字为“main”，调用时，可省略控制器名 -->
+	<main2 type="bundle" srv="IKCSqlPgSQL_A5E289BB-ADB8-92F8-AABB-BD411D2F5288" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar","parms":{"v_p3":"varchar2"}}}' needToken="false"> <!-- select, update, delete, insert, batch, function, procedures -->
+		--do $$
+		declare
+           v_v int;
+       begin
+          update t_bas_user set s_pass = :v_p1 where i_user = :v_p2::int;
+          :v_p3 := 120;
+          :errCode := 0;
+          :errMsg := '成功';
+		  --raise notice '%', v_v;
+       end;
+		--$$
+    </main2>
+
+	<main3 type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar","parms":{"v_p3":"varchar2"}}}' needToken="false"> <!-- select, update, delete, insert, batch, function, procedures -->
+		#include "sample_pgsql.sql?part=main"#
+    </main3>
+
+	<!-- 例子4：读写session，用于登录后保存用户信息 -->
+	<Login type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","logMsg":"varchar2"}}' needToken="false">
+		begin
+			:KC__SESSION_sys__LoginUID := 'admin';
+			:KC__SESSION_sys__LoginUName := '管理员';
+
+			:errCode := 0;
+			:errMsg := '登录成功';
+			:logMsg = '写入日志';
+		end;
+	</Login>
+	<GetUserName type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","v_username":"varchar2"}}'>
+		begin
+			:v_username = :KC__SESSION_sys__LoginUName;
+
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+	</GetUserName>
+	
+	<!-- 例子5：函数（存储过程）调用 -->
+   <Func_f1 type="bundle" srv="SQLSrv" ctrl="connect1" method="function" attach='{"defaultParms":{"abc":"1234"}}' needToken="false">
+		<depend>
+			<C2 url="/test2/sample_pgsql.kc?act=Proc_p1" />		<!-- 绝对路径引用（从根路径开始） -->
+		</depend>
+		create or replace function pg_temp.f1(
+			--i int  ,
+			s  jsonb
+		)
+		returns varchar as $f1$
+		begin
+			-- 函数体
+			--return ' ';
+			--return :KC__CONST__client_host_port;
+			return :KC__CONST__RootActUri;
+			--return :abc;
+			--return  (select array_to_json(array_agg(row_to_json(t))) from (select i_user, s_nickname, s->'a' a from t_bas_user) t);
+		end $f1$ language plpgsql;   
+   </Func_f1>
+   <Proc_p1 type="bundle" srv="SQLSrv" ctrl="connect1" method="function" needToken="false">
+		create or replace procedure pg_temp.p1(str varchar)
+		as $p1$
+		begin
+			-- 过程体
+			set _$lb.uname to 'admin';
+		end $p1$ language plpgsql;   
+   </Proc_p1>
+	<main type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar","res":"varchar"}}' needToken="false"> <!-- select, update, delete, insert, batch, function, procedures -->
+		<depend>
+			<C1 url="?act=Func_f1" />							<!-- 本文件引用，可省略文件名 -->
+			<C2 url="/test2/sample_pgsql.kc?act=Proc_p1" />		<!-- 绝对路径引用（从根路径开始） -->
+		</depend>
+		--do $$
+		declare
+           v_v int;
+		begin
+			v_v = :i::int;
+			--v_v = :ii::int;
+          --perform pg_temp.f1('abc');
+		  call pg_temp.p1('abc');
+		  :res = pg_temp.f1('{}'::jsonb);
+          :errCode := 0;
+          :errMsg := v_v;
+		end;
+		--$$
+    </main>
+	
+	<!-- 例子6：批量导入。batchValsParm：数据数组的参数名，默认为vals。batchMethod：1跳过错误（默认）；2发现错误，结束插入；3发现错误，全部回滚。 -->
+	<batch type="bundle" srv="SQLSrv" ctrl="connect2" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1, "savePoint":"true", "hintRow":10000}}' needToken="false">
+		insert into t_dtl_test(a, b, c) values(:a, :b, :c)
+	</batch>
+	<batch2 type="bundle" srv="SQLSrv" ctrl="connect2" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1, "savePoint":"true", "hintRow":10000}, "outParms":{"errCode":"int","errMsg":"varchar","logMsg":"varchar"}}' needToken="false">
+		begin
+			:errCode = 0;
+			:errMsg = '';
+			:logMsg = '批量导入：' || :val;
+		end;
+	</batch2>
+	
+	<!-- 批量操作例子 -->
+	<batchQuery srv="SQLSrv" ctrl="sample" method="select" content="select * from test where c1 = 2" />	
+	<batchMain srv="SQLSrv" ctrl="sample" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1, "savePoint":"true", "hintRow":10000}}'>
+		insert into test(c1,c2) values(:c1, :c2)
+	</batchMain>
+	<batchTest type="group" exec="order" needToken="false">
+		<C1 url="?act=batchQuery" />
+		<C2 url="?act=batchMain" />
+	</batchTest>
+	
+	<!-- 组嵌套节点（待定） -->
+   <GrpSubNode type="group" exec="order" needToken="false">
+		<select type="bundle" srv="SQLSrv" ctrl="sample2" method="select" needToken="false">
+			select * from test
+		</select>
+   </GrpSubNode>
+	<!-- 批量组操作（待定） -->
+   <BatchGroupExec type="group" exec="order" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1}}' needToken="false">
+		<C1 url="?act=Func_t1" />
+		<batch type="bundle" srv="SQLSrv" ctrl="connect2" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1}}' needToken="false">
+			insert into t_dtl_test(a, b, c) values(:a, :b, :c)
+		</batch>
+   </BatchGroupExec>
+
+	<!-- 例子7：替换名称。 三种替换方式：NoCheck、SQLInjection、OnlyName；分别是不限、防sql注入、只替换标识符。 -->
+   <TestReplace type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" jsonCaseSensitive="false" Charset="UTF-8" needToken="false">
+		<attach>
+			{
+				"fixParms": {"errCode":"errCode", "errMsg":"errMsg"},
+				"outParms": {"tmp_r2":"temp-table", "errCode":"int", "errMsg":"varchar"},
+				"replace": {"tableName":"OnlyName"},
+				"fixParmName": {"errCode": "errCode"}
+			}
+		</attach>
+		declare
+			v_v int;
+		begin
+			--update test set a = 'yui' where b = :v_p1;
+			CREATE TEMP TABLE tmp_r2 as select * from #@tableName#;
+			:errCode := 0;
+			:errMsg := '成功';
+		end;
+    </TestReplace>
+	
+	<!-- 例子8：批量copy -->
+	<CopySrcData method="select" ctrl="kingbase3" content="select age, height, dt from test" attach='{"dbset-inner":"true"}' />	
+	<CopySrcData2 method="select" ctrl="kingbase3">
+		select 12 age, 'jack2' name, 2.4 height
+		union
+		select 12 age, 'jack3' name, 2.4 height
+		union
+		select 11 age, 'tom' name, 3.4 height
+	</CopySrcData2>
+	<CopyDataToTable method="copy" ctrl="kingbase3" attach='{"copyParm":{"copyValsParm":"vals", "toTable":"test(age, height)"}}' />
+	<CopyDataToTable2 method="copy" ctrl="kingbase3" attach='{"copyParm":{"copyValsParm":"vals", "toTable":"test(age, name, height)"}}' />
+	<CopyDataToTmpTable method="copy" ctrl="kingbase3" attach='{"copyParm":{"copyValsParm":"vals","copyFeildsParm":"feilds"}}' />
+	<CopyDataToTmpTable2 method="copy" ctrl="kingbase3">
+		<attach>
+			{
+				"copyParm":{"copyValsParm":"vals","copyFeildsParm":"fls"},
+				"defaultParms":{"fls":{"age": "int","height": "numeric","dt": "timestamp"}}
+			}
+		</attach>
+	</CopyDataToTmpTable2>
+	<CopyDataToTmpTable3 method="copy" ctrl="kingbase3" />
+	<CopyDataEnd method="procedures" ctrl="kingbase3" attach='{"outParms":{"tmp_r1":"temp-table","errCode":"int","errMsg":"varchar2","logMsg":"varchar2","cnt":"int"}, "dynTmpTableName":["vals"]}'>
+		declare
+			v_count int;
+		begin
+			select count(1) into v_count from ##vals;
+			CREATE TEMP TABLE tmp_r1 as select * from ##vals LIMIT 10;
+
+			:errCode := 0;
+			:errMsg := '成功';
+			:logMsg = '日志';
+			:cnt = v_count;
+		end;
+	</CopyDataEnd>
+	<CopyGroupExec type="group" exec="order" needToken="false">
+		<C1 url="?act=CopySrcData" />
+		<C2 url="?act=CopyDataToTmpTable3" />
+		<C3 url="?act=CopyDataEnd" />
+	</CopyGroupExec>
+	<CopyGroupExec2 type="group" exec="order" needToken="false">
+		<C1 url="?act=CopySrcData2" />
+		<C2 url="?act=CopyDataToTable2" />
+	</CopyGroupExec2>
+
+	<!-- 例子8：大数据量批量copy -->
+	<selectZiLaiSgssbFromOracle srv="SQLSrvOra" ctrl="import" method="select" attach='{"dbsetParms":{"":"dbset-inner"}}'>
+		select * from t_cb_zilaisgssb where i_y = :i_y and i_m = :i_m /*and 100 > ROWNUM*/ order by s_fuwudid
+	</selectZiLaiSgssbFromOracle>
+	<BigCopyGroupExec type="group" exec="order" needToken="false">
+		<C1 url="?act=selectZiLaiSgssbFromOracle" />
+		<C2 url="?act=CopyDataToTmpTable3" />
+		<C3 url="?act=CopyDataEnd" />
+	</BigCopyGroupExec>
+
+	<!-- 批量组操作 -->
+	<GrpInsert1 type="bundle" srv="SQLSrv" ctrl="sample" method="insert">
+		insert into tmp(a, b, c) values(:name, :date::timestamp, :height)
+	</GrpInsert1>
+   <BatchGrp1 type="group" exec="order" method="batch" attach='{"batchParm":{"batchValsParm":"vals", "batchMethod":1}}' needToken="false">
+		<C1 url="?act=GrpInsert1" />
+   </BatchGrp1>
+	<GrpSelect1 type="bundle" srv="SQLSrv" ctrl="sample" method="select" attach='{"dbsetParms":{"":"dbset-inner"}}'>
+		select * from test
+	</GrpSelect1>
+   <BatchGrpExce1 type="group" exec="order" needToken="false">
+		<C1 url="?act=GrpSelect1" />
+		<C1 url="?act=BatchGrp1" />
+   </BatchGrpExce1>
+
+</Controllers>

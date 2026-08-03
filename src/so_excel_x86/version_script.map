@@ -1,0 +1,7 @@
+{
+    global:
+        KC_self_*;
+        KC_mod_*;
+    local:
+        *;
+};

@@ -1,0 +1,12 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>
+	<!-- 系统初始化 -->
+	<main type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}'>
+		begin
+			:errCode := 0;
+			:errMsg := '初始化';
+		end;
+	</main>
+
+</Controllers>

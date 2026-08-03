@@ -1,0 +1,50 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<Controllers>	
+	<QueryDataset type="bundle" srv="SQLSrvMS" ctrl="connect2" method="query" attach='{"dbsetParms":{"":"dbset-one", "":"dbset"}}' needToken="false"> <!-- query, batch -->
+		declare @account int;
+		set @account = :a;
+		select * from test where a = @account;
+		select * from test;
+	</QueryDataset>
+
+	<qry type="bundle" srv="SQLSrvMS" ctrl="connect2" method="query" attach='' needToken="false">
+		/*
+		abc
+		123
+		*/
+		-- @@@
+		select 1 a, 2 b;
+	</qry>
+
+	<GetVal type="bundle" srv="SQLSrvMS" ctrl="connect1" method="query" attach='{"outParms":{"tmp_r1":"temp-table","errCode":"int","errMsg":"varchar","val":"varchar"}}' needToken="false">
+		declare @account varchar(50), @val varchar(50);
+		set @account = :account;
+		select @val = s_val from as_userinfo where account = @account;
+		select :val = @val, :errCode = 0, :errMsg = '成功';
+		select * into ##tmp_r1 from as_userinfo;
+	</GetVal>
+	
+	<!-- 临时存储过程 -->
+	<tmpProc type="bundle" srv="SQLSrvMS" ctrl="connect1" method="create" attach ='' needToken="false">
+		CREATE or ALTER PROCEDURE #tmpProc
+			@inParm int,
+			@outParm int output
+		AS
+		BEGIN
+			print '临时存储过程';
+			set @outParm = @inParm * @inParm;
+		END
+	</tmpProc>
+	<tmpProcTest type="bundle" srv="SQLSrvMS" ctrl="connect1" method="exec" attach ='{"outParms":{"errCode":"int","errMsg":"varchar","val":"int"}}' needToken="false">
+		declare @inVal int, @outVal int;
+		select @inVal = :a, @outVal = 3;
+		exec #tmpProc @inVal, @outVal output;
+		set :val = @outVal + isnull(@inVal, 0);
+	</tmpProcTest>
+	<tmpProcGrp type="group" exec="order" needToken="false">	<!-- order, parallel, branch -->
+		<C1 url="?act=tmpProc" />
+		<C2 url="?act=tmpProcTest" />
+	</tmpProcGrp>
+	
+</Controllers>

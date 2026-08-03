@@ -1,0 +1,17 @@
+// 类
+class Rectangle {
+  attr height
+  attr width
+  def Rectangle() { this.height = 10; this.width = 20 }
+  def area() { this.height * this.width }
+}
+
+// 函数
+def FuncMothd(height) {
+	var rect = Rectangle()
+	rect.height = height
+	print(rect.area())
+}
+
+// 调用
+FuncMothd(30)

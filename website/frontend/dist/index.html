@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>webapi传参测试</title>
+	</head>
+	<body>
+        <div>
+			<br><input id="uri" type="text" value="https://127.0.0.1:24122/api/sample_pgsql.kc?act=Login" style="width:80%" />
+			<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
+			<textarea id="prm" rows="6" style="width:96%">{"artid":0}</textarea>
+		</div>
+		<div id="recv"></div>
+		<script type="text/javascript">
+			function preflight() {
+				// 参数
+				var uri = document.getElementById("uri").value;
+				let prm = document.getElementById("prm").value;
+				// 保存cookie
+				localStorage.ajaxTestUri = uri;
+				localStorage.ajaxTestPrm = prm;
+				// ajax对象
+				var xhr = new XMLHttpRequest();
+				xhr.open('PUT', uri, true);//请求方式，请求地址，是否异步
+				//xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				// 允许跨域
+				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
+				xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
+				xhr.withCredentials = true; // 启用 cookies 的发送
+				xhr.responseType = "text";  // 返回类型text
+				//xhr.responseType = "blob";  // 返回类型blob
+				xhr.onload = function () {// 请求完成处理函数
+					document.getElementById("recv").innerText = this.status + xhr.responseText;
+				};
+				xhr.onerror = function (e) {
+					console.log(e);
+					document.getElementById("recv").innerText = "";
+				};
+				// 发送ajax请求
+				xhr.send(prm);
+			}
+			
+			function ajaxTest() {
+				document.getElementById("stt").innerText = "";
+				document.getElementById("recv").innerText = "";
+				// 参数
+				var uri = document.getElementById("uri").value;
+				let prm = document.getElementById("prm").value;
+				// 保存cookie
+				localStorage.ajaxTestUri = uri;
+				localStorage.ajaxTestPrm = prm;
+				// ajax对象
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', uri, true);//请求方式，请求地址，是否异步
+				//xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				//xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
+				//xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
+				xhr.responseType = "text";  // 返回类型text
+				//xhr.responseType = "blob";  // 返回类型blob
+				xhr.onload = function () {// 请求完成处理函数
+					let sResp = xhr.responseText;
+					document.getElementById("recv").innerText = sResp;
+					document.getElementById("stt").innerText = this.status;
+					try {
+						let jsn = JSON.parse(sResp);
+						console.log(jsn);
+					}
+					catch (err) {
+						console.error(err, sResp);
+					}
+				};
+				xhr.onerror = function (e) {
+					console.log(e);
+					document.getElementById("recv").innerText = "";
+					document.getElementById("stt").innerText = this.status;
+				};
+				// 发送ajax请求
+				xhr.send(prm);
+			};
+			
+			function onTestClick() {
+				//preflight();
+				ajaxTest();
+			}
+
+			if (localStorage.ajaxTestUri) document.getElementById("uri").value = localStorage.ajaxTestUri;
+			else document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample_pgsql.kc?act=Login";
+			if (localStorage.ajaxTestPrm) document.getElementById("prm").value = localStorage.ajaxTestPrm;
+		</script>
+	</body>
+</html>

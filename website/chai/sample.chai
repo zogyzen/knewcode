@@ -1,0 +1,75 @@
+// 类
+class Rectangle {
+  attr height
+  attr width
+  def Rectangle() { this.height = 10; this.width = 20 }
+  def area() { this.height * this.width }
+}
+
+// 函数
+def FuncMothd(height) {
+	var rect = Rectangle()
+	rect.height = height
+	print(rect.area())
+}
+
+// 调用
+FuncMothd(30)
+
+
+/// attr Rectangle::height
+/// attr Rectangle::width
+/// def Rectangle::Rectangle() { this.height = 10; this.width = 20 }
+/// def Rectangle::area() { this.height * this.width }
+///
+/// var rect = Rectangle()
+/// rect.height = 30
+/// print(rect.area())
+
+
+/// var i = 0;
+/// while (i < 10)
+/// {
+///   // do something
+///   ++i;
+/// }
+
+
+/// for (var i = 0; i < 10; ++i)
+/// {
+///   // do something
+/// }
+
+
+/// var b = true;
+/// if (b) {
+///   // do something
+/// } else if (c < 10) {
+///   // do something else
+/// } else {
+///   // or do this
+/// }
+
+/// eval> def myfun2(x) : x < 10 { print("less than 10"); }
+/// eval> def myfun2(x) : x >= 10 { print("10 or greater"); }
+/// eval> myfun2(5)
+/// less than 10
+/// eval> myfun2(12)
+/// 10 or greater
+
+/// eval> var p = print;
+/// eval> p(1);
+
+/// eval> def callfunc(f, lhs, rhs) { return f(lhs, rhs); }
+/// eval> def do_something(lhs, rhs) { print("lhs: ${lhs}, rhs: ${rhs}"); }
+/// eval> callfunc(do_something, 1, 2);
+/// lhs: 1, rhs: 2
+
+/// eval> callfunc(`+`, 1, 4);
+/// 5
+/// eval> callfunc(`*`, 3, 2);
+/// 6
+
+/// Lambda ::= "fun" "(" [variable] ("," variable)*  ")" block
+/// var f = fun(x) { x + 2; }
+

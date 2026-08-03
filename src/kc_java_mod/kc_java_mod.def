@@ -1,0 +1,9 @@
+LIBRARY
+
+EXPORTS
+        GetApiVersion
+	SetCBFuncPointer
+	Init
+	Free
+	Request
+	WriteLog

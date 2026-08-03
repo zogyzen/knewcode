@@ -1,0 +1,8 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+
+<!-- 消息队列回调 -->
+<Controllers needToken="false">
+    <!-- 通过消息队列触发其他进程 --> 
+	<main type="so" file="/bin/so_mq_callback" attach='{"MQName":"my@work", "MsgSize":8192, "JsonFeild":""}' />
+	
+</Controllers>

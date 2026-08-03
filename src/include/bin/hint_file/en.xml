@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+<Hint>
+	<EachPrefix String="***" />
+	<_error String=" - error" />
+	<Unknown_exception String="Unknown exception" />
+	<Method_Not_Allowed String="Method Unknown" />
+	<Start_framework String="***** Start %1% ***** - %2%" />
+	<Start_framework_success String="Start Success!" />
+	<End_framework String="***** End %1% ***** - %2%" />
+	<Repeat_to_install_ String="Repeat to install - " />
+	<Install_Bundle_ String="Install Bundle - " />
+	<Install_Bundle_Success_ String="Install Bundle Success - " />
+	<Install_Bundle_Fail_ String="Install Bundle Fail - " />
+	<Uninstall_Bundle_ String="Uninstall Bundle - " />
+	<Can_t_find_the_bundle_ String="Can't find the bundle - " />
+	<The_service_GUID_is_null_ String="The service GUID is null - " />
+	<Repeat_to_register_service_ String="Repeat to register service - " />
+	<Register_Service_ String="Register Service - " />
+	<Register_Service_Success_ String="Register Service Success - " />
+	<Unregister_Service_ String="Unregister Service - " />
+	<Take_Reference_Service String="Take Reference Service." />
+	<Free_Reference_Service String="Free Reference Service." />
+	<Can_t_get_the_function_ String="Can't get the function - " />
+	<The_service_don_t_exist_ String="The service don't exist - " />
+	<The_path_config_don_t_exist_ String="The path config don't exist - " />
+
+	<Reander_page_ String=">>>>> Reander page begin - " />
+	<Reander_page_end_ String="<<<<< Reander page end - " />
+	<Get_full_name_of_the_local_file_ String="Get full name of the local file - " />
+	<Don_t_exists_file_ String="Don't exists file - " />
+	<Read_file_failure_ String="Read file failure - " />
+	<Don_t_exists_data_ String="Don't exists data - " />
+	<Null_Point_Data_ String="Null Point Data - " />
+	<Register_Data_ String="Register Data - " />
+	<Repeat_Register_Data_ String="Repeat Register Data - " />
+	<Push_Jmp_Point_ String="Push Jmp Point - " />
+	<Pop_Jmp_Point_ String="Pop Jmp Point - " />
+	
+	<Create_page_ String="Create page - " />
+	<Action_page_ String="Action page - " />
+	<Action_Delay_Syntax_ String="Action Delay Syntax - " />
+	<Read_Page_File_ String="Read Page File - " />
+	<SIGFPE_Signo String="SIGFPE" />
+	<SIGSEGV_Signo String="SIGSEGV" />
+	<Exception_Signo_ String="Exception Signo - " />
+	<Circular_reference_ String="Circular reference - " />
+	<Load_library_failure_ String="Load library failure - " />
+	<Don_t_create_the_page_ String="Don't create the page - " />
+
+	<The_interface_is_nullptr_ String="The interface is nullptr - " />
+		
+	<Parameter_type_unknown_ String="Parameter type unknown - " />
+	<Is_not_an_interface_type String="Is not an interface type" />
+	<json_format_error_ String="json format error, near:  " />
+	<kc_format_error_ String="%s format error, at %d line" />
+	
+	<Don_t_exists_connect_pool_ String="Don't exists connect pool - " />
+	<Array_index_out_of_bounds String="Array index out of bounds." />
+	<Don_t_exists_field_ String="Don't exists field - " />
+	<Repeating_Field_ String="Repeating field - " />
+	<Repeating_Create_DB_Action_ String="Repeating Create_DB Action - " />
+	<The_field_value_is_NULL_ String="The field value is NULL - " />
+	<The_field_type_don_t_match_ String="The field type don't match - " />
+	
+	<Not_Assigned_Controller_ String="Not Assigned Controller - " />
+	<No_Controller_ String="No controller - " />
+	<Controller_Type_Error_  String="Controller Type Error - " />
+	<No_Access_ String="No access - " />
+
+	<Database_Connection_ String="Database Connection - " />
+	<Database_Connection_Error_ String="Database connection error - " />
+	<Database_Type_Error_ String="Database type error - " />
+	<SQL_Empty_ String="sql statement is empty - " />
+	<SQL_Error_ String="sql statement is error - " />
+	<Parm_Error_ String="Error or missing parameter - " />
+	<No_Login String="no login" />
+	<Need_Func_Return_Value String="Function format error, name cannot contain special characters, return value is required" />
+	
+	<Create_Fail_ String="Create Fail - " />
+	<Remove_Fail_ String="Remove Fail - " />
+	<Repeating_Define_ String="Repeating Define - " />
+	<Request_Failed_ String="Request Failed - " />
+</Hint>
