@@ -34,16 +34,20 @@ const char* CWSProxyRequestCB::GetLocalFilename(const char* uri) const
     {
         sResult = CUtilFunc::PCharSafeToStr(m_own.GetContext().transCfgPathToFullPath(sLocalFile.c_str()));
         // 判断本地文件是否存在
-        if (boost::filesystem::exists(sResult)) return sResult.c_str();
-        else
+        if (!boost::filesystem::exists(sResult))
         {
             string sErr = (boost::format("%s %s\n%s (%s)") % m_own.GetContext().getHint("Don_t_exists_file_") % sUri % sResult % sLocalFile).str();
             m_own.GetContext().WriteLogWarning(sErr.c_str(), __CURR_CODE_PLACE_C__);
         }
+        // 有值则返回
+        return sResult.c_str();
     }
     // 在网站根目录下找
-    sResult = m_own.m_WebsitePath + "/" + sUri;
-    return sResult.c_str();
+    else
+    {
+        sResult = m_own.m_WebsitePath + "/" + sUri;
+        return sResult.c_str();
+    }
 }
 
 // 得到网络根路径

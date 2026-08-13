@@ -163,6 +163,7 @@ bool CCtrlDM::TParmDM::IsNull(void)
 
 string CCtrlDM::TParmDM::GetString(string sDef)
 {
+    string s = BoostAnyToStdString(anyVal, sDef);
     string sRes = IsNull() ? sDef : &m_sVal[0];
     if (c_RESTful_GBK == m_own.m_own.GetCharset()) sRes = CUtilFunc::GbkToUtf8(sRes);
     return sRes;

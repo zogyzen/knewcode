@@ -54,7 +54,10 @@ const char* CWebRequestRespond::GetLocalFilename(const char* uri)
     if (nullptr != pLocalFile && strlen(pLocalFile) > 0 && boost::filesystem::exists(string(pLocalFile)))
         return pLocalFile;
     // 在后端api配置的目录下找
-    return m_own.m_WebApiWrkRef.getServiceSafe<IKCWebApiWork>().GetUrlLocalPath(uri);
+    const char* pLocalMainApiFile =  m_own.m_WebApiWrkRef.getServiceSafe<IKCWebApiWork>().GetUrlLocalPath(uri);
+    if (nullptr != pLocalMainApiFile && strlen(pLocalMainApiFile) > 0 && boost::filesystem::exists(string(pLocalMainApiFile)))
+        return pLocalMainApiFile;
+    return pLocalFile;
 }
 
 // 得到网络文件名
