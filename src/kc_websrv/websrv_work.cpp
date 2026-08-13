@@ -264,18 +264,24 @@ void CWebSrvWork::Init(void)
     {
         // 循环每个子项
         for(const property_tree::ptree::value_type &vt: ptCfg)
-        try
         {
             string sName = vt.first;
-            if (c_RESTful_xmlcomment != sName && c_RESTful_xmlattr != sName)
+            try
             {
-                string sUrl = vt.second.get<string>(string(c_RESTful_xmlattr) + "." + c_RESTful_uri);
-                string sLocal = cntx.transCfgPathToFullPath(boost::algorithm::trim_right_copy_if(vt.second.get<string>(string(c_RESTful_xmlattr) + ".local"), boost::is_any_of("/")).c_str());
-                vPathMap.insert(make_pair(sUrl, sLocal));
-                vPathVct.push_back(sUrl);
+                if (c_RESTful_xmlcomment != sName && c_RESTful_xmlattr != sName)
+                {
+                    string sUrl = vt.second.get<string>(string(c_RESTful_xmlattr) + "." + c_RESTful_url);
+                    string sLocal = cntx.transCfgPathToFullPath(boost::algorithm::trim_right_copy_if(vt.second.get<string>(string(c_RESTful_xmlattr) + ".local"), boost::is_any_of("/")).c_str());
+                    vPathMap.insert(make_pair(sUrl, sLocal));
+                    vPathVct.push_back(sUrl);
+                }
+            }
+            catch (property_tree::ptree_error &ex)
+            {
+                string sWarnMsg = (boost::format("Get Virtual Path Error: \t<%s> %s") % sName % ex.what()).str();
+                cntx.WriteLogWarning(sWarnMsg.c_str(), __CURR_CODE_PLACE_C__);
             }
         }
-        catch (...) {}
     };
     if (cfgPt.get_child_optional("Config.WebServer.virtualPath"))
         fGetVirtualPath(cfgPt.get_child("Config.WebServer.virtualPath"), m_mainHost.m_pageCfg.m_vPath, m_mainHost.m_pageCfg.m_vPathVct);

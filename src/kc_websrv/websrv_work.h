@@ -43,7 +43,7 @@ private:
                 if (sPageFile.empty()) sPageFile = m_rootPath + sUri;
                 boost::algorithm::trim_right_if(sPageFile, boost::is_any_of("/\\"));
                 // 子目录
-                if (sUri.back() == '/' || (boost::filesystem::exists(sPageFile) && boost::filesystem::is_directory(sPageFile)))
+                if (sUri.back() == '/' && (boost::filesystem::exists(sPageFile) && boost::filesystem::is_directory(sPageFile)))
                     sPageFile += "/" + m_indexPage;
                 // 去掉路径中的冗余（..和.）
                 if (boost::filesystem::exists(sPageFile))
