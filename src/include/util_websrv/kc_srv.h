@@ -377,12 +377,15 @@ namespace KCSrv
         void SetStaticPage(std::string sFile, std::function<std::tuple<std::string, std::string>(const int)> fErr =
                 [](const int iErrCode){ return std::make_tuple(std::to_string(iErrCode) + ".html", ""); })
         {
-            if (!boost::filesystem::exists(sFile)) SetErrorPage(sFile, 404, fErr);
+            if (!boost::filesystem::exists(sFile))
+                SetErrorPage(sFile, 404, fErr);
+            else if (!boost::filesystem::is_regular_file(sFile))
+                SetErrorPage(sFile, 400, fErr);
             else
             {
                 std::string extName = boost::algorithm::to_lower_copy(boost::filesystem::path(sFile).extension().string());
                 // 文件的mime类型
-                std::string sMimeType = m_request->m_extName.empty() ? extName.substr(1) : m_request->m_extName.substr(1);
+                std::string sMimeType = !m_request->m_extName.empty() ? m_request->m_extName.substr(1) : (!extName.empty() ? extName.substr(1) : "");
                 // 判断mime类型
                 auto fCheckMime = [&](const std::map<std::string, std::string>& mapMime)
                 {
@@ -1101,7 +1104,23 @@ namespace KCSrv
 
         void RequestRespond(KcSrvRespondPtr res)
         {
-            if (res.get() != nullptr) m_frr(res);
+            if (res.get() != nullptr)
+            try
+            {
+                m_frr(res);
+            }
+            catch (std::exception &ex)
+            {
+                std::cout << ex.what() << std::endl;
+                m_own.WriteLogError(ex.what(), __FUNCTION__, res->m_request->m_unparsed_uri.c_str());
+                res->SetErrorPage(res->m_request->m_uri, 500);
+            }
+            catch (...)
+            {
+                std::cout << "unknown error" << std::endl;
+                m_own.WriteLogError("unknown error", __FUNCTION__, res->m_request->m_unparsed_uri.c_str());
+                res->SetErrorPage(res->m_request->m_uri, 500);
+            }
         }
 
     protected:

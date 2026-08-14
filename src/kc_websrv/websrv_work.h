@@ -18,6 +18,9 @@ public:
     // 处理请求
     void Work(KCSrv::KcSrvRespondPtr res);
 
+    // 错误日志
+    bool WriteLogError(const char* info, const char* place, const char* other = "") const;
+
 private:
     // 主页配置
     struct TMainPageCfg
@@ -43,7 +46,8 @@ private:
                 if (sPageFile.empty()) sPageFile = m_rootPath + sUri;
                 boost::algorithm::trim_right_if(sPageFile, boost::is_any_of("/\\"));
                 // 子目录
-                if (sUri.back() == '/' && (boost::filesystem::exists(sPageFile) && boost::filesystem::is_directory(sPageFile)))
+                // if (sUri.back() == '/' || (boost::filesystem::exists(sPageFile) && boost::filesystem::is_directory(sPageFile)))
+                if (sUri.back() == '/')
                     sPageFile += "/" + m_indexPage;
                 // 去掉路径中的冗余（..和.）
                 if (boost::filesystem::exists(sPageFile))

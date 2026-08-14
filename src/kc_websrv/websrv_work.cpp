@@ -389,3 +389,10 @@ void CWebSrvWork::Work(KCSrv::KcSrvRespondPtr res)
     // 调用后端api
     else m_proxy.Work(reqCB);
 }
+
+// 错误日志
+bool CWebSrvWork::WriteLogError(const char* info, const char* place, const char* other) const
+{
+    auto &cntx = dynamic_cast<IBundleContextEx&>(m_proxy.GetContext());
+    return cntx.WriteLogError(info, place, other);
+}
