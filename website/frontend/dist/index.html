@@ -8,25 +8,78 @@
 	</head>
 	<body>
         <div>
-			<br><input id="uri" type="text" value="https://127.0.0.1:24122/api/sample_pgsql.kc?act=Login" style="width:80%" />
+			<br>
+			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:200px; height: 25px">
+			</select>
+			<input id="txtFunc" type="text" value="测试" style="width:160px; height: 20px" /><button onclick="addSelOption()">添加</button>
+			<button onclick="delSelOption()">移除</button>
+			<br><br>
+			<input id="uri" type="text" value="https://127.0.0.1:24122/api/sample.kc?act=Login" style="width:80%; height: 20px" />
 			<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
-			<textarea id="prm" rows="6" style="width:96%">{"artid":0}</textarea>
+			<textarea id="prm" rows="6" style="width:96%">{"id":0}</textarea>
 		</div>
 		<div id="recv"></div>
 		<script type="text/javascript">
+			// 保存调用参数
+			function saveCallParm(uri, prm) {
+				let select = document.getElementById('selFunction');
+				let selectedValue = select.value;
+				localStorage["ajaxTestUri-" + selectedValue] = uri;
+				localStorage["ajaxTestPrm-" + selectedValue] = prm;
+			}
+			// 获取调用参数
+			function loadCallParm() {
+				let select = document.getElementById('selFunction');
+				let selectedValue = select.value;
+				let localUri = localStorage["ajaxTestUri-" + selectedValue];
+				let localPrm = localStorage["ajaxTestPrm-" + selectedValue];
+				if (localUri) document.getElementById("uri").value = localUri;
+				else document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample.kc?act=Login";
+				if (localPrm) document.getElementById("prm").value = localPrm;
+				else document.getElementById("prm").value = '{"id":0}';
+			}
+			// 保存列表
+			function saveSelList() {
+				let jsonArray = [];
+				let select = document.getElementById('selFunction');
+				let options = select.options;
+				for (let i = 0; i < options.length; ++i)
+					jsonArray.push(options[i].value);
+				localStorage.ajaxTestFuncList = JSON.stringify(jsonArray);
+			}
+			// 加载列表
+			function loadSelList() {
+				let select = document.getElementById('selFunction');
+				select.options = localStorage.ajaxTestFuncList;
+				try {
+					let jsonArray = JSON.parse(localStorage.ajaxTestFuncList);
+					if (Array.isArray(jsonArray) && jsonArray.length > 0)
+						jsonArray.forEach(obj => {
+							addSelOptionVal(obj);
+						});
+					else loadCallParm();
+				}
+				catch (err) {
+					console.warn(err);
+					loadCallParm();
+				}
+			}
+			loadSelList();
+			
+			// 调用
 			function preflight() {
 				// 参数
-				var uri = document.getElementById("uri").value;
+				let uri = document.getElementById("uri").value;
 				let prm = document.getElementById("prm").value;
 				// 保存cookie
-				localStorage.ajaxTestUri = uri;
-				localStorage.ajaxTestPrm = prm;
+				//localStorage.ajaxTestUri = uri;
+				//localStorage.ajaxTestPrm = prm;
+				saveCallParm(uri, prm);
 				// ajax对象
 				var xhr = new XMLHttpRequest();
 				xhr.open('PUT', uri, true);//请求方式，请求地址，是否异步
 				//xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 				// 允许跨域
-				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 				xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
 				xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
 				xhr.withCredentials = true; // 启用 cookies 的发送
@@ -42,22 +95,24 @@
 				// 发送ajax请求
 				xhr.send(prm);
 			}
-			
 			function ajaxTest() {
 				document.getElementById("stt").innerText = "";
 				document.getElementById("recv").innerText = "";
 				// 参数
-				var uri = document.getElementById("uri").value;
+				let uri = document.getElementById("uri").value;
 				let prm = document.getElementById("prm").value;
 				// 保存cookie
-				localStorage.ajaxTestUri = uri;
-				localStorage.ajaxTestPrm = prm;
+				//localStorage.ajaxTestUri = uri;
+				//localStorage.ajaxTestPrm = prm;
+				saveCallParm(uri, prm);
 				// ajax对象
 				var xhr = new XMLHttpRequest();
 				xhr.open('POST', uri, true);//请求方式，请求地址，是否异步
 				//xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-				//xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
-				//xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
+				// 允许跨域
+				xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
+				xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
+				xhr.withCredentials = true; // 启用 cookies 的发送
 				xhr.responseType = "text";  // 返回类型text
 				//xhr.responseType = "blob";  // 返回类型blob
 				xhr.onload = function () {// 请求完成处理函数
@@ -85,10 +140,47 @@
 				//preflight();
 				ajaxTest();
 			}
-
-			if (localStorage.ajaxTestUri) document.getElementById("uri").value = localStorage.ajaxTestUri;
-			else document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample_pgsql.kc?act=Login";
-			if (localStorage.ajaxTestPrm) document.getElementById("prm").value = localStorage.ajaxTestPrm;
+			
+			// 自定义方法
+			function addSelOptionVal(txtFunc) {
+				// 查找已存在的子项
+				let eleExists = document.querySelector('#selFunction option[value="' + txtFunc + '"]');
+				if (eleExists) {
+					alert("已存在");
+					return;
+				}
+				// 获取select元素
+				let select = document.getElementById("selFunction");
+				// 创建一个新的option元素
+				let option = document.createElement("option");
+				// 设置option的文本内容和值
+				option.text = txtFunc;
+				option.value = txtFunc;
+				// 将新创建的option元素添加到select元素中
+				select.add(option);
+				select.selectedIndex = select.length - 1;
+				// 重选
+				selChange(select);
+			}
+			function addSelOption() {
+				addSelOptionVal(document.getElementById("txtFunc").value);
+				// 保存列表
+				saveSelList();
+			}
+			function delSelOption() {
+				let select = document.getElementById('selFunction');
+				// 获取当前选中的选项
+				let selectedOption = select.options[select.selectedIndex];
+				// 移除选中的选项
+				if (selectedOption)
+					select.removeChild(selectedOption);
+				// 重选
+				selChange(select);
+			}
+			function selChange(element) {
+				console.log('选中方法: ' + element.value);
+				loadCallParm();
+			}
 		</script>
 	</body>
 </html>
