@@ -47,16 +47,17 @@ bool CCtrlDM::TParmDM::SetNumber(double fVal)
     GetParmDesc();
     bool bResult = 0 == scale;
     DPIRETURN rt = DSQL_SUCCESS;
+    const bool bIsOutIn = CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
     if (bResult)
     {
         m_nVal.i = static_cast<int>(fVal);
-        rt = dpi_bind_param(m_own.stmt, iPos, ePTp == CSqlFunc::EParmType::eptInOutParm ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
+        rt = dpi_bind_param(m_own.stmt, iPos, bIsOutIn ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
                                       DSQL_C_SLONG, DSQL_INT, prec, 0, &m_nVal.i, sizeof(m_nVal.i), &c_ind);
     }
     else
     {
         m_nVal.d = fVal;
-        rt = dpi_bind_param(m_own.stmt, iPos, ePTp == CSqlFunc::EParmType::eptInOutParm ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
+        rt = dpi_bind_param(m_own.stmt, iPos, bIsOutIn ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
                                       DSQL_C_DOUBLE, DSQL_DEC, prec, scale, &m_nVal.d, sizeof(m_nVal.d), &c_ind);
     }
     TDmdpiException::CheckError(m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
@@ -66,7 +67,8 @@ void CCtrlDM::TParmDM::SetInt(int iVal)
 {
     GetParmDesc();
     m_nVal.i = iVal;
-    DPIRETURN rt = dpi_bind_param(m_own.stmt, iPos, ePTp == CSqlFunc::EParmType::eptInOutParm ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
+    const bool bIsOutIn = CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
+    DPIRETURN rt = dpi_bind_param(m_own.stmt, iPos, bIsOutIn ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
                                   DSQL_C_SLONG, DSQL_INT, prec, 0, &m_nVal.i, sizeof(m_nVal.i), &c_ind);
     TDmdpiException::CheckError(m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
 }
@@ -76,7 +78,7 @@ void CCtrlDM::TParmDM::SetString(string strVal)
     GetParmDesc();
     if (c_RESTful_GBK == m_own.m_own.GetCharset()) strVal = CUtilFunc::Utf8ToGbk(strVal);
     // 是否输入输出参数
-    bool bIsOutIn = CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
+    const bool bIsOutIn = CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
     // 宽度
     unsigned iLen = 10;
     // 输出参数
