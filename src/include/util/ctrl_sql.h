@@ -157,7 +157,7 @@ namespace KC
             int DataSetToOut(TFields& vecFields, std::function<void()> fInitFeilds, std::function<bool(int, int)> fAddRow)
             {
                 // 提前获取各字段基础信息
-                bool bPreGetFields = this->GetColumnListMetaDataBeforeFetch(vecFields);
+                const bool bPreGetFields = this->GetColumnListMetaDataBeforeFetch(vecFields);
                 if (bPreGetFields) fInitFeilds();
                 // 跳转下一条记录
                 auto fNextRec = [&](int &iUseTimeNext)
@@ -171,15 +171,11 @@ namespace KC
                 int iRecCount = 0;
                 for (int iUseTimeNext = 0; fNextRec(iUseTimeNext); ++iRecCount)
                 {
-                    // 首条记录，初始化
-                    if (0 == iRecCount)
+                    // 首条记录，初始化。获取各字段基础信息
+                    if (0 == iRecCount && !bPreGetFields)
                     {
-                        // 首行获取各字段基础信息
-                        if (!bPreGetFields)
-                        {
-                            this->GetColumnListMetaData(vecFields);
-                            fInitFeilds();
-                        }
+                        this->GetColumnListMetaData(vecFields);
+                        fInitFeilds();
                     }
                     // 添加行记录
                     if (!fAddRow(iRecCount, iUseTimeNext)) break;
@@ -213,14 +209,15 @@ namespace KC
             {
                 // 请求的字段
                 TFields vecFields;
-                // // 获取各字段类型
-                // this->GetColumnListMetaData(vecFields);
+                // 提前获取各字段基础信息
+                const bool bPreGetFields = this->GetColumnListMetaDataBeforeFetch(vecFields);
                 // 循环插入记录
                 int iResult = 0;
                 if (Next())
                 {
                     // 获取各字段类型
-                    this->GetColumnListMetaData(vecFields);
+                    if (!bPreGetFields)
+                        this->GetColumnListMetaData(vecFields);
                     // 添加记录
                     for (auto fFeild : vecFields) AddVal(jset, *fFeild);
                     iResult = 1;
@@ -231,14 +228,14 @@ namespace KC
             {
                 // 请求的字段
                 TFields vecFields;
-                // // 获取各字段类型
-                // this->GetColumnListMetaData(vecFields);
+                // 提前获取各字段基础信息
+                const bool bPreGetFields = this->GetColumnListMetaDataBeforeFetch(vecFields);
                 // 循环插入记录
                 int iRecCount = 0;
                 for (; Next(); ++iRecCount)
                 {
                     // 初始化
-                    if (0 == iRecCount)
+                    if (0 == iRecCount && !bPreGetFields)
                     {
                         // 获取各字段类型
                         this->GetColumnListMetaData(vecFields);
@@ -1937,7 +1934,7 @@ namespace KC
                 for (TRecordSetPtr SetPtr = fExecQuery(rows_affected); SetPtr.get() != nullptr; SetPtr = this->NextResult(), ++iCountSet)
                 {
                     // 数据集类型
-                    const std::string sDbSetType = vctRsetNames.size() > iCountSet ? vctRsetNames[iCountSet].second : c_RESTful_dbset;
+                    const std::string sDbSetType = vctRsetNames.size() > iCountSet && !vctRsetNames[iCountSet].second.empty() ? vctRsetNames[iCountSet].second : c_RESTful_dbset;
                     // 数据集名称（带路径，用实心点分隔）
                     std::string sDbSetName = SetPtr->m_name = vctRsetNames.size() > iCountSet ? boost::algorithm::trim_copy(vctRsetNames[iCountSet].first) : "";
                     // 是否主数据集

@@ -9,11 +9,12 @@
 		end;
 	</UpdData>
 
-	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}}' needToken="false">
+	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}, "dbsetParms":{"r1":"dbset", "r2":"dbset-array"}}' needToken="false">
 		begin
 			--select :KC__SESSION_sys__Ftype a, * from city where region_id = :id;
 			--select * from city where region_id = :id2;
 			select * from test;
+			select * from test2;
 		end
 	</Select>
 	
