@@ -17,8 +17,10 @@
 		<div>
 			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:230px; height: 25px">
 			</select>
-			<input id="txtFunc" type="text" value="测试" style="width:200px; height: 20px" /><button onclick="addSelOption()">添加</button>
-			<button onclick="delSelOption()">移除</button>
+			<div style="float: right;">
+				<input id="txtFunc" type="text" value="测试" style="width:200px; height: 20px" /><button onclick="addSelOption()">添加</button>&ensp;
+				<button onclick="delSelOption()">移除</button>
+			</div>
 		</div>
 		<script type="text/javascript">
 			// 保存调用参数
@@ -170,13 +172,19 @@
 			}
 			function delSelOption() {
 				let select = document.getElementById('selFunction');
+				let selIndex = select.selectedIndex;
 				// 获取当前选中的选项
-				let selectedOption = select.options[select.selectedIndex];
+				let selectedOption = select.options[selIndex];
 				// 移除选中的选项
-				if (selectedOption)
+				if (selectedOption) {
 					select.removeChild(selectedOption);
-				// 重选
-				selChange(select);
+					// 重选
+					let iNewSel = Math.min(selIndex, select.length - 1);
+					if (iNewSel >= 0) select.selectedIndex = iNewSel;
+					selChange(select);
+					// 保存列表
+					saveSelList();
+				}
 			}
 			function selChange(element) {
 				console.log('选中方法: ' + element.value);
