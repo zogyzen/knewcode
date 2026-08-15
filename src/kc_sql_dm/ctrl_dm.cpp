@@ -76,7 +76,7 @@ void CCtrlDM::TParmDM::SetString(string strVal)
     GetParmDesc();
     if (c_RESTful_GBK == m_own.m_own.GetCharset()) strVal = CUtilFunc::Utf8ToGbk(strVal);
     // 是否输入输出参数
-    bool bIsOutIn = CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
+    bool bIsOutIn = CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp;
     // 宽度
     unsigned iLen = 10;
     // 输出参数
