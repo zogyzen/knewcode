@@ -9,16 +9,17 @@
 	<body>
         <div>
 			<br>
-			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:200px; height: 25px">
-			</select>
-			<input id="txtFunc" type="text" value="测试" style="width:160px; height: 20px" /><button onclick="addSelOption()">添加</button>
-			<button onclick="delSelOption()">移除</button>
-			<br><br>
 			<input id="uri" type="text" value="https://127.0.0.1:24122/api/sample.kc?act=Login" style="width:80%; height: 20px" />
 			<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
-			<textarea id="prm" rows="6" style="width:96%">{"id":0}</textarea>
+			<textarea id="prm" rows="6" style="width:96vw">{"id":0}</textarea>
+			<div id="recv" style="width:95vw; height: calc(98vh - 210px); overflow: auto;"></div>
 		</div>
-		<div id="recv"></div>
+		<div>
+			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:230px; height: 25px">
+			</select>
+			<input id="txtFunc" type="text" value="测试" style="width:200px; height: 20px" /><button onclick="addSelOption()">添加</button>
+			<button onclick="delSelOption()">移除</button>
+		</div>
 		<script type="text/javascript">
 			// 保存调用参数
 			function saveCallParm(uri, prm) {
@@ -180,6 +181,8 @@
 			function selChange(element) {
 				console.log('选中方法: ' + element.value);
 				loadCallParm();
+				document.getElementById("stt").innerText = "";
+				document.getElementById("recv").innerText = "";
 			}
 		</script>
 	</body>
