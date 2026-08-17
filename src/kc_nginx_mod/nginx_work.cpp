@@ -111,7 +111,7 @@ int CNginxWork::Work(TNgxRequestData &r)
         //     if (nullptr != r.ngx_request_body) *r.ngx_request_body = nullptr;
         // }
         int iLoop = 0;
-        const int iAgainSleepMS = 99;
+        const int iAgainSleepMS = 199;
         const int iMaxLoop = std::max(static_cast<int>(std::ceil(CNginxHelper::NgxInfo().m_client_body_timeout * 1.0 / iAgainSleepMS)), 10);
         bool bNgxAgain = false;
         intptr_t iResult = 0;
@@ -130,7 +130,8 @@ int CNginxWork::Work(TNgxRequestData &r)
         // 其他错误
         if (0 != iResult)
         {
-            string sErr = (boost::format("Request Post Fail, Can't Get Request Body: %d (%s)\n\t %s") % iResult % CNginxHelper::NgxStrToStdStr(r.content_length) % CNginxHelper::NgxStrToStdStr(r.unparsed_uri)).str();
+            string sErr = (boost::format("Request Post Fail, Can't Get Request Body: %d (%s)\n\t %s") % iResult
+                        % CNginxHelper::NgxStrToStdStr(r.content_length) % CNginxHelper::NgxStrToStdStr(r.unparsed_uri)).str();
             m_load.WriteLog(4, sErr.c_str(), __CURR_CODE_PLACE_C__, "Post");
             if (bNgxAgain && nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
                 CNginxHelper::NgxInfo().ngx_http_finalize_request(r.ngx_request_s, -1);
