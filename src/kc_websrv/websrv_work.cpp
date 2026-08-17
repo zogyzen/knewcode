@@ -327,6 +327,8 @@ void CWebSrvWork::Init(void)
            ).str();
     cout << "*[knewcode] load knewcode mod success \n" << sMsg << endl;
     cntx.WriteLogDebug(sMsg.c_str(), __CURR_CODE_PLACE_C__);
+    // 写入进程编号
+    CUtilFunc::SaveFile(m_exePath + ".pid", std::to_string(getpid()));
 }
 
 // 释放
