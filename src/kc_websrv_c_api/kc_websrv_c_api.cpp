@@ -134,7 +134,7 @@ extern "C"
     // 请求
     int Request(intptr_t re)
     {
-        int iResult = 15;
+        int iResult = 15;   // 处理失败
         auto fThrdRun = [&](void)
         {
             try
@@ -142,7 +142,7 @@ extern "C"
                 printf("*[knewcode] Request: %lld\n", re);
                 if (g_work.get() != nullptr) g_work->Work(re);
                 else throw std::runtime_error("Not Init.");
-                iResult = 0;
+                iResult = 0;    // 处理成功
             }
             catch (std::exception &ex)
             {

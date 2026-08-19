@@ -62,7 +62,7 @@ int Free(void)
 int Request(long int re)
 {
     printf("*[JavaMod] Request: %ld >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> \n", re);
-    int iResult = 5;
+    int iResult = 5;    // 处理失败
     if (KC_HasLoad())
     {
         typedef int (*FRequest)(long int);

@@ -117,7 +117,14 @@ int CNginxWork::Work(TNgxRequestData &r)
         intptr_t iResult = 0;
         do
         {
+            cout << "20.[request post body get] " << reinterpret_cast<intptr_t>(&r) << " <" << CUtilFunc::CurrThreadID()
+                 << "> (" << CNginxHelper::NgxStrToStdStr(t_ngxReqData->content_length, 12) << ") - " << CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri) << endl;
             iResult = CNginxHelper::NgxInfo().ngx_http_read_client_request_body(r.ngx_request_s, &GetClientBodyHandler);
+            // if (-2 == iResult)
+                return -4;
+
+
+
             if (-2 != iResult || ++iLoop > iMaxLoop) break;
             // 等待再次尝试
             bNgxAgain = true;
@@ -172,14 +179,30 @@ int CNginxWork::Work(TNgxRequestData &r)
 }
 void CNginxWork::GetClientBodyHandler(void *rSrc)
 {
-    cout << "21.[request post work] " << reinterpret_cast<intptr_t>(rSrc) << " (" << CNginxHelper::NgxStrToStdStr(t_ngxReqData->content_length, 12) << ") - " << CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri) << endl;
-    // boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    // boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+    cout << "21.[request post body work] " << reinterpret_cast<intptr_t>(rSrc) << " <" << CUtilFunc::CurrThreadID() << ">" << endl;
+    // printf("21.[request post body work] %d %s\n", CUtilFunc::CurrThreadID(), CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri).c_str());
 
     // CNginxHelper::NgxInfo().GetRequestBody(rSrc, t_ngxReqData);
     // printf("21.[request post work] %s\n", CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri).c_str());
     // auto const iResult = g_work->m_load.Request(reinterpret_cast<intptr_t>(t_ngxReqData));
     // if (iResult != -2 && nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
     //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, iResult);
+
+
+
+    // 获取输入参数
+    CNginxHelper::NgxInfo().GetRequestBody(rSrc, t_ngxReqData);
+    // string sTmpFileSrc = CNginxHelper::NgxStrToStdStr(r.m_tempFile);
+    // string sTmpFile = CUtilFunc::ToAbsPath(sTmpFileSrc, m_NgxPath);
+    // cout << (boost::filesystem::exists(sTmpFile) ? "" : "Not ") << "Exists - " << sTmpFile << endl;
+
+    // 处理
+    g_work->m_load.Request(reinterpret_cast<intptr_t>(t_ngxReqData));
+
+    // if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
+    //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, -4);
+
 }
 
 // 判断是否ssl

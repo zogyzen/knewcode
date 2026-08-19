@@ -96,7 +96,8 @@ extern "C"
 
         // return NGX_DECLINED;
 
-        TNgxRequestData rData;
+        TNgxRequestData *pData = new TNgxRequestData;
+        TNgxRequestData &rData = *pData;
         auto fRespondErr = [&](int iCode)
         {
             string sJsn = (boost::format(R"({"%s":%d,"%s":"Work Error - %s"})") % c_RESTful_errCode % iCode % c_RESTful_errMsg % CNginxHelper::NgxStrToStdStr(rData.unparsed_uri)).str();
@@ -126,6 +127,7 @@ extern "C"
             int iErrCode = -5;
             if (g_work.get() == nullptr || (iErrCode = g_work->Work(rData)) > 0)
                 throw std::runtime_error("Uninitialized - " + std::to_string(iErrCode));
+            if (-4 == iErrCode) return iErrCode;
             // 返回
             if (nullptr != rData.m_responseStatus && 200 != *rData.m_responseStatus && 101 != *rData.m_responseStatus)
                 cout << "Http Status - " << *rData.m_responseStatus << endl;
