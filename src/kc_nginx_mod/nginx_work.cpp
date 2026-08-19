@@ -121,7 +121,7 @@ int CNginxWork::Work(TNgxRequestData &r)
                  << "> (" << CNginxHelper::NgxStrToStdStr(t_ngxReqData->content_length, 12) << ") - " << CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri) << endl;
             iResult = CNginxHelper::NgxInfo().ngx_http_read_client_request_body(r.ngx_request_s, &GetClientBodyHandler);
             // if (-2 == iResult)
-                return -4;
+                return /*NGX_OK*/0;
 
 
 
@@ -199,9 +199,10 @@ void CNginxWork::GetClientBodyHandler(void *rSrc)
 
     // 处理
     g_work->m_load.Request(reinterpret_cast<intptr_t>(t_ngxReqData));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
     // if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
-    //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, -4);
+    //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, /*NGX_DONE*/-4);
 
 }
 
