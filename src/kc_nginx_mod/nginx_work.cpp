@@ -199,7 +199,7 @@ void CNginxWork::GetClientBodyHandler(void *rSrc)
 
     // 处理
     g_work->m_load.Request(reinterpret_cast<intptr_t>(t_ngxReqData));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+    // boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
     // if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
     //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, /*NGX_DONE*/-4);
@@ -649,6 +649,8 @@ int CNginxWork::CommitResponseCB(intptr_t hRequest)
     auto& re = *reinterpret_cast<TNgxRequestData*>(hRequest);
     CNginxHelper::NgxInfo().ngx_http_finalize_request(re.ngx_request_s, /*NGX_DONE*/-4);
     // CNginxHelper::NgxInfo().ngx_http_send_special(re.ngx_request_s, /*NGX_HTTP_LAST*/1);
+    if (nullptr != re.m_responseStatus && 200 != *re.m_responseStatus && 101 != *re.m_responseStatus)
+        cout << "Http Status - " << *re.m_responseStatus << endl;
     return 0;
 }
 

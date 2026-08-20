@@ -89,14 +89,17 @@ extern "C"
     }
 
     // “web请求”引出函数
-    int KC_mod_handler(void *r, TNgxStr uri)
+    int KC_mod_handler(TNgxRequestData *pData)
     {
         // WriteLog(0, "Begin Request ", (char*)(r->unparsed_uri.data), __CURR_CODE_PLACE_C__);
         // CAutoRelease _auto([&](){ WriteLog(0, "End Request ", (char*)(r->unparsed_uri.data), __CURR_CODE_PLACE_C__); });
 
         // return NGX_DECLINED;
 
-        TNgxRequestData *pData = new TNgxRequestData;
+        // 请求为空，放弃执行
+        if (nullptr == pData || nullptr == pData->ngx_request_s || nullptr == pData->uri.data || 0 == pData->uri.len)
+            return /*NGX_DECLINED*/-5;
+
         TNgxRequestData &rData = *pData;
         auto fRespondErr = [&](int iCode)
         {
@@ -105,34 +108,32 @@ extern "C"
         };
         try
         {
-            // 请求为空，放弃执行
-            if (nullptr == r || nullptr == uri.data || 0 == uri.len) return -5;
             // cout << "*[nginx] - " << CNginxHelper::NgxStrToStdStr(uri) << endl;
             // 判断uri扩展名
-            string sUri = CNginxHelper::NgxStrToStdStr(uri);
+            string sUri = CNginxHelper::NgxStrToStdStr(rData.uri);
             string sExt = boost::filesystem::path(sUri).extension().string();
             if (boost::algorithm::to_lower_copy(sExt) != c_DefaultWorkUriExtension)
-                return -5;      // 扩展名不为.kc，放弃执行
+                return /*NGX_DECLINED*/-5;      // 扩展名不为.kc，放弃执行
             // 扩展名为.kc继续执行
-            memset(&rData, 0, sizeof(TNgxRequestData));
+            // memset(&rData, 0, sizeof(TNgxRequestData));
             rData.m_stampMS = CUtilFunc::GetCurrentStampMS();
-            CNginxHelper::NgxInfo().GetRequestData(r, &rData);
-            cout << "*[nginx] begin " <<  reinterpret_cast<intptr_t>(r) << " - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
+            CNginxHelper::NgxInfo().GetRequestData(rData.ngx_request_s, &rData);
+            cout << "*[nginx] begin " <<  reinterpret_cast<intptr_t>(rData.ngx_request_s) << " - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
             CAutoRelease _auto([&](){
-                cout << "*[nginx] end " <<  reinterpret_cast<intptr_t>(r) << " - " << "(" << (CUtilFunc::GetCurrentStampMS() - rData.m_stampMS) << "ms) - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
+                cout << "*[nginx] end " <<  reinterpret_cast<intptr_t>(rData.ngx_request_s) << " - " << "(" << (CUtilFunc::GetCurrentStampMS() - rData.m_stampMS) << "ms) - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
                 // boost::this_thread::sleep(boost::posix_time::milliseconds(166));
             });
             if (nullptr != rData.m_responseStatus) *rData.m_responseStatus = 200;
             // 加载核心处理功能
-            int iErrCode = -5;
+            int iErrCode = /*NGX_DECLINED*/-5;
             if (g_work.get() == nullptr || (iErrCode = g_work->Work(rData)) > 0)
                 throw std::runtime_error("Uninitialized - " + std::to_string(iErrCode));
-            if (-4 == iErrCode) return iErrCode;
+            if (/*NGX_DECLINED*/-5 == iErrCode) return iErrCode;
             // 返回
-            if (nullptr != rData.m_responseStatus && 200 != *rData.m_responseStatus && 101 != *rData.m_responseStatus)
-                cout << "Http Status - " << *rData.m_responseStatus << endl;
+            // if (nullptr != rData.m_responseStatus && 200 != *rData.m_responseStatus && 101 != *rData.m_responseStatus)
+            //     cout << "Http Status - " << *rData.m_responseStatus << endl;
             // return iErrCode;
-            return 0 == iErrCode ? 0 : -1;
+            return 0 == iErrCode ? /*NGX_OK*/0 : /*NGX_ERROR*/-1;
         }
         catch (std::exception &ex)
         {
