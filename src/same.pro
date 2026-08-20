@@ -217,7 +217,9 @@ unix {
     # patchelf --set-rpath /new/path:/new/path2 /path/to/your/executable    # 设置新的RPATH
 
     # 链接本地glibc库，解决‘GLIBC_2.xx‘缺失问题
-    QMAKE_LFLAGS += -Wl,--dynamic-linker=./lib/ld-linux-x86-64.so.2
+    QMAKE_LFLAGS += -Wl,--dynamic-linker=$$DESTDIR/../lib/ld-linux-x86-64.so.2
+    LIBS += $$DESTDIR/../lib/ld-linux-x86-64.so.2
+    LIBS += $$DESTDIR/../lib/libgcc_s.so.1
 
     QMAKE_LFLAGS += -Wl,-Bsymbolic
     # QMAKE_LFLAGS += -Wl,-soname
