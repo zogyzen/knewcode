@@ -108,6 +108,7 @@ extern "C"
         };
         try
         {
+            int iErrCode = /*NGX_DECLINED*/-5;
             // cout << "*[nginx] - " << CNginxHelper::NgxStrToStdStr(uri) << endl;
             // 判断uri扩展名
             string sUri = CNginxHelper::NgxStrToStdStr(rData.uri);
@@ -118,16 +119,23 @@ extern "C"
             // memset(&rData, 0, sizeof(TNgxRequestData));
             rData.m_stampMS = CUtilFunc::GetCurrentStampMS();
             CNginxHelper::NgxInfo().GetRequestData(rData.ngx_request_s, &rData);
-            cout << "*[nginx] begin " <<  reinterpret_cast<intptr_t>(rData.ngx_request_s) << " - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
+            // 退出提示
+            auto q_ngx_request_s = rData.ngx_request_s;
+            auto q_stampMS = rData.m_stampMS;
+            auto q_conn_id = rData.m_connection.m_id;
+            auto q_req_line = CNginxHelper::NgxStrToStdStr(rData.request_line);
+            cout << "*[nginx] begin " <<  reinterpret_cast<intptr_t>(q_ngx_request_s) << " - " << q_conn_id << " - " << q_req_line << endl;
             CAutoRelease _auto([&](){
-                cout << "*[nginx] end " <<  reinterpret_cast<intptr_t>(rData.ngx_request_s) << " - " << "(" << (CUtilFunc::GetCurrentStampMS() - rData.m_stampMS) << "ms) - " << rData.m_connection.m_id << " - " << CNginxHelper::NgxStrToStdStr(rData.request_line) << endl;
+                cout << "*[nginx] end " << iErrCode << " - " <<  reinterpret_cast<intptr_t>(q_ngx_request_s) << " - " << "(" << (CUtilFunc::GetCurrentStampMS() - q_stampMS) << "ms) - " << q_conn_id << " - " << q_req_line << endl;
                 // boost::this_thread::sleep(boost::posix_time::milliseconds(166));
             });
+            // 退出状态
             if (nullptr != rData.m_responseStatus) *rData.m_responseStatus = 200;
             // 加载核心处理功能
-            int iErrCode = /*NGX_DECLINED*/-5;
             if (g_work.get() == nullptr || (iErrCode = g_work->Work(rData)) > 0)
                 throw std::runtime_error("Uninitialized - " + std::to_string(iErrCode));
+            if (-2 == iErrCode) return iErrCode;
+            if (-4 == iErrCode) return iErrCode;
             if (/*NGX_DECLINED*/-5 == iErrCode) return iErrCode;
             // 返回
             // if (nullptr != rData.m_responseStatus && 200 != *rData.m_responseStatus && 101 != *rData.m_responseStatus)

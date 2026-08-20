@@ -509,15 +509,17 @@ namespace KCSrv
                             {
                                 boost::shared_array<char> strResidue(new char[iResidue + 1]{ 0 });
                                 boost::asio::async_read(this->m_socket, boost::asio::buffer(strResidue.get(), iResidue),
-                                    [this, self, pReq, reqPtr, strResidue](const boost::system::error_code& ec, std::size_t length)
+                                    [this, self, pReq, reqPtr, strResidue, iResidue](const boost::system::error_code& ec, std::size_t length)
                                     {
                                         try
                                         {
                                             if (!this->m_own.m_own.IsRunning()) return;
                                             if (!ec)
                                             {
+                                                if (iResidue != length)
+                                                    std::cout << (boost::format("? [%d] Read Body: %d != %d") % this->GetID() % iResidue % length).str() << std::endl;
+                                                // 拼请求体
                                                 pReq->m_body.append(strResidue.get(), length);
-                                                // std::cout << "[" << this->GetID() << "]Read Body:\n" << pReq->m_body << std::endl;
                                                 // 处理
                                                 this->Deal(reqPtr);
                                             }

@@ -120,8 +120,11 @@ int CNginxWork::Work(TNgxRequestData &r)
             cout << "20.[request post body get] " << reinterpret_cast<intptr_t>(&r) << " <" << CUtilFunc::CurrThreadID()
                  << "> (" << CNginxHelper::NgxStrToStdStr(t_ngxReqData->content_length, 12) << ") - " << CNginxHelper::NgxStrToStdStr(t_ngxReqData->unparsed_uri) << endl;
             iResult = CNginxHelper::NgxInfo().ngx_http_read_client_request_body(r.ngx_request_s, &GetClientBodyHandler);
+            if (iResult >= 300) return iResult;
+
             // if (-2 == iResult)
-                return /*NGX_OK*/0;
+                // return /*NGX_OK*/-4;
+            return -2 == iResult ? -4 : 0;
 
 
 
@@ -175,7 +178,13 @@ int CNginxWork::Work(TNgxRequestData &r)
         return static_cast<int>(iResult);
     }
     // GET请求
-    else return m_load.Request(reinterpret_cast<intptr_t>(&r));
+    else
+    {
+        return m_load.Request(reinterpret_cast<intptr_t>(&r));
+        // if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
+        //     CNginxHelper::NgxInfo().ngx_http_finalize_request(r.ngx_request_s, /*NGX_DONE*/-4);
+        // return 0;
+    }
 }
 void CNginxWork::GetClientBodyHandler(void *rSrc)
 {
@@ -201,8 +210,8 @@ void CNginxWork::GetClientBodyHandler(void *rSrc)
     g_work->m_load.Request(reinterpret_cast<intptr_t>(t_ngxReqData));
     // boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
-    // if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
-    //     CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, /*NGX_DONE*/-4);
+    if (nullptr != CNginxHelper::NgxInfo().ngx_http_finalize_request)
+        CNginxHelper::NgxInfo().ngx_http_finalize_request(rSrc, /*NGX_DONE*/-4);
 
 }
 
@@ -647,10 +656,10 @@ int CNginxWork::CommitResponseCB(intptr_t hRequest)
 {
     // return ap_rflush(reinterpret_cast<request_rec*>(hRequest));
     auto& re = *reinterpret_cast<TNgxRequestData*>(hRequest);
-    CNginxHelper::NgxInfo().ngx_http_finalize_request(re.ngx_request_s, /*NGX_DONE*/-4);
     // CNginxHelper::NgxInfo().ngx_http_send_special(re.ngx_request_s, /*NGX_HTTP_LAST*/1);
     if (nullptr != re.m_responseStatus && 200 != *re.m_responseStatus && 101 != *re.m_responseStatus)
         cout << "Http Status - " << *re.m_responseStatus << endl;
+    // CNginxHelper::NgxInfo().ngx_http_finalize_request(re.ngx_request_s, /*NGX_DONE*/-4);
     return 0;
 }
 
