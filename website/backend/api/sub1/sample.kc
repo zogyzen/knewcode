@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="sample">
+
+	<!-- 组合 -->
+	<Query type="group" exec="order">
+		<C1 url="../sub2/sub/sample.kc?act=Query" />
+	</Query>	
+	<Query2 type="group" exec="order">
+		<C1 url="../sub2/sub/sample.kc?act=Query2" />
+	</Query2>	
+	<Query3 type="group" exec="order">
+		<C1 url="../sub2/sub/sample.kc?act=Query3" />
+	</Query3>	
+	
+	<!-- 组合：分支 -->
+	<comQry1C1 method="procedures" attach='{"outParms":{"tab":"temp-table","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		#include "/api/sub2/sub/sample_query.sql"#
+	</comQry1C1>
+	<comQry1C2 type="group" exec="branch">
+	     <LG url="?act=comQry1C1" />
+		 <MM url="?act=comQry1C1" />
+	</comQry1C2>
+	<comQry1 type="group" exec="order">
+		<C1 url="?act=comQry1C1" />
+		<C2 url="?act=comQry1C2" />
+	</comQry1>	
+	
+</Controllers>

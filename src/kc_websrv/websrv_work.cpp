@@ -270,7 +270,7 @@ void CWebSrvWork::Init(void)
             {
                 if (c_RESTful_xmlcomment != sName && c_RESTful_xmlattr != sName)
                 {
-                    string sUrl = vt.second.get<string>(string(c_RESTful_xmlattr) + "." + c_RESTful_url);
+                    string sUrl = vt.second.get<string>(string(c_RESTful_xmlattr) + "." + c_RESTful_uri);
                     string sLocal = cntx.transCfgPathToFullPath(boost::algorithm::trim_right_copy_if(vt.second.get<string>(string(c_RESTful_xmlattr) + ".local"), boost::is_any_of("/")).c_str());
                     vPathMap.insert(make_pair(sUrl, sLocal));
                     vPathVct.push_back(sUrl);
@@ -328,15 +328,26 @@ void CWebSrvWork::Init(void)
     cout << "*[knewcode] load knewcode mod success \n" << sMsg << endl;
     cntx.WriteLogDebug(sMsg.c_str(), __CURR_CODE_PLACE_C__);
     // 写入进程编号
-    CUtilFunc::SaveFile(m_exePath + ".pid", std::to_string(getpid()));
+    // CUtilFunc::SaveFile(m_exePath + ".pid", std::to_string(getpid()));
+    string sPidPth = m_MainExecPath + "/pid/";
+    if (!boost::filesystem::exists(sPidPth)) boost::filesystem::create_directories(sPidPth);
+    string sXmlFile = boost::filesystem::path(m_CfgFile).filename().string();
+    CUtilFunc::SaveFile(sPidPth + sXmlFile + ".pid", std::to_string(getpid()));
 }
 
 // 释放
 void CWebSrvWork::Free(void)
 {
-    if (m_kcSrv.get() != nullptr) m_kcSrv->Stop();
-    m_proxy.Free();
-    m_kcSrv.reset();
+    try
+    {
+        if (m_kcSrv.get() != nullptr) m_kcSrv->Stop();
+        m_proxy.Free();
+        m_kcSrv.reset();
+        // 删除进程编号
+        string sPidFile = m_MainExecPath + "/pid/" + boost::filesystem::path(m_CfgFile).filename().string() + ".pid";
+        if (boost::filesystem::exists(sPidFile)) boost::filesystem::remove(sPidFile);
+    }
+    catch (...) {}
 }
 
 // 处理请求
@@ -382,11 +393,17 @@ void CWebSrvWork::Work(KCSrv::KcSrvRespondPtr res)
                     res->SetErrorPage(sPageFile, 403, fErrDeal);
                 // 静态页面
                 else
+                {
+                    // 如果是目录，拼上主页
+                    if (boost::filesystem::is_directory(sPageFile)) sPageFile += "/" + pHost->m_pageCfg.m_indexPage;
                     // 显示静态页面
                     res->SetStaticPage(sPageFile, fErrDeal);
+                }
             }
             m_proxy.StaticPage(reqCB);
         }
+        // 不处理
+        else cout << "[no processing] " << res->m_request->m_unparsed_uri << endl;
     }
     // 调用后端api
     else m_proxy.Work(reqCB);

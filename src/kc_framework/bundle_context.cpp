@@ -532,7 +532,12 @@ void CBundleContext::startup(void)
                 }
             }
             // 所有插件启动完成
-            for (auto &bundle : m_BundleMap) bundle.second->context_started();
+            for (auto &bundle : m_BundleMap)
+            try
+            {
+                bundle.second->context_started();
+            }
+            CATCH_EXCEPTION_TO_WRITELOG(*this, bundle.second->getName())
         }
     }
 	catch(TException& ex)

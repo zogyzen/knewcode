@@ -28,4 +28,7 @@
 
 	<!-- 删除数据 -->
 	<Delete method="delete" content="delete from test where name = :name" />
+	
+	
+	
 </Controllers>

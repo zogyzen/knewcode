@@ -64,7 +64,7 @@ win32 {
 unix {
     LIBS += -L/usr/local/lib
     LIBS += -L/usr/local/lib64
-    LIBS += -lcrypto -lssl
+    # LIBS += -lcrypto -lssl
 
     QMAKE_LFLAGS += -Wl,--version-script=$$PWD/version_script.map
     DISTFILES += version_script.map

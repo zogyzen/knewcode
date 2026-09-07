@@ -36,4 +36,5 @@ win32 {
 unix {
     QMAKE_LFLAGS += -Wl,--version-script=$$PWD/version_script.map
     DISTFILES += version_script.map
+    LIBS += -lrt
 }

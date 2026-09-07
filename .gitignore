@@ -5,3 +5,6 @@
 /website/db
 /src/kc_framework_qt5.pro.user
 /build
+/src/kc_framework_qt6.pro.user
+/lib
+/src/lib

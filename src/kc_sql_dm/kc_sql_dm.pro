@@ -54,19 +54,25 @@ win32{
     }
 }
 unix {
+    DEFINES += DM64
     # x86
     contains(QT_ARCH, x86_64) {
-        INCLUDEPATH += $$LIBRARYPTH3RD/linux/dm/dpi/include
-        LIBS += $$LIBRARYPTH3RD/linux/dm/dpi/libdmdpi.a
+        DMDIPPTH = $$LIBRARYPTH3RD/linux/dm/dpi
     }
     # arm
     else {
-        INCLUDEPATH += $$LIBRARYPTH3RD/linux/dm-arm/dpi/include
-        LIBS += $$LIBRARYPTH3RD/linux/dm-arm/dpi/libdmdpi.a
-        LIBS += -lrt
+        DMDIPPTH = $$LIBRARYPTH3RD/linux/dm-arm/dpi
     }
-    DEFINES += DM64
+    INCLUDEPATH += $$DMDIPPTH/include
+    # LIBS += $$DMDIPPTH/libdmdpi.a
+    LIBS += -L$$DMDIPPTH
+    LIBS += -ldmdpi
 
     QMAKE_LFLAGS += -Wl,--version-script=$$PWD/version_script.map
     DISTFILES += version_script.map
+
+    # 拷贝文件
+    QMAKE_POST_LINK += $$QMAKE_COPY $$DMDIPPTH/libdmdpi.so $$DESTDIR/../lib/ $$escape_expand(\\n\\t)
+    message($$QMAKE_POST_LINK)
+    export(QMAKE_POST_LINK)
 }

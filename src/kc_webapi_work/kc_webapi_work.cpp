@@ -561,7 +561,7 @@ void CKCWebApiWork::ExecCtrlApi(CCtrApilData &objCtrlD)
             return;
     }
     // 类型
-    string sType = objCtrlD.Type();
+    const string sType = objCtrlD.Type();
     // 控制器正文引用（用于替换）
     string &sContent = objCtrlD.ContentRef();
     // 替换包含的脚本
@@ -646,12 +646,19 @@ CKCJsonPackRespond::TCoreParmJsonRespondPtr CKCWebApiWork::SubCallResult(CCtrApi
     auto coreMov = subObjCtrlD.MoveOutResUp();
     if (coreMov.get() == nullptr)
         throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork_InvalidRespondRoot, __CURR_CODE_PLACE_C__, string(this->getHint("Null_Point_Data_")) + act.GetSingleInfo("the_request"), *this);
-    // 子控制器api的结果，上传到父控制器api中的结果
-    if (upResult) objCtrlD.MoveInRes(coreMov);
-    // 子控制器与父控制器交换内部数据集
-    objCtrlD.SwapInnerDbSet(subObjCtrlD);
+    // 判断是否存在结果
+    const bool bHasResult = subObjCtrlD.HasExec();
+    if (bHasResult)
+    {
+        objCtrlD.SetHasExec();
+        // 子控制器api的结果，上传到父控制器api中的结果
+        if (upResult) objCtrlD.MoveInRes(coreMov);
+        // 子控制器与父控制器交换内部数据集
+        objCtrlD.SwapInnerDbSet(subObjCtrlD);
+    }
     // 返回
-    return coreMov;
+    CKCJsonPackRespond* pResJsn = dynamic_cast<CKCJsonPackRespond*>(&objCtrlD.JsonRespond());
+    return bHasResult || nullptr == pResJsn ? coreMov : pResJsn->Copy();
 }
 
 // 持久对象

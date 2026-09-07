@@ -199,16 +199,16 @@ unix {
     QMAKE_LFLAGS += -Wl,-rpath,../lib
     QMAKE_LFLAGS += -Wl,-rpath,~/lib
     QMAKE_LFLAGS += -Wl,-rpath,~/website/knewcode_v12
-    QMAKE_RPATHDIR += :\'\$\$ORIGING\'   # 启动程序目录
+    QMAKE_RPATHDIR += :\'\$\$ORIGIN\'   # 启动程序目录
     QMAKE_RPATHDIR += \'\$$ORIGIN\'
     QMAKE_RPATHDIR += \'\$$ORIGIN/lib\'
     QMAKE_RPATHDIR += \'\$$ORIGIN/../lib\'
     QMAKE_LFLAGS_RPATH += #. .. ./libs
-    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGING\'
-    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGING/lib\'
-    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGING/../lib\'
-    QMAKE_LFLAGS += -Wl,-rpath,$ORIGING/../lib
-    QMAKE_LFLAGS += -Wl,-rpath,/usr/local/lib
+    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$PWD/../lib\'
+    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGIN\'
+    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGIN/lib\'
+    QMAKE_LFLAGS += -Wl,-rpath,\'\$\$ORIGIN/../lib\'
+    # QMAKE_LFLAGS += -Wl,-rpath,/usr/local/lib
     QMAKE_LFLAGS += -Wl,-rpath,/usr/local/knewcode
     QMAKE_LFLAGS += -Wl,-rpath,/usr/local/knewcode/lib
     QMAKE_LFLAGS += -Wl,-rpath,target
@@ -216,10 +216,46 @@ unix {
     # patchelf --print-rpath /path/to/your/executable                       # 查看当前RPATH
     # patchelf --set-rpath /new/path:/new/path2 /path/to/your/executable    # 设置新的RPATH
 
+    #
+    GCC_VER = $$system(gcc --version | head -n 1 | awk \'{print $NF}\')
+    message(Current GCC version: $$GCC_VER)
+
+# gblic版本
+    GLIBC_VER = $$system(ldd --version | head -n 1 | awk \'{print $NF}\')
+    message(Current GLIBC version: $$GLIBC_VER)
+
     # 链接本地glibc库，解决‘GLIBC_2.xx‘缺失问题
-    QMAKE_LFLAGS += -Wl,--dynamic-linker=$$DESTDIR/../lib/ld-linux-x86-64.so.2
-    LIBS += $$DESTDIR/../lib/ld-linux-x86-64.so.2
-    LIBS += $$DESTDIR/../lib/libgcc_s.so.1
+    contains(QT_ARCH, arm64){
+        equals(GLIBC_VER, 2.31){
+            QMAKE_LFLAGS += -Wl,--dynamic-linker=../lib/ld-linux-aarch64.so.1
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/ld-linux-aarch64.so.1
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/libgcc_s.so.1
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/libdl.so.2
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/librt.so.1
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/libssl.a
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/arm2.31/libcrypto.a
+        }
+    }else{
+        # GLIBC_VER = 2.28
+        equals(GLIBC_VER, 2.28){
+            QMAKE_LFLAGS += -Wl,--dynamic-linker=../lib/ld-linux-x86-64.so.2
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/ld-linux-x86-64.so.2
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libgcc_s.so.1
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libc.so.6
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libdl.so.2
+            # LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libpthread.so.0
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libssl.a
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.28/libcrypto.a
+        }
+        equals(GLIBC_VER, 2.36){
+            # QMAKE_LFLAGS += -Wl,-rpath-link=$$LIBRARYPTH3RD/linux/glibc/x64_2.36/
+            QMAKE_LFLAGS += -Wl,--dynamic-linker=../lib/ld-linux-x86-64.so.2
+            # LIBS += $$PWD/../lib/ld-linux-x86-64.so.2
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.36/libgcc_s.so.1
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.36/libssl.a
+            LIBS += $$LIBRARYPTH3RD/linux/glibc/x64_2.36/libcrypto.a
+        }
+    }
 
     QMAKE_LFLAGS += -Wl,-Bsymbolic
     # QMAKE_LFLAGS += -Wl,-soname
@@ -250,12 +286,12 @@ unix {
     LIBS += -static-libgcc #-static-libstdc++ -ldl -lstdc++
 
     # LIBS += -ldl -lrt -fPIC -fexceptions
-    LIBS += -lrt -fPIC -fexceptions
+    LIBS += -fPIC -fexceptions
 
 
     # 判断x86或arm芯片架构
     contains(QT_ARCH, arm64){
-        BOOSTPTH = $$LIBRARYPTH3RD/linux/boost/arm_gcc9
+        BOOSTPTH = $$LIBRARYPTH3RD/linux/boost/arm_clang18
     }else{
         BOOSTPTH = $$LIBRARYPTH3RD/linux/boost/x64_clang18
     }

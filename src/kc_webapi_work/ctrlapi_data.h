@@ -117,6 +117,10 @@ public:
         this->m_innerDbSet.swap(ctrlD.m_innerDbSet);
     }
 
+    // 是否执行过
+    bool HasExec(void) const { return m_hasExec; }
+    void SetHasExec(void) { m_hasExec = true; }
+
 public:
     // 批量组操作的内部临时参数
     typedef std::weak_ptr<const CKCJsonPack> CKCJsonPackWeakPtr;
@@ -171,6 +175,9 @@ protected:
     CKCJsonPackRespond m_jsonRespond;
     // 本控制器保存的内部数据集
     map<string, CSqlFunc::TRecordSetPtr> m_innerDbSet;
+
+    // 是否执行过
+    bool m_hasExec = false;
 
 public:
     // 固定的参数字段名称：输入参数

@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="sample">
+
+	<!-- 组合 -->
+	<Query type="group" exec="order">
+		<C1 url="../../sample.kc?act=Query" />
+	</Query>	
+
+	<!-- 引用 -->
+	<Query2 method="procedures" attach='{"outParms":{"tab":"temp-table","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		#include "sample_query.sql"#
+	</Query2>
+	<!-- 绝对路径 -->
+	<Query3 method="procedures" attach='{"outParms":{"tab":"temp-table","errMsg":"varchar2","logMsg":"varchar2"}}'>
+		#include "/api/sub2/sub/sample_query.sql"#
+	</Query3>
+	
+	
+</Controllers>

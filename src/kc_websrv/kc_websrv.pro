@@ -81,9 +81,9 @@ unix {
     # 无窗口
     #QMAKE_CXXFLAGS += -mwindows
 
-    LIBS += -L/usr/local/lib
-    LIBS += -L/usr/local/lib64
-    LIBS += -lcrypto -lssl
+    # LIBS += -L/usr/local/lib
+    # LIBS += -L/usr/local/lib64
+    # # LIBS += -lcrypto -lssl
     LIBS += -ldl
 
     # 拷贝文件

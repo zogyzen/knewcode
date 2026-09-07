@@ -72,17 +72,18 @@ unix {
 
     # 判断x86或arm芯片架构
     contains(QT_ARCH, arm64){
-        LIBPQPTH = /usr/include/postgresql
-        INCLUDEPATH += $$LIBPQPTH
+        # = /usr/include/postgresql
+        #INCLUDEPATH += $$LIBPQPTH
+        LIBPQPTH = $$LIBRARYPTH3RD/linux/postgresql/pgsql18arm
     }else{
         LIBPQPTH = $$LIBRARYPTH3RD/linux/postgresql/pgsql18x64
-        INCLUDEPATH += $$LIBPQPTH/include
-        LIBS += -L$$LIBPQPTH/lib
-
-        # 拷贝文件
-        QMAKE_POST_LINK += $$QMAKE_COPY $$LIBPQPTH/lib/libpq.so.5 $$DESTDIR/../lib/ $$escape_expand(\\n\\t)
     }
+    INCLUDEPATH += $$LIBPQPTH/include
+    LIBS += -L$$LIBPQPTH/lib
     LIBS += -lpq
+    # LIBS += $$LIBPQPTH/lib/libpq.a
+    # 拷贝文件
+    QMAKE_POST_LINK += $$QMAKE_COPY $$LIBPQPTH/lib/libpq.so.5 $$DESTDIR/../lib/ $$escape_expand(\\n\\t)
 
     QMAKE_LFLAGS += -Wl,--version-script=$$PWD/version_script.map
     DISTFILES += version_script.map

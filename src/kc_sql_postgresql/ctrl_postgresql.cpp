@@ -585,11 +585,18 @@ void CCtrlPgSQL::TDBCommandPgSQL::PrepareByProcedures(void)
         }
         //auto &parm = *iter;
         // 参数名
-        string sParmName = (format("%s___%d__%s") % parm.second->sName % parm.second->iPos % sNowTime).str();
+        string sParmName = (boost::format("%s___%d__%s") % parm.second->sName % parm.second->iPos % sNowTime).str();
         // 参数输入输出类型
         string sParmInOutType = bIsOutParm ? "INOUT" : "IN";
+        // 参数数据类型
+        string sParmDataType = parm.second->Get<TParmPgSQL>().sDbTP;
+        if ("int" == sParmDataType)
+        {
+            const auto &dType = parm.second->anyVal.type();
+            if (dType == typeid(long long) || dType == typeid(unsigned long long)) sParmDataType = "bigint";
+        }
         // 拼加
-        sFuncCreateSQL += sParmInOutType + " " + sParmName + " " + parm.second->Get<TParmPgSQL>().sDbTP + ",";
+        sFuncCreateSQL += sParmInOutType + " " + sParmName + " " + sParmDataType + ",";
 
         // 替换sql语句中的参数名
         //        if (m_own.m_parmCaseSensitive)

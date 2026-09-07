@@ -218,7 +218,10 @@ const IKCJson& CCtrApilData::GetUserParmJson(const char* name) const
         // 1.在请求的输入参数区域里找
         const IKCJson& jsonInParm = JsonRequest().GetItem(m_nameInParms.c_str()).GetItem(name);
         if (jsonInParm.IsValid()) return jsonInParm;
-        // 2.在请求的根区域里找
+        // 2.在“replace”里找（为了兼容旧系统）
+        const IKCJson& jsonReplace = JsonRequest().GetItem(c_RESTful_replace).GetItem(name);
+        if (jsonReplace.IsValid()) return jsonReplace;
+        // 3.在请求的根区域里找
         const IKCJson& jsonIn = JsonRequest().GetItem(name);
         if (jsonIn.IsValid()) return jsonIn;
     }
@@ -750,6 +753,7 @@ const char* CCtrApilDataBase::transItemUrlToFullPath(const char* url) const
     {
         static thread_local string sUrl;
         sUrl = CUtilFunc::PCharSafeToStr(url);
+        /*
         // 如果不是从根目录开始，则转换为当前页面的相对目录
         if ('/' != sUrl[0])
             sUrl = m_re.GetUrlPagePath() + string("/") + sUrl;
@@ -758,6 +762,17 @@ const char* CCtrApilDataBase::transItemUrlToFullPath(const char* url) const
         sUrl = m_re.CanonicalUrl(sUrl.c_str());
         // 转换为本地路径
         sUrl = m_re.GetLocalFilename(sUrl.c_str());
+        return sUrl.c_str();
+        */
+        // // 如果是本地绝对路径，直接返回
+        // if (boost::filesystem::path(sUrl).is_absolute())
+        //     return url;
+        // 如果是网站根路径，取网站路径对应的本地路径
+        if ('/' == sUrl[0])
+            sUrl = m_re.GetLocalFilename(m_re.CanonicalUrl(sUrl.c_str()));
+        // 相对本控制器kc文件的相对路径
+        else
+            sUrl = boost::filesystem::path(m_kcFilePath).parent_path().string() + "/" + sUrl;
         return sUrl.c_str();
     }
     catch (TException &ex)
@@ -911,6 +926,7 @@ std::string CCtrApilDataBase::GetFixParmName(std::string prmName) const
 // 执行结果
 void CCtrApilDataBase::SetPerformResult(void)
 {
+    m_hasExec = true;
     // 在应答的json里，添加字符集
     if (m_charset != c_RESTful_UTF8 && JsonAttach().GetItem(c_RESTful_outParm).HasItem(c_RESTful_Charset) && !JsonRespond().HasItem(c_RESTful_Charset))
         JsonRespond().SetStr(c_RESTful_Charset, m_charset.c_str());
