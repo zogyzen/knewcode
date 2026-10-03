@@ -942,9 +942,10 @@ void CCtrlOracle::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
     Statement *stmt = nullptr;
     auto fExceptInfo = [&](void)
     {
-        return (format("%s%s%s%s%s%s\n%s\n%s?act=%s\n[Connect: %d-%X][Statement: %X] \t")
+        return (format("%s%s%s%s%s%s\n%s\n\n%s?act=%s\n[Connect: %d-%X][Statement: %X] \t")
                 % c_strLineShow % sLastSQL % c_strLineShow % CUtilFunc::PCharSafeToStr(pSQL) % c_strLineShow
-                % act.GetSingleInfo("the_request") % sJsonParm % pLocalFile % sAct % iConnID % conn % stmt).str();
+                % act.GetSingleInfo("the_request") % (sJsonParm.size() < 4096 ? sJsonParm : (sJsonParm.substr(0, 4096) + " ..."))
+                % pLocalFile % sAct % iConnID % conn % stmt).str();
     };
     try
     {

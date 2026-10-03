@@ -416,7 +416,7 @@ void CCtrlPgSQL::TDBCommandPgSQL::TranRollback(void)
 {
     PQexec(&m_con, "ROLLBACK");
 }
-void CCtrlPgSQL::TDBCommandPgSQL::TranSavePoint(string)
+int CCtrlPgSQL::TDBCommandPgSQL::TranSavePoint(string)
 {
     string sStmtName = m_stmtName + "_pnt";
     if (!m_tranSavePnt.empty())
@@ -426,6 +426,7 @@ void CCtrlPgSQL::TDBCommandPgSQL::TranSavePoint(string)
     // if (!m_tranSavePnt.empty())
     //     PQexec(&m_con, ("savepoint " + m_tranSavePnt).c_str());
     PQexecPrepared(&m_con, (sStmtName + "_save").c_str(), 0, nullptr, nullptr, nullptr, 0);
+    return 0;
 }
 void CCtrlPgSQL::TDBCommandPgSQL::TranRollbackToSavePoint(void)
 {
@@ -1649,9 +1650,11 @@ void CCtrlPgSQL::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm& /*a
     int iExecSort = 0;
     auto fExceptInfo = [&](void)
     {
-        return (format("\n%d.%s%s%s%s%s%s%s%s%s%s%s\n%s?act=%s") % iExecSort % act.GetSingleInfo("UniqueConnID") % c_strLineShow
+        return (format("\n%d.%s%s%s%s%s%s%s%s%s\n%s%s\n%s?act=%s")
+                % iExecSort % act.GetSingleInfo("UniqueConnID") % c_strLineShow
                 % sSQL % c_strLineShow % sFuncCreateSQL % c_strLineShow % sExecSQL % c_strLineShow
-                % sJsonParm % c_strLineShow % act.GetSingleInfo("the_request") % pLocalFile % sAct).str();
+                % (sJsonParm.size() < 4096 ? sJsonParm : (sJsonParm.substr(0, 4096) + " ..."))
+                % c_strLineShow % act.GetSingleInfo("the_request") % pLocalFile % sAct).str();
     };
     try
     {

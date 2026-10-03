@@ -103,6 +103,10 @@ win32 {
         # 源文件编码改为utf8，日志可以输出Emoji表情
         QMAKE_CXXFLAGS += /utf-8
 
+        # 禁止未使用变量的警告
+        QMAKE_CXXFLAGS += /wd"4100"
+        QMAKE_CXXFLAGS += /wd"4101"
+
         # QMAKE_CXXFLAGS_RELEASE -= -O2
         # QMAKE_CXXFLAGS_RELEASE += -O0
         # QMAKE_CFLAGS_RELEASE -= -O2
@@ -167,6 +171,11 @@ win32 {
         QMAKE_CXXFLAGS += -m64
         QMAKE_LFLAGS  += -m64
 
+        QMAKE_CXXFLAGS += -Wno-unknown-pragmas
+        # 禁止未使用变量的警告
+        QMAKE_CXXFLAGS += -Wno-unused-variable
+        QMAKE_CXXFLAGS += -Wno-unused-parameter
+
         # QMAKE_CXXFLAGS += -nostdlib
         # QMAKE_LFLAGS += -nostartfiles -nostdlib -nodefaultlibs
 
@@ -220,7 +229,7 @@ unix {
     GCC_VER = $$system(gcc --version | head -n 1 | awk \'{print $NF}\')
     message(Current GCC version: $$GCC_VER)
 
-# gblic版本
+    # gblic版本
     GLIBC_VER = $$system(ldd --version | head -n 1 | awk \'{print $NF}\')
     message(Current GLIBC version: $$GLIBC_VER)
 
@@ -267,6 +276,11 @@ unix {
     # LFLAGS += -fPIC
     # QMAKE_CXXFLAGS += -m64
     # QMAKE_LFLAGS  += -m64
+
+    QMAKE_CXXFLAGS += -Wno-unknown-pragmas
+    # 禁止未使用变量的警告
+    QMAKE_CXXFLAGS += -Wno-unused-variable
+    QMAKE_CXXFLAGS += -Wno-unused-parameter
 
     CONFIG += plugin
     # CONFIG += -static -static-glibc -static-libgcc -static-libstdc++

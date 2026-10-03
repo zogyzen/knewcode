@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>自来水公司接口测试</title>
+	</head>
+	<body>
+		<!-- <span id="token"></span>&ensp;<button onclick="onGetTokenClick()">获取令牌</button><br> -->
+		<span id="url"></span>&ensp;<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
+		<div id="recv"></div>
+		<script type="text/javascript">
+			// 接口url
+			var url = window.location.protocol + "//" + window.location.host + "/api/dm.kc?act=Batch2";
+			// 接口参数
+			var dataParm =
+{
+  "parms": {
+    "Token": "",
+    "YM": 202009,
+    "Page": 1,
+    "RecCount": 42,
+    "TotalCount": 42,
+    "IsComplete": 1,
+    "errMsg": ""
+  },
+  "vals": [
+    {
+	  "txt": "abc",
+	  "val": 1,
+	  "num": 1.1
+    },
+    {
+	  "txt": "bbb",
+	  "val": 2,
+	  "num": 2.5
+    },
+    {
+	  "txt": "ccc",
+	  "val": 3,
+	  "num": 3.5
+    },
+    {
+	  "txt": "ddd",
+	  "num": 4.8
+    }
+  ]
+}
+			;
+			// 供水企业获取token参数
+			var getTokenUrl = window.location.protocol + "//" + window.location.host + "/pdwb-jk/token.kc?act=GetToken";
+			var getTokenPrm = {"UserName":"nh", "KeyId":"NHToPDJKid0001", "KeySecret":"nFN5ncm6njTpYmEDvS4A9DMQys4W"};
+			
+			// ajax调用
+			function ajaxCall(url, dataParm, fn = (jsn) => {}) {
+				document.getElementById("recv").innerText = "";
+				document.getElementById("stt").innerText = "";
+				// ajax对象
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', url, true);//请求方式，请求地址，是否异步
+				//xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				// 允许跨域
+				xhr.setRequestHeader('Access-Control-Request-Private-Network', 'true');
+				xhr.setRequestHeader('Access-Control-Request-Headers', 'Access-Control-Request-Private-Network');
+				xhr.withCredentials = true; // 启用 cookies 的发送
+				xhr.responseType = "text";  // 返回类型text
+				//xhr.responseType = "blob";  // 返回类型blob
+				xhr.onload = function () {// 请求完成处理函数
+					let sResp = xhr.responseText;
+					document.getElementById("recv").innerText = sResp;
+					document.getElementById("stt").innerText = this.status;
+					try {
+						let jsn = JSON.parse(sResp);
+						fn(jsn);
+						console.log(jsn);
+					}
+					catch (err) {
+						console.error(err, sResp);
+					}
+				};
+				xhr.onerror = function (e) {
+					console.log(e);
+					document.getElementById("recv").innerText = "";
+					document.getElementById("stt").innerText = this.status;
+				};
+				// 发送ajax请求
+				xhr.send(JSON.stringify(dataParm));
+			};
+			
+			// 获取令牌
+			function onGetTokenClick() {
+				//preflight();
+				ajaxCall(getTokenUrl, getTokenPrm, (jsn) => {
+					document.getElementById("token").innerText = dataParm.parms.Token = jsn.parms.Token;
+				});
+			}
+			
+			// 测试
+			function onTestClick() {
+				//preflight();
+				ajaxCall(url, dataParm);
+			}
+						
+			window.onload = function() {
+				document.getElementById("url").innerText = url;
+			};
+			
+		</script>
+	</body>
+</html>

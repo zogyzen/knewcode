@@ -700,10 +700,10 @@ const char* CBundleContext::Encrypted(const char* src, unsigned long len, const 
             const char keyArr[33] = { 0 };
             memcpy((void*)keyArr, key, std::min((size_t)32, strlen(key)));
             const std::vector<unsigned char> keyBytes = plusaes::key_from_string(&keyArr);
-            const unsigned long encrypted_size = plusaes::get_padded_encrypted_size(raw_data.size());
+            const unsigned long encrypted_size = plusaes::get_padded_encrypted_size(static_cast<unsigned long>(raw_data.size()));
             std::vector<unsigned char> encrypted(encrypted_size);
             memset(encrypted.data(), 0, encrypted.size());
-            if (plusaes::encrypt_cbc((unsigned char*)raw_data.data(), raw_data.size(), &keyBytes[0], keyBytes.size(), &c_plusAesIV, &encrypted[0], encrypted.size(), true) == plusaes::kErrorOk)
+            if (plusaes::encrypt_cbc((unsigned char*)raw_data.data(), static_cast<unsigned long>(raw_data.size()), &keyBytes[0], static_cast<unsigned long>(keyBytes.size()), &c_plusAesIV, &encrypted[0], static_cast<unsigned long>(encrypted.size()), true) == plusaes::kErrorOk)
                 sResult = CUtilFunc::Base64Encode(encrypted.data(), encrypted_size);
         }
         catch (...) {}
@@ -719,15 +719,15 @@ const char* CBundleContext::Decrypted(const char* src, unsigned long& len, const
         try
         {
             std::string raw_data(src, len);
-            raw_data = CUtilFunc::Base64Decode((unsigned char*)raw_data.data(), raw_data.size());
-            len = raw_data.size();
+            raw_data = CUtilFunc::Base64Decode((unsigned char*)raw_data.data(), static_cast<int>(raw_data.size()));
+            len = static_cast<unsigned long>(raw_data.size());
             const char keyArr[33] = { 0 };
             memcpy((void*)keyArr, key, std::min((size_t)32, strlen(key)));
             const std::vector<unsigned char> keyBytes = plusaes::key_from_string(&keyArr);
             std::vector<unsigned char> decrypted(len + 1);
             memset(decrypted.data(), 0, decrypted.size());
             unsigned long padded_size = 0;
-            if (plusaes::decrypt_cbc((unsigned char*)&raw_data[0], raw_data.size(), &keyBytes[0], keyBytes.size(), &c_plusAesIV, &decrypted[0], decrypted.size(), &padded_size) == plusaes::kErrorOk)
+            if (plusaes::decrypt_cbc((unsigned char*)&raw_data[0], static_cast<unsigned long>(raw_data.size()), &keyBytes[0], static_cast<unsigned long>(keyBytes.size()), &c_plusAesIV, &decrypted[0], static_cast<unsigned long>(decrypted.size()), &padded_size) == plusaes::kErrorOk)
             {
                 sResult = string((const char*)decrypted.data(), len);
                 len = len - padded_size;

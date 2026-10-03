@@ -39,7 +39,7 @@ namespace KCSrv
         </div>
         <span>%4%</span>
         <hr>
-        <div style="text-align: center;"><a target="_blank" href="https://apikc.cc">%5%</a></div>
+        <div style="text-align: center;"><a target="_blank" href="https://kc.gl">%5%</a></div>
     </body>
 </html>
     )";
@@ -77,24 +77,66 @@ namespace KCSrv
 
     // 应答状态列表
     const std::map<int, std::string> c_mapStatus = {
-        {100, "Continue"},                  // 初始请求已接受，客户端应继续发送剩余部分
-        {101, "Switching Protocols"},       // 服务器同意切换协议（如升级为 WebSocket）
-        {200, "OK"},                        // 请求成功
-        {201, "Created"},                   // 请求成功且服务器创建了新的资源（常见于 POST）
-        {204, "No Content"},                // 请求成功，但响应体无内容（常见于 DELETE）
-        {206, "Partial Content"},           // 只返回文件部分内容（请求头Range的范围），用于断点续传
-        {301, "Moved Permanently"},         // 资源‌永久‌移动到新 URL，浏览器会自动跳转
-        {302, "Found"},                     // 资源‌临时‌移动到新 URL，客户端应继续使用原 URL
-        {304, "Not Modified"},              // 资源未修改，客户端可使用本地缓存
-        {400, "Bad Request"},               // 请求语法错误或参数无效
-        {401, "Unauthorized"},              // 需要身份验证，未提供或无效
-        {403, "Forbidden"},                 // 服务器理解请求，但‌拒绝执行‌（权限不足）
-        {404, "Not Found"},                 // 服务器找不到请求的资源
-        {416, "Range Not Satisfiable"},     // 在断点续传时，请求头Range的范围超出文件大小
-        {500, "Internal Server Error"},     // 服务器遇到意外情况，无法完成请求
-        {502, "Bad Gateway"},               // 作为网关的服务器收到上游服务器的无效响应
-        {503, "Service Unavailable"},       // 服务器暂时过载或正在维护
-        {504, "Gateway Timeout"}            // 网关服务器未及时从上游服务器获得响应
+        // 信息响应
+        {100, "Continue"},                              // 初始请求已接受，客户端应继续发送剩余部分
+        {101, "Switching Protocols"},                   // 服务器同意切换协议（如升级为 WebSocket）
+        {102, "Processing"},                            // 处理将被继续执行（由WebDAV（RFC 2518）扩展的状态码）
+        // 成功
+        {200, "OK"},                                    // 请求成功
+        {201, "Created"},                               // 请求成功且服务器创建了新的资源（常见于 POST）
+        {202, "Accepted"},                              // 请求已接受，但处理尚未完成
+        {203, "Non-Authoritative Information"},         // 服务器已成功处理了请求，但返回的实体头部元信息不是在原始服务器上有效的确定集合，而是来自本地或者第三方的拷贝
+        {204, "No Content"},                            // 请求成功，但响应体无内容（常见于 DELETE）
+        {205, "Reset Content"},                         // 服务器成功处理了请求，且没有返回任何内容
+        {206, "Partial Content"},                       // 只返回文件部分内容（请求头Range的范围），用于断点续传
+        {207, "Multi-Status"},                          // 之后的消息体将是一个XML消息，并且可能依照之前子请求数量的不同，包含一系列独立的响应代码（由WebDAV（RFC 2518）扩展的状态码）
+        // 重定向
+        {300, "Multiple Choices"},                      // 被请求的资源有一系列可供选择的回馈信息，每个都有自己特定的地址和浏览器驱动的商议信息
+        {301, "Moved Permanently"},                     // 资源‌永久‌移动到新 URL，浏览器会自动跳转
+        {302, "Found"},                                 // 资源‌临时‌移动到新 URL，客户端应继续使用原 URL
+        {303, "See Other"},                             // 应使用 GET 方法访问新地址（常用于表单提交后跳转）
+        {304, "Not Modified"},                          // 资源未修改，客户端可使用本地缓存
+        {305, "Use Proxy"},                             // 被请求的资源必须通过指定的代理才能被访问
+        {307, "Temporary Redirect"},                    // 临时重定向，保留原始请求方法
+        {308, "Permanent Redirect"},                    // 永久重定向，保留原始请求方法
+        // 客户端错误
+        {400, "Bad Request"},                           // 请求语法错误或参数无效
+        {401, "Unauthorized"},                          // 需要身份验证，未提供或无效
+        {403, "Forbidden"},                             // 服务器理解请求，但‌拒绝执行‌（权限不足）
+        {404, "Not Found"},                             // 服务器找不到请求的资源
+        {405, "Method Not Allowed"},                    // 请求方法不被该资源支持
+        {406, "Not Acceptable"},                        // 请求的资源的内容特性无法满足请求头中的条件，因而无法生成响应实体
+        {407, "Proxy Authentication Required"},         // 客户端必须在代理服务器上进行身份验证
+        {408, "Request Timeout"},                       // 请求超时
+        {409, "Conflict"},                              // 由于和被请求的资源的当前状态之间存在冲突，请求无法完成
+        {410, "Gone"},                                  // 资源已永久删除，且无转发地址
+        {411, "Length Required"},                       // 服务器拒绝在没有定义 Content-Length 头的情况下接受请求
+        {412, "Precondition Failed"},                   // 服务器在验证在请求的头字段中给出先决条件时，没能满足其中的一个或多个
+        {413, "Request Entity Too Large"},              // 请求提交的实体数据大小超过了服务器愿意或者能够处理的范围
+        {414, "Request-URI Too Long"},                  // 请求的URI长度超过了服务器能够解释的长度
+        {415, "Unsupported Media Type"},                // 请求中提交的实体并不是服务器中所支持的格式
+        {416, "Range Not Satisfiable"},                 // 在断点续传时，请求头Range的范围超出文件大小
+        {417, "Expectation Failed"},                    // 请求头Expect中指定的预期内容无法被服务器满足
+        {421, "Misdirected Request"},                   // 请求被指向到无法生成响应的服务器（比如由于连接重复使用）
+        {423, "Locked"},                                // 当前资源被锁定。（RFC 4918 WebDAV）
+        {424, "Failed Dependency"},                     // 由于之前的某个请求发生的错误，导致当前请求失败，例如 PROPPATCH。（RFC 4918 WebDAV）
+        {425, "Too Early"},                             // 代表服务器不愿意冒风险来处理该请求，原因是处理该请求可能会被“重放”，从而造成潜在的重放攻击。（RFC 8470）
+        {426, "Upgrade Required"},                      // 客户端应当切换到TLS/1.0。（RFC 2817）
+        {429, "Too Many Requests"},                     // 请求频率过高，触发了速率限制
+        {449, "Retry With"},                            // 由微软扩展，代表请求应当在执行完适当的操作后进行重试
+        {451, "Unavailable For Legal Reasons"},         // 该请求因法律原因不可用。（RFC 7725）
+        // 服务器错误
+        {500, "Internal Server Error"},                 // 服务器遇到意外情况，无法完成请求
+        {501, "Not Implemented"},                       // 服务器不支持请求的功能
+        {502, "Bad Gateway"},                           // 作为网关的服务器收到上游服务器的无效响应
+        {503, "Service Unavailable"},                   // 服务器暂时过载或正在维护
+        {504, "Gateway Timeout"},                       // 网关服务器未及时从上游服务器获得响应
+        {505, "HTTP Version Not Supported"},            // 服务器不支持请求的 HTTP 协议版本
+        {506, "Variant Also Negotiates"},               // 服务器存在内部配置错误：被请求的协商变元资源被配置为在透明内容协商中使用自己，因此在一个协商处理中不是一个合适的重点。由《透明内容协商协议》（RFC 2295）扩展
+        {507, "Insufficient Storage"},                  // 服务器无法存储完成请求所必须的内容。这个状况被认为是临时的。WebDAV (RFC 4918)
+        {509, "Bandwidth Limit Exceeded"},              // 服务器达到带宽限制。（不是一个官方的状态码）
+        {510, "Not Extended"},                          // 获取资源所需要的策略并没有被满足。（RFC 2774）
+        {600, "Unparseable Response Headers"}           // 源站没有返回响应头部，只返回实体内容
     };
 
     // 用于启动内置web服务器的基本参数
@@ -104,6 +146,8 @@ namespace KCSrv
         unsigned threadCount = 32;
         // 端口
         unsigned short portHttp = 0, portHttps = 0;
+        // 是否启动
+        bool portHttpIsStart = false, portHttpsIsStart = false;
         // ssl证书文件
         std::string sslKey = "./ssl/private.key", sslCert = "./ssl/fullchain.pem";
     };
@@ -178,6 +222,9 @@ namespace KCSrv
             if (vctFirstLine.size() > 1)
             {
                 m_unparsed_uri = boost::algorithm::trim_copy(vctFirstLine[1]);
+                // 去掉多余的斜杠
+                while (m_unparsed_uri.find("//") != std::string::npos)
+                    m_unparsed_uri = boost::algorithm::replace_all_copy(m_unparsed_uri, "//", "/");
                 // 解析请求的uri
                 std::vector<std::string> vctUrl;
                 boost::algorithm::split(vctUrl, m_unparsed_uri, boost::is_any_of("?"));
@@ -346,12 +393,13 @@ namespace KCSrv
                                 std::string sEnd = boost::algorithm::trim_copy(vctRange[1]);
                                 if (!sEnd.empty()) iEnd = boost::lexical_cast<long long>(sEnd);
                             }
-                            if (iEnd >= iSizeFile) throw std::runtime_error(itRange->second + " Error. " + std::to_string(iEnd));
+                            if (iEnd >= static_cast<long long>(iSizeFile))
+                                throw std::runtime_error(itRange->second + " Error. " + std::to_string(iEnd));
                             // 实际读取的大小
                             m_readSize = iEnd - m_readBegin + 1;
                             if (m_readSize <= 0) throw std::runtime_error(itRange->second + " Error. " + std::to_string(m_readSize));
                             SetHead(c_WebHeader_ContentRange, (boost::format("bytes %lld-%lld/%lld") % m_readBegin % iEnd % iSizeFile).str());
-                            m_status = m_readSize < iSizeFile ? 206 : 200;
+                            m_status = m_readSize < static_cast<long long>(iSizeFile) ? 206 : 200;
                         }
                         catch (std::exception &ex)
                         {
@@ -447,7 +495,7 @@ namespace KCSrv
             {
                 auto itStatus = c_mapStatus.find(errCode);
                 std::string sStatus = c_mapStatus.end() != itStatus ? itStatus->second : std::to_string(errCode);
-                m_body = (boost::format(c_modPageErr) % ("❌" + std::to_string(errCode) + ": " + sSysName + " - " + sFileLeaf)
+                m_body = (boost::format(c_modPageErr) % ("❌" + std::to_string(errCode) + ": " + sFileLeaf + " - " + sSysName)
                           % ("\"" + sFileLeaf + "\" " + sStatus)
                           % errCode % sOther
                           % m_request->m_connect->GetSrvHttp().KnewcodeVersion()).str();
@@ -457,6 +505,8 @@ namespace KCSrv
         }
     };
     typedef std::shared_ptr<KcSrvRespond> KcSrvRespondPtr;
+    // 客户端连接的回调函数
+    typedef std::function<bool(long, std::string, KcSrvConnectPtr)> FClientConnStart;
     // 请求处理的回调函数
     typedef std::function<void(KcSrvRespondPtr)> FRequestRespond;
 
@@ -477,16 +527,18 @@ namespace KCSrv
 
     protected:
         // 初始连接
-        virtual void Start(void)
+        virtual bool Start(void)
         {
-            std::cout << "[" << this->GetID() << "] Client Connect: \t" << std::hex << &this->m_socket << std::endl;
+            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Client Connect: \t" << std::hex << &this->m_socket << std::endl;
+            return m_own.m_own.ClientConnStart(this->GetID(), this->ClientIP(), this->shared_from_this());
         }
         // 读请求
         void do_read(void)
         {
             auto self(this->shared_from_this());
-            // 读请求头
+            // 读请求头，使用动态自动扩展缓冲区
             std::shared_ptr<boost::asio::streambuf> bufReadPtr(new boost::asio::streambuf);
+            // 读请求头，直到指定标记。（可能会多读一些数据）
             boost::asio::async_read_until(this->m_socket, *bufReadPtr, "\r\n\r\n",
                 [this, self, bufReadPtr](const boost::system::error_code& ec, std::size_t length)
                 {
@@ -495,13 +547,17 @@ namespace KCSrv
                         if (!this->m_own.m_own.IsRunning()) return;
                         if (!ec)
                         {
+                            // boost::asio::streambuf::const_buffers_type bufReadData = bufReadPtr->data();
                             std::string dataHeader(buffers_begin(bufReadPtr->data()), buffers_begin(bufReadPtr->data()) + length);
-                            bufReadPtr->consume(length);
-                            bufReadPtr->commit(length);
-                            std::cout << "[" << this->GetID() << "] read:" << std::endl << dataHeader << std::endl;
+                            bufReadPtr->consume(length);    // 消费掉请求头这部分数据
+                            // bufReadPtr->commit(length);
+                              std::cout << "[" << this->GetID() << "] read: " << std::dec << bufReadPtr->size() << " / " << length
+                                      << std::endl << dataHeader << std::endl;
                             KcSrvRequest *pReq = new KcSrvRequest(self, dataHeader);
                             KcSrvRequestPtr reqPtr(pReq);
-                            pReq->m_body.append(buffers_begin(bufReadPtr->data()), buffers_end(bufReadPtr->data()));
+                            // 如果存在多读数据，先放到请求体里
+                            if (bufReadPtr->size() > 0)
+                                pReq->m_body.append(buffers_begin(bufReadPtr->data()), buffers_end(bufReadPtr->data()));
                             // 剩余未读数据
                             long long iResidue = reqPtr->m_ContentLength - bufReadPtr->size();
                             // 读请求体
@@ -517,7 +573,7 @@ namespace KCSrv
                                             if (!ec)
                                             {
                                                 if (iResidue != length)
-                                                    std::cout << (boost::format("? [%d] Read Body: %d != %d") % this->GetID() % iResidue % length).str() << std::endl;
+                                                    std::cout << (boost::format("? [%d / %s] Read Body: %d != %d") % this->GetID() % this->ClientIP() % iResidue % length).str() << std::endl;
                                                 // 拼请求体
                                                 pReq->m_body.append(strResidue.get(), length);
                                                 // 处理
@@ -525,13 +581,13 @@ namespace KCSrv
                                             }
                                             else
                                             {
-                                                std::cout << "[" << this->GetID() << "] Read Body: " << ec.message() << std::endl;
+                                                std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Read Body: " << ec.message() << std::endl;
                                                 WaitNextRequest(self, ec, 555);
                                             }
                                         }
                                         catch (...)
                                         {
-                                            std::cout << "[" << this->GetID() << "] Read Body: Unknown Error" << std::endl;
+                                            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Read Body: Unknown Error" << std::endl;
                                             WaitNextRequest(self, ec, 555);
                                         }
                                     });
@@ -540,13 +596,13 @@ namespace KCSrv
                         }
                         else
                         {
-                            std::cout << "[" << this->GetID() << "] async_read_until Error: " << ec.value() << "-" << ec.message() << std::endl;
+                            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] async_read_until Error: " << ec.value() << "-" << ec.message() << std::endl;
                             WaitNextRequest(self, ec, 555);
                         }
                     }
                     catch (...)
                     {
-                        std::cout << "[" << this->GetID() << "] async_read_until Error: Unknown Error" << std::endl;
+                        std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] async_read_until Error: Unknown Error" << std::endl;
                         WaitNextRequest(self, ec, 555);
                     }
                 });
@@ -558,14 +614,26 @@ namespace KCSrv
             if (!m_own.m_own.IsRunning()) return;
             // char sBuf[] = "HTTP/1.1 200\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nhello kc";
             // char sBuf[] = "HTTP/1.1 200\r\nContent-Length: 0\r\n\r\n";
+            // 判断是否重定向
+            const bool bIsReLocation = res->m_status / 100 == 3;
             // 应答状态
             auto itStatus = c_mapStatus.find(res->m_status);
             std::string sStatus = c_mapStatus.end() != itStatus ? " " + itStatus->second : "";
             // 应答首行
             std::string sDataHead = (boost::format("%s %d%s") % res->m_httpVersion % res->m_status % sStatus).str();
+            // 判断那些应答头不通过集合返回（需要根据后续条件返回）
+            auto fCheckMapHead = [&](std::string sName) -> bool
+            {
+                // 返回的字节数通过应答体计算
+                if (c_WebHeader_ContentLength == sName) return false;
+                // 重定向涉及到的响应头，动态生成
+                if (bIsReLocation && ("Connection" == sName)) return false;
+                // 其余响应头通过集合返回
+                return true;
+            };
             // 应答头
             for (auto &h : res->m_mapHeader)
-                if (c_WebHeader_ContentLength != h.first) sDataHead += "\r\n" + h.first + ": " + h.second;
+                if (fCheckMapHead(h.first)) sDataHead += "\r\n" + h.first + ": " + h.second;
             // cookie
             for (auto &c : res->m_mapCookie)
                 sDataHead += (boost::format("\r\n%s: %s=%s") % c_WebHeader_SetCookie % c.second.m_name % c.second.m_str).str();
@@ -583,13 +651,13 @@ namespace KCSrv
                     }
                     else
                     {
-                        std::cout << "[" << this->GetID() << "] Respond Error: " << res->m_request->m_the_request << std::endl << ec.message() << std::endl;
+                        std::cout << "[" << this->GetID() << "] Respond Error: " << res->m_request->m_the_request << std::endl << len << std::endl << ec.message() << std::endl;
                         WaitNextRequest(self, ec, 555);
                     }
                 }
                 catch (...)
                 {
-                    std::cout << "[" << this->GetID() << "] Respond Error - " << res->m_request->m_the_request << std::endl;
+                    std::cout << "[" << this->GetID() << "] Respond Error - " << res->m_request->m_the_request << std::endl << len << std::endl;
                     WaitNextRequest(self, ec, 555);
                 }
             };
@@ -607,18 +675,27 @@ namespace KCSrv
                 boost::asio::async_write(this->m_socket, boost::asio::buffer(bufPtr.get(), iSize),
                     [bufPtr, fEnd](const boost::system::error_code& ec, std::size_t len) { fEnd(ec, len); });
             };
+            auto fSendStr2 = [&](std::string sHead, std::string sBody = "")
+            {
+                fSendStr(sHead, sBody, fWaitNextRequest,
+                    [&](size_t size){
+                        std::cout << "[" << this->GetID() << "] Respond: " << res->m_request->m_the_request << std::dec << " \t" << res->m_status << " \t" << size << std::endl;
+                    });
+            };
+            // 重定向
+            auto fReLocation = [&](void)
+            {
+                // 发送重定向
+                sDataHead += "\r\nConnection: Close";
+                sDataHead += "\r\nContent-Length: 0\r\n\r\n";
+                fSendStr2(sDataHead);
+            };
             // 返回应答体
             auto fRespondBody = [&](std::size_t iSize)
             {
                 // 发送http头和体
                 sDataHead += (boost::format("\r\n%s: %d\r\n\r\n") % c_WebHeader_ContentLength % iSize).str();
-                fSendStr(sDataHead, c_RequestMethod_head == res->m_request->m_method ? "" : res->m_body,
-                    [fWaitNextRequest](const boost::system::error_code& ec, std::size_t len){
-                        fWaitNextRequest(ec, len);
-                    },
-                    [&](size_t size){
-                        std::cout << "[" << this->GetID() << "] Respond: " << res->m_request->m_the_request << " \t" << std::dec << size << std::endl;
-                    });
+                fSendStr2(sDataHead, c_RequestMethod_head == res->m_request->m_method ? "" : res->m_body);
             };
             // 返回文件
             auto fRespondFile = [&](void)
@@ -675,8 +752,10 @@ namespace KCSrv
                         std::cout << "[" << this->GetID() << "] Respond Head: " << std::dec << size << std::endl;
                     });
             };
+            // 重定向
+            if (bIsReLocation) fReLocation();
             // 如果指定文件，通过文件返回
-            if (!res->m_filename.empty())
+            else if (!res->m_filename.empty())
             {
                 // 文件大小
                 std::size_t iSize = boost::filesystem::file_size(res->m_filename);
@@ -787,7 +866,11 @@ namespace KCSrv
         // 代表连接断开的错误码
         virtual bool IsBreakErrCode(const boost::system::error_code& ec) const
         {
-            return boost::asio::error::connection_aborted == ec || boost::asio::error::eof == ec;
+            return boost::asio::error::eof == ec                            // 错误码2。远端正常关闭连接（调用 close() 时触发）
+                    || boost::asio::error::connection_aborted == ec         // 本地系统终止连接
+                    || boost::asio::error::connection_reset == ec           // windows下10054，linux下104。远端TCP层发送RST暴力断开
+                    || boost::asio::error::bad_descriptor == ec             // windows下10009，linux下9。在已关闭的套接字上执行读写操作
+            ;
         }
 
     protected:
@@ -813,10 +896,11 @@ namespace KCSrv
         {
         }
 
-        void Start(void) override
+        bool Start(void) override
         {
-            TParentClass::Start();
-            this->do_read();
+            bool bResult = TParentClass::Start();
+            if (bResult) this->do_read();
+            return bResult;
         }
 
         bool IsOpen(void) const override { return this->m_socket.is_open(); }
@@ -873,10 +957,11 @@ namespace KCSrv
             // socket.set_verify_callback(boost::asio::ssl::host_name_verification("host.name"));
         }
 
-        void Start(void) override
+        bool Start(void) override
         {
-            TParentClass::Start();
-            do_handshake();
+            bool bResult = TParentClass::Start();
+            if (bResult) do_handshake();
+            return bResult;
         }
 
         bool IsOpen(void) const override { return this->m_socket.lowest_layer().is_open(); }
@@ -911,6 +996,7 @@ namespace KCSrv
         // ssl握手
         void do_handshake()
         {
+            // std::cout << "SSL Handshake" << std::endl;
             auto self(this->shared_from_this());
             this->m_socket.async_handshake(boost::asio::ssl::stream_base::server,
                 [this, self](const boost::system::error_code& ec)
@@ -962,9 +1048,31 @@ namespace KCSrv
     protected:
         virtual void DealAccept(boost::asio::ip::tcp::socket& socket)
         {
-            auto self(this->shared_from_this());
-            auto conn = std::make_shared<KcSrvConnectTCP<decltype(*this)>>(*this, self, std::move(socket));
-            conn->Start();
+            typedef KcSrvConnectTCP<decltype(*this)> TSrvConnTCP;
+            TSrvConnTCP *pConn = nullptr;
+            auto fFlag = [&](void)
+            {
+                return (boost::format("%X-%X") % (ptrdiff_t)&socket % (ptrdiff_t)pConn).str();
+            };
+            try
+            {
+                auto self(this->shared_from_this());
+                auto conn = std::make_shared<TSrvConnTCP>(*this, self, std::move(socket));
+                pConn = conn.get();
+                conn->Start();
+            }
+            catch (std::exception &ex)
+            {
+                std::cout << ex.what() << std::endl;
+                m_own.m_own.WriteLogError(ex.what(), __FUNCTION__, fFlag().c_str());
+                if (nullptr != pConn) pConn->CloseConn();
+            }
+            catch (...)
+            {
+                std::cout << "unknown error" << std::endl;
+                m_own.m_own.WriteLogError("unknown error", __FUNCTION__, fFlag().c_str());
+                if (nullptr != pConn) pConn->CloseConn();
+            }
         }
 
         void do_accept()
@@ -1002,37 +1110,59 @@ namespace KCSrv
     protected:
         void DealAccept(boost::asio::ip::tcp::socket& socket) override
         {
-            std::shared_ptr<boost::asio::ssl::context> ctx(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
-            ctx->set_options(
-                boost::asio::ssl::context::default_workarounds |
-                boost::asio::ssl::context::no_sslv2 |
-                boost::asio::ssl::context::single_dh_use);
+            typedef KcSrvConnectSSL<decltype(*this)> TSrvConnSSL;
+            TSrvConnSSL *pConn = nullptr;
+            auto fFlag = [&](void)
+            {
+                return (boost::format("%X-%X") % &socket % pConn).str();
+            };
+            try
+            {
+                std::shared_ptr<boost::asio::ssl::context> ctx(new boost::asio::ssl::context(boost::asio::ssl::context::sslv23));
+                ctx->set_options(
+                    boost::asio::ssl::context::default_workarounds |
+                    boost::asio::ssl::context::no_sslv2 |
+                    boost::asio::ssl::context::single_dh_use);
 
-            // ssl握手验证回调
-            ctx->set_verify_mode(boost::asio::ssl::context::verify_none);
-            ctx->set_verify_callback(
-                [ctx](bool preverified, boost::asio::ssl::verify_context& ctxVerify)
-                {
-                    boost::asio::ssl::host_name_verification host_verification("https://127.0.0.1:18011/");
-                    bool bSucc = host_verification(preverified, ctxVerify);
+                // ssl握手验证回调
+                ctx->set_verify_mode(boost::asio::ssl::context::verify_none);
+                ctx->set_verify_callback(
+                    [ctx](bool preverified, boost::asio::ssl::verify_context& ctxVerify)
+                    {
+                        boost::asio::ssl::host_name_verification host_verification("https://127.0.0.1:18011/");
+                        bool bSucc = host_verification(preverified, ctxVerify);
 
-                    char subject_name[256];
-                    X509* cert = X509_STORE_CTX_get_current_cert(ctxVerify.native_handle());
-                    X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
-                    std::cout << "Verifying " << bSucc << ": " << subject_name << "\n";
-                    // 这里可以添加更多的验证逻辑，比如检查证书是否过期等。
-                    // ctx->use_certificate_chain_file("./ssl2/fullchain.pem");
-                    // ctx->use_private_key_file("./ssl2/private.key", boost::asio::ssl::context::pem);
-                    return true; // 如果内置验证通过，或者你的自定义验证通过，返回 true。
-                });
+                        char subject_name[256];
+                        X509* cert = X509_STORE_CTX_get_current_cert(ctxVerify.native_handle());
+                        X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+                        std::cout << "Verifying " << bSucc << ": " << subject_name << "\n";
+                        // 这里可以添加更多的验证逻辑，比如检查证书是否过期等。
+                        // ctx->use_certificate_chain_file("./ssl2/fullchain.pem");
+                        // ctx->use_private_key_file("./ssl2/private.key", boost::asio::ssl::context::pem);
+                        return true; // 如果内置验证通过，或者你的自定义验证通过，返回 true。
+                    });
 
-            // 证书文件
-            ctx->use_certificate_chain_file(this->m_own.m_parm.sslCert);
-            ctx->use_private_key_file(this->m_own.m_parm.sslKey, boost::asio::ssl::context::pem);
-            // ctx->use_tmp_dh_file("./ssl/fullchain.pem");
-            auto self(this->shared_from_this());
-            auto conn = std::make_shared<KcSrvConnectSSL<decltype(*this)>>(*this, self, boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(std::move(socket), *ctx), ctx);
-            conn->Start();
+                // 证书文件
+                ctx->use_certificate_chain_file(this->m_own.m_parm.sslCert);
+                ctx->use_private_key_file(this->m_own.m_parm.sslKey, boost::asio::ssl::context::pem);
+                // ctx->use_tmp_dh_file("./ssl/fullchain.pem");
+                auto self(this->shared_from_this());
+                auto conn = std::make_shared<TSrvConnSSL>(*this, self, boost::asio::ssl::stream<boost::asio::ip::tcp::socket>(std::move(socket), *ctx), ctx);
+                pConn = conn.get();
+                conn->Start();
+            }
+            catch (std::exception &ex)
+            {
+                std::cout << ex.what() << std::endl;
+                KcSrvHttp<TOwn>::m_own.m_own.WriteLogError(ex.what(), __FUNCTION__, fFlag().c_str());
+                if (nullptr != pConn) pConn->CloseConn();
+            }
+            catch (...)
+            {
+                std::cout << "unknown error" << std::endl;
+                KcSrvHttp<TOwn>::m_own.m_own.WriteLogError("unknown error", __FUNCTION__, fFlag().c_str());
+                if (nullptr != pConn) pConn->CloseConn();
+            }
         }
     };
 
@@ -1045,7 +1175,8 @@ namespace KCSrv
         TParmKcSrv m_parm;
         const std::string m_version = "Knewcode v1.2";
 
-        KcSrvMainExec(TOwn &own, std::string sVersion, FRequestRespond frr) : m_own(own), m_version(sVersion), m_frr(frr)
+        KcSrvMainExec(TOwn &own, std::string sVersion, FRequestRespond frr, FClientConnStart fcc = [](long, std::string, KcSrvConnectPtr){ return true; })
+            : m_own(own), m_version(sVersion), m_frr(frr), m_fcc(fcc)
         {
         }
 
@@ -1053,7 +1184,8 @@ namespace KCSrv
         {
             auto self(this->shared_from_this());
             bool bRunHttp = false, bRunHttps = false;
-            if (m_parm.portHttp > 0)
+            m_parm.portHttpIsStart = m_parm.portHttp > 0;
+            if (m_parm.portHttpIsStart)
             {
                 try
                 {
@@ -1066,7 +1198,8 @@ namespace KCSrv
                     std::cout << "Can't Run Http: " << m_parm.portHttp << std::endl;
                 }
             }
-            if (m_parm.portHttps > 0)
+            m_parm.portHttpsIsStart = m_parm.portHttps > 0 && boost::filesystem::exists(m_parm.sslCert) && boost::filesystem::exists(m_parm.sslKey);
+            if (m_parm.portHttpsIsStart)
             {
                 try
                 {
@@ -1125,6 +1258,24 @@ namespace KCSrv
             }
         }
 
+        bool ClientConnStart(long id, std::string clnIP, KcSrvConnectPtr conn)
+        {
+            try
+            {
+                return m_fcc(id, clnIP, conn);
+            }
+            catch (std::exception &ex)
+            {
+                std::cout << ex.what() << std::endl;
+                m_own.WriteLogError(ex.what(), __FUNCTION__);
+            }
+            catch (...)
+            {
+                std::cout << "unknown error" << std::endl;
+                m_own.WriteLogError("unknown error", __FUNCTION__);
+            }
+        }
+
     protected:
         boost::asio::io_context m_ioContext;
         std::shared_ptr<KcSrvHttp<KcSrvMainExec<TOwn>>> m_srvHttp;
@@ -1132,6 +1283,7 @@ namespace KCSrv
         std::vector<std::shared_ptr<boost::thread>> m_thrdIoCtx;
         std::atomic_bool m_running = false;
         FRequestRespond m_frr;
+        FClientConnStart m_fcc;
     };
     template<typename TOwn>
     using KcSrvMainExecPtr = std::shared_ptr<KcSrvMainExec<TOwn>>;

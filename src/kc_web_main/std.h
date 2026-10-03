@@ -28,7 +28,7 @@
 #include <boost/log/trivial.hpp>
 
 #include "util/auto_release.h"
-#include "util/util_funcs.h"
+#include "util/util_funcs_kc.h"
 #include "util/proc_meminfo.h"
 #include "util/backtrace_symbols.h"
 #include "util/request_respond_tmp.h"

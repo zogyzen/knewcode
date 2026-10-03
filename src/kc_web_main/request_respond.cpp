@@ -88,7 +88,7 @@ CKCRequestRespond::CKCRequestRespond(ISrcRequestRespond& re, IKCWebWork& ww)
                                 % this % sConnID % sConnHandle % sUserAddr % sKeepalive % sKeepalives
                                 % boost::lexical_cast<string>(boost::this_thread::get_id()) % sClnHost % sSrvHost % sSrvHost2 % sContentType
                                 % sGet % sCookie
-                                % sBody.substr(0, 1024)
+                                % (sBody.size() < 2048 ? sBody : (sBody.substr(0, 2048) + " ..."))
                             ).str().c_str());
         cout << ">>>>>>>>>>>>>>>> " << m_runIndex << endl;
     }

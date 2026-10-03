@@ -528,7 +528,7 @@ namespace KC
                 std::vector<std::string> hexVec;
                 if (!space.empty())
                     boost::algorithm::split(hexVec, sHex, boost::is_any_of(space));
-                else for (int i = 0, c = sHex.size(); i < c; i += 2)
+                else for (int i = 0, c = static_cast<int>(sHex.size()); i < c; i += 2)
                     hexVec.push_back(sHex.substr(i, 2));
                 for(std::string s : hexVec)
                     try

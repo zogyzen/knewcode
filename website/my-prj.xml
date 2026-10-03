@@ -22,8 +22,8 @@
 	
 	<!-- 内置web服务器参数 -->
 	<WebServer threadCount="128">
-		<!-- 端口 -->
-		<port http="8080" https="8443" />
+		<!-- 端口。 只能定义http和https端口。 httpToHttps表示访问http会被重定向到https，值为重定向的状态码，值必须为30x（如308），否则不重定向。 -->
+		<port http="80" https="443" httpToHttps="" />
 		<!-- SSL配置（目前不支持SNI。如果存在多域名的虚拟主机，请申请多域名合一的ssl证书） -->
 		<ssl key="./ssl/private.key" cert="./ssl/fullchain.pem" />
 		<!-- 主页目录。 sysName系统名称。 root本地根路径。 index主页（相对路径）。 其他错误页面的路径相对于root配置的本地根路径。 -->
@@ -33,8 +33,9 @@
 			<api uri="/api" local="D:\work\WSA2601QMS\trunk\backend\api" />
 			<!-- 测试页路径 -->
 			<test uri="/test" local="./backend/test" />
+			<test2 uri="/test2" local="D:\work\PDSW2601DingE\trunk\backend\test" />
 			<!-- 上传和下载路径 -->
-			<test uri="/updown" local="./updownload" />
+			<updown uri="/updown" local="./updownload" />
 		</virtualPath>
 		<!-- 多域名的虚拟主机 -->
 		<virtualHost>
@@ -173,8 +174,9 @@
 		<!-- 达梦数据库模块 -->
 		<kc_sql_dm Path="" Activation="2" srv="dmdbms">
 			<controllers>		<!-- 达梦数据库的参数名称不区分大小写。连接参数默认不加密 -->
-				<connect1 srv="172.16.1.252:5236" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" />
-				<connect1 srv="mingye.fy.takin.cc:15021" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" />
+				<connect1 srv="127.0.0.1:5236" uid="SYSDBA" pwd="myKnewcode2026" model="TEST" charset="GBK" encrypt="false" />
+				<connectJK srv="127.0.0.1:5236" uid="SYSDBA" pwd="myKnewcode2026" model="PDWB" charset="GBK" encrypt="false" />
+				<connect2 srv="mingye.fy.takin.cc:15021" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" />
 			</controllers>
 		</kc_sql_dm>
 		
@@ -191,9 +193,10 @@
 		<!-- webapi主模块 -->
 		<kc_webapi_work Path="" Activation="2">
 			<!-- 服务控制器别名（主要针对各数据库插件）。default：默认的控制器别名，api未指定控制器的话，取该默认值；不设置的话，默认取“Config.Parameters.sys_flag.customer”的值。 valsName：默认的返回数据集的名称，默认为vals。 -->
-			<SrvCtrl default="ywglxxxt" valsName="vals">
+			<SrvCtrl default="pdwb-jk" valsName="vals">
 				<ywglxxxt bundle="kc_sql_postgresql" ctrl="kingbase" />
 				<dingeglyw srv="SQLSrv" ctrl="kingbase" />
+				<pdwb-jk srv="dmdbms" ctrl="connectJK" />
 			</SrvCtrl>
 			<!-- 转发服务器。 not、all、no-ctrl -->
 			<!-- <relay ctrl="relay1" server="192.168.1.100" type="not" /> -->
@@ -223,6 +226,7 @@
 			-->
 			<GrantUriPath>
 				<api uri="/myapp/api" localDir="./backend/api" grant="true" flag="" />
+				<api uri="/pdwb-jk" localDir="D:\work\PDSW2601DingE\trunk\backend\api\jk" grant="true" flag="" />
 				<api uri="/api" localDir="./backend/api" grant="true" />
 				<test uri="/test" localDir="./backend/test" grant="true" />
 				<test2 uri="/test2" localDir="./backend/test2" grant="true" />
@@ -230,7 +234,7 @@
 				<bin uri="/bin" localDir=">" grant="false" />
 				<rpt uri="/rpt" localDir="./backend/rpt" grant="true" />
 			</GrantUriPath>
-			<!-- 定时任务（只能一个进程执行）：interval - 两次执行的间隔（秒）。manaFlag - 单例运行的排他标识。 -->
+			<!-- 定时任务（只能一个进程执行）：interval - 两次执行的间隔（秒），为0，则不执行。 manaFlag - 单例运行的排他标识。 -->
 			<TaskTimeExec interval="30000" manaFlag="KC__SESSION_global__taskManaFlag">
 				<GetTasks uri="/inside/task.kc?act=GetTasks" />
 				<FinishTask uri="/inside/task.kc?act=FinishTask" />

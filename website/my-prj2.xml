@@ -218,7 +218,7 @@
 				<bin uri="/bin" localDir=">" grant="false" />
 				<rpt uri="/rpt" localDir="./backend/rpt" grant="true" />
 			</GrantUriPath>
-			<!-- 定时任务（只能一个进程执行）：interval - 两次执行的间隔（秒）。manaFlag - 单例运行的排他标识。 -->
+			<!-- 定时任务（只能一个进程执行）：interval - 两次执行的间隔（秒），为0，则不执行。 manaFlag - 单例运行的排他标识。 -->
 			<TaskTimeExec interval="30000" manaFlag="KC__SESSION_global__taskManaFlag">
 				<GetTasks uri="/inside/task.kc?act=GetTasks" />
 				<FinishTask uri="/inside/task.kc?act=FinishTask" />

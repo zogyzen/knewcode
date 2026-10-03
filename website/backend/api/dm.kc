@@ -9,14 +9,17 @@
 		end;
 	</UpdData>
 
-	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}, "dbsetParms":{"r1":"dbset", "r2":"dbset-array"}}' needToken="false">
+	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}, "dbsetParms":{"vals":"dbset", "r2":"dbset-array"}}' needToken="false">
 		begin
 			--select :KC__SESSION_sys__Ftype a, * from city where region_id = :id;
 			--select * from city where region_id = :id2;
 			select * from test;
-			select * from test2;
+			select * from test;
 		end
 	</Select>
+	<query type="bundle" srv="dmdbms" ctrl="connect1" method="query" attach='{"replace":{"QrySQL":"NoCheck"}}' needToken="false">
+		#@QrySQL#
+	</query>
 	
 	<Login type="bundle" srv="dmdbms" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","s_zhandianh":"varchar2","parms":{"username":"varchar2","isAdmin":"int"}}}' needToken="false">
 		declare
@@ -72,5 +75,36 @@
 			:errMsg := '退出' || :KC__GLOBAL_CONSTANT__User_Agent;
 		end;
 	</Logout>
+	
+	<Batch1 type="bundle" srv="dmdbms" ctrl="connect1" method="batch" attach ="" needToken="false">
+		declare
+			v_i_in_sort int;
+			v_inid int;
+		begin
+			insert into test
+			(
+				txt
+			)
+			values
+			(
+				:txt
+			);
+		end;
+	</Batch1>
+	<Batch2 type="bundle" srv="dmdbms" ctrl="connect1" method="batch-dm" attach ='{"batchParm":{"savePoint":2}}' needToken="false">
+		declare
+			v_i_in_sort int;
+			v_inid int;
+		begin
+			insert into test
+			(
+				txt, val, num
+			)
+			values
+			(
+				:txt, :val, :num
+			);
+		end;
+	</Batch2>
 
 </Controllers>

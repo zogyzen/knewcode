@@ -44,6 +44,6 @@ private:
     IServiceReference &m_WebApiRef;
     // 响应的类型
     std::list<string> m_ResponseContentTypes;
-    // 配置中的响应头信息
+    // 配置中的静态响应头信息
     std::map<string, string> m_CfgHeader;
 };

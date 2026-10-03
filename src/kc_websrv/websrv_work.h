@@ -15,6 +15,9 @@ public:
     // 释放
     void Free(void);
 
+    // 客户端连接
+    bool ClientConn(long, std::string, KCSrv::KcSrvConnectPtr);
+
     // 处理请求
     void Work(KCSrv::KcSrvRespondPtr res);
 
@@ -70,8 +73,12 @@ private:
     const string m_exePath, m_exeParm;
     // 内置web服务器软件名称和版本、可执行文件根目录、KC框架路径、配置文件、网站或应用根路径、平台根路径、主页目录、虚拟目录
     const string m_ownName, m_ownVersion, m_MainExecPath, m_FxPath, m_CfgFile, m_WebsitePath, m_PlatformPath, m_PgPath, m_virtualPath;
+    // http和https端口，和全局http到https的重定向状态码
+    const unsigned short m_httpPort = 0, m_httpsPort = 0, m_httpToHttps = 0;
     // 禁止访问文件的扩展名
     std::set<string> m_stDeniedUrlExtName;
+    // 配置中的静态响应头信息
+    std::map<string, string> m_CfgHeader;
 
     // 内置web服务器
     KCSrv::KcSrvMainExecPtr<CWebSrvWork> m_kcSrv;

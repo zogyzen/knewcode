@@ -181,7 +181,7 @@ protected:
         void TranBegin(void) override;
         void TranCommit(void) override;
         void TranRollback(void) override;
-        void TranSavePoint(string) override;
+        int TranSavePoint(string) override;
         void TranRollbackToSavePoint(void) override;
 
         // 预备sql语句

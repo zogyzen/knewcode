@@ -3,12 +3,14 @@
 
 int main(int argc, char *argv[])
 {
-    std::string sCommFmt = R"(/\*((?!\*/)[\s\S])*\*/)";
-    //sSQL = boost::regex_replace(sSQL, boost::regex(sCommFmt), " ");
-    boost::regex pattern(sCommFmt);
     cout << "begin" << endl;
     try
     {
+        // 测试boost库是否正常运行
+        // std::string sCommFmt = R"(/\*((?!\*/)[\s\S])*\*/)";
+        // //sSQL = boost::regex_replace(sSQL, boost::regex(sCommFmt), " ");
+        // boost::regex pattern(sCommFmt);
+
         string sCfgFile = argc >= 2 ? argv[1] : "../website/my-prj.xml";
         g_work.reset(new CWebSrvWork(argv[0], sCfgFile));
         CAutoRelease _auto([=](){g_work.reset(); });
@@ -27,6 +29,6 @@ int main(int argc, char *argv[])
         cout << "Unknown error!" << endl;
         WriteLog("kc_websrv", __CURR_CODE_PLACE_C__, "Unknown error!");
     }
-    cout << "end" << endl;
+    cout << endl << "end" << endl;
     return 0;
 }

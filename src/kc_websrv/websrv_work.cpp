@@ -222,9 +222,15 @@ void CWebSrvWork::Init(void)
     auto &cntx = dynamic_cast<IBundleContextEx&>(m_proxy.GetContext());
     auto &cfgPt = cntx.CfgPt();
     cntx.WriteLogDebug(sMsg.c_str(), __CURR_CODE_PLACE_C__);
+    // 主应用引用
+    auto &webMainRef = dynamic_cast<IServiceReferenceEx&>(*cntx.takeServiceReference(c_KCWebWorkSrvGUID));
+    IKCWebWork& wbwk = webMainRef.getServiceSafe<IKCWebWork>();
+    // 得到配置的静态响应头
+    CUtilFuncKC::GetCfgHeadeStatic(m_CfgHeader, cntx, wbwk.getBundle().getName());
     // 端口配置
-    unsigned short  portHttp = atoi(cntx.GetCfgInfo("Config.WebServer.port", "http", "0")),
-                    portHttps = atoi(cntx.GetCfgInfo("Config.WebServer.port", "https", "0"));
+    const_cast<unsigned short&>(m_httpPort) = atoi(cntx.GetCfgInfo("Config.WebServer.port", "http", "0"));
+    const_cast<unsigned short&>(m_httpsPort) = atoi(cntx.GetCfgInfo("Config.WebServer.port", "https", "0"));
+    const_cast<unsigned short&>(m_httpToHttps) = atoi(cntx.GetCfgInfo("Config.WebServer.port", "httpToHttps", "0"));
     // 禁止访问文件的扩展名
     string sDeniedUrlExtName = cntx.GetCfgInfo("Config.WebServer.other", "deniedUrlExtName");
     std::vector<string> vctDeniedUrlExtName;
@@ -254,7 +260,7 @@ void CWebSrvWork::Init(void)
             }
         }
         catch (...) {}
-        sDomains += (boost::format("\t http://%s:%d/ \t | \t https://%s:%d/ \n") % domainName % portHttp % domainName % portHttps).str();
+        sDomains += (boost::format("\t http://%s:%d/ \t | \t https://%s:%d/ \n") % domainName % m_httpPort % domainName % m_httpsPort).str();
     };
     if (cfgPt.get_child_optional("Config.WebServer.page"))
         fGetPageCfg(cfgPt.get_child("Config.WebServer.page"), m_mainHost.m_pageCfg);
@@ -310,19 +316,23 @@ void CWebSrvWork::Init(void)
     // 创建内置web服务器
     auto self(this->shared_from_this());
     m_kcSrv.reset(new KCSrv::KcSrvMainExec(*this, /*cntx.VersionInfo()*/CUtilFunc::KcVersionForFullInfo(),
-                                           [this, self](KCSrv::KcSrvRespondPtr res){ this->Work(res); }));
+                                        [this, self](KCSrv::KcSrvRespondPtr res){ this->Work(res); },
+                                        [this, self](long id, std::string ip, KCSrv::KcSrvConnectPtr conn){ return this->ClientConn(id, ip, conn); }
+    ));
     // 内置web服务器的参数
-    m_kcSrv->m_parm.portHttp = portHttp;
-    m_kcSrv->m_parm.portHttps = portHttps;
+    m_kcSrv->m_parm.portHttp = m_httpPort;
+    m_kcSrv->m_parm.portHttps = m_httpsPort;
     m_kcSrv->m_parm.threadCount = atoi(cntx.GetCfgInfo("Config.WebServer", "threadCount", "64"));
     m_kcSrv->m_parm.sslKey = cntx.transCfgPathToFullPath(cntx.GetCfgInfo("Config.WebServer.ssl", "key", "./ssl/private.key"));
     m_kcSrv->m_parm.sslCert = cntx.transCfgPathToFullPath(cntx.GetCfgInfo("Config.WebServer.ssl", "cert", "./ssl/fullchain.pem"));
     // 启动内置web服务器
     m_kcSrv->Start();
     // 日志
-    sMsg = (boost::format("\t PgPath: \t%s \n\t sslKey: \t%s \n\t sslCert: \t%s \n\t threadCount=%d \t portHttp=%d \t portHttps=%d \n%s")
+    sMsg = (boost::format("\t PgPath: \t%s \n\t sslKey: \t%s \n\t sslCert: \t%s \n\t threadCount=%d \t portHttp=%d(%s) \t portHttps=%d(%s) \n%s")
                 % m_PgPath % m_kcSrv->m_parm.sslKey % m_kcSrv->m_parm.sslCert
-                % m_kcSrv->m_parm.threadCount % m_kcSrv->m_parm.portHttp % m_kcSrv->m_parm.portHttps
+                % m_kcSrv->m_parm.threadCount
+                % m_kcSrv->m_parm.portHttp % (m_kcSrv->m_parm.portHttpIsStart ? "Start" : "Stop")
+                % m_kcSrv->m_parm.portHttps % (m_kcSrv->m_parm.portHttpsIsStart ? "Start" : "Stop")
                 % sDomains
            ).str();
     cout << "*[knewcode] load knewcode mod success \n" << sMsg << endl;
@@ -350,6 +360,14 @@ void CWebSrvWork::Free(void)
     catch (...) {}
 }
 
+// 客户端连接
+bool CWebSrvWork::ClientConn(long id, std::string ipCln, KCSrv::KcSrvConnectPtr)
+{
+    auto &cntx = dynamic_cast<IBundleContextEx&>(m_proxy.GetContext());
+    cntx.WriteLogTrace((boost::format("[%d] Client Connect: %s") % id % ipCln).str().c_str(), __CURR_CODE_PLACE_C__);
+    return true;
+}
+
 // 处理请求
 void CWebSrvWork::Work(KCSrv::KcSrvRespondPtr res)
 {
@@ -357,18 +375,41 @@ void CWebSrvWork::Work(KCSrv::KcSrvRespondPtr res)
     // return 0;
 
     CWSProxyRequestCB reqCB(*this, m_proxy, res);
+    // WebApi后端引用
+    auto &cntx = dynamic_cast<IBundleContextEx&>(m_proxy.GetContext());
+    // auto &m_WebApiWrkRef = dynamic_cast<IServiceReferenceEx&>(*cntx.takeServiceReference(c_KCWebApiWorkSrvGUID));
+    // 添加配置中的静态响应头信息 m_CfgHeader
+    auto fAddCfgHeaderStatic = [&](void)
+    {
+        for (auto &header : m_CfgHeader) res->SetHead(header.first, header.second);
+    };
     // 匹配主机
-    string sHostName = res->m_request->m_hostName;
+    const string sHostName = res->m_request->m_hostName;
     const TVirtualHost *pHost = &m_mainHost;
     auto it = m_virtualHost.find(sHostName);
     if (m_virtualHost.end() != it) pHost = &it->second;
     res->m_request->m_attachParm = pHost;
-    // 返回静态页面
-    if (".kc" != res->m_request->m_extName)
+    // 重定向
+    if (res->m_request->m_hostPort == m_httpPort && m_httpToHttps / 100 == 3)
     {
+        fAddCfgHeaderStatic();
+        res->m_status = m_httpToHttps;
+        const std::string sLocation = (boost::format("https://%s:%d%s") % sHostName % m_httpsPort % res->m_request->m_unparsed_uri).str();
+        res->SetHead("Location", sLocation);
+    }
+    // 调用后端api
+    else if (c_DefaultWorkUriExtension == res->m_request->m_extName)
+        m_proxy.Work(reqCB);
+    // 返回静态页面
+    else
+    {
+        // 请求类型为空，不处理
+        if (res->m_request->m_ContentType.empty())
+            cout << "[no processing] " << res->m_request->m_unparsed_uri << endl;
         // 正常请求
-        if (!res->m_request->m_ContentType.empty())
+        else
         {
+            fAddCfgHeaderStatic();
             // 静态页面文件
             string sPageFile = pHost->m_pageCfg.GetLocalPath(res->m_request->m_uri);
             if (!sPageFile.empty())
@@ -402,11 +443,7 @@ void CWebSrvWork::Work(KCSrv::KcSrvRespondPtr res)
             }
             m_proxy.StaticPage(reqCB);
         }
-        // 不处理
-        else cout << "[no processing] " << res->m_request->m_unparsed_uri << endl;
     }
-    // 调用后端api
-    else m_proxy.Work(reqCB);
 }
 
 // 错误日志

@@ -33,7 +33,7 @@ win32{
     }
     # 64位
     else {
-        DMLIBPTH = $$LIBRARYPTH3RD/windows/dm-x64/dpi.new
+        DMLIBPTH = $$LIBRARYPTH3RD/windows/dm-x64/dpi
     }
     INCLUDEPATH += $$DMLIBPTH/include
     LIBS += $$DMLIBPTH/dmdpi.lib

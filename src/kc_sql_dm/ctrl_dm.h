@@ -21,11 +21,11 @@ protected:
     // 达梦DPI异常类
     struct TDmdpiException : std::runtime_error
     {
-        int m_code = 0;
+        int m_code = DSQL_SUCCESS, m_diag = DSQL_SUCCESS;
         string m_msg;
         string m_pos;
 
-        TDmdpiException(int c, string s, string p);
+        TDmdpiException(int c, string s, string p, int d = DSQL_SUCCESS);
 
         // 检查错误
         static void CheckError(CCtrlDM& own, DPIRETURN rt, sdint2 hndl_type, dhandle hndl, string sPos, string sKey = "");
@@ -53,25 +53,68 @@ protected:
     };
     typedef std::shared_ptr<KeepStmtDM> KeepStmtDMPtr;
 
-    // 参数
-    struct TParmGrpDM;
-    struct TParmDM : public CSqlFunc::TParm
+    // 参数值或字段值（数组）
+    struct TVal
     {
-        TParmGrpDM &m_own;
-        // 参数值
-        union
-        {
-            int i = 0;
-            double d;
-        } m_nVal;
-        vector<char> m_sVal;
-        slength c_ind = 0;
+        // 参数类型
+        CSqlFunc::EDataType m_type = CSqlFunc::EDataType::edtUnknown;
+        // 参数长度
+        vector<slength> vinds;
+        vector<slength> vlens;
+        // 整型
+        vector<int> vi;
+        // 浮点型
+        vector<double> vf;
+        // 字符串
+        vector<string> vs;
+        string strBuf;
+        // 参数数组，单行字符串长度
+        unsigned strARowLen = 21;
 
-        // dm参数信息
+        TVal(void);
+
+        // 初始化
+        void InitInds(int len);
+        void InitInds(void);
+        /*
+        void InitInt(int len);
+        void InitFloat(int len);
+        void InitStr(int len, int row = 1);
+        */
+
+        // 获取值
+        slength& inds(void);
+        slength& lens(void);
+        int& intVal(void);
+        double& floatVal(void);
+
+        // 设置参数数组的某行值
+        void SetARowInds(int row, slength val, bool isNull = false);
+        void SetARowInt(int row, int val, bool isNull = false);
+        void SetARowFloat(int row, double val, bool isNull = false);
+        void SetARowStr(int row, string val, bool isNull = false);
+    };
+
+    // 达梦的参数描述
+    struct TDmParmDesc
+    {
         sdint2         sql_type     = DSQL_VARCHAR;
         ulength        prec         = 0;
         sdint2         scale        = 0;
         sdint2         nullable     = 0;
+    };
+
+    // 参数
+    struct TParmGrpDM;
+    struct TParmDM : CSqlFunc::TParm
+    {
+        TParmGrpDM &m_own;
+
+        // 参数值
+        TVal m_val;
+
+        // dm参数信息
+        TDmParmDesc m_dmDesc;
 
         TParmDM(TParmGrpDM&, std::string = "", unsigned = 0);
 
@@ -81,6 +124,8 @@ protected:
         void SetString(string) override;
         void SetClob(string) override;
         void SetNull(void) override;
+        // 未绑定参数值
+        void SetUnbind(void) override;
         // 获取参数值
         bool IsNull(void) override;
         string GetString(string = "") override;
@@ -98,29 +143,35 @@ protected:
 
         // 得到dm参数信息
         void GetParmDesc(void);
+
+        // 初始化参数值
+        void ReInitVal(void);
+        // 绑定dm批量操作参数数组
+        void BindBatchDMParmArray(void);
+        void BindBatchDMParmArrayAfter(void);
     };
+    typedef std::shared_ptr<TParmDM> TParmDmPtr;
+
+    // 参数组
+    struct TDBCommandDM;
     typedef CSqlFunc::TParmGrp<TDmdpiException> TParmGrpDMBase;
-    struct TParmGrpDM : public TParmGrpDMBase
+    struct TParmGrpDM : TParmGrpDMBase
     {
-        CCtrlDM& m_own;
+        TDBCommandDM& m_own;
         dhcon &conn;
         KeepStmtDMPtr keepStmt;
         dhstmt &stmt;
         ICtrlApiData& m_objCtrlD;
         string m_act;
         // 参数
-        std::map<std::string, CSqlFunc::TParmPtr, TLessStr> mapDmParms;
+        std::map<std::string, TParmDmPtr, TLessStr> mapDmParms;
         // 达梦的参数描述
-        struct TDmParmDesc
-        {
-            sdint2         sql_type;
-            ulength        prec;
-            sdint2         scale;
-            sdint2         nullable;
-        };
         std::vector<TDmParmDesc> m_dmParmDesc;
 
-        TParmGrpDM(CCtrlDM& ctrl, dhcon& cn, KeepStmtDMPtr st, ICtrlApiData& re, string sAct);
+        TParmGrpDM(TDBCommandDM& ctrl, dhcon& cn, KeepStmtDMPtr st, ICtrlApiData& re, string sAct);
+
+        // 重新初始化参数值
+        void ReInitParmVal(void);
 
         // 所属的服务
         IKCSql& Srv(void) override;
@@ -143,22 +194,16 @@ protected:
 
     // 字段
     struct TRecordSetDM;
-    struct TFieldDM : public CSqlFunc::TField
+    struct TFieldDM : CSqlFunc::TField
     {
         // 字段值
-        union
-        {
-            int i = 0;
-            double d;
-        } m_nVal;
-        vector<char> m_sVal;
-        slength c_ind = 0;
+        TVal m_val;
 
         TFieldDM(TRecordSetDM&, std::string n, int p, int t, unsigned sz, unsigned dc, bool nl);
     };
 
     // 数据集
-    struct TRecordSetDM : public CSqlFunc::TRecordSet
+    struct TRecordSetDM : CSqlFunc::TRecordSet
     {
         CCtrlDM& m_own;
         ICtrlApiData& m_objCtrlD;
@@ -183,7 +228,7 @@ protected:
     };
 
     // 数据库执行命令
-    struct TDBCommandDM : public CSqlFunc::TDBCommand<TDmdpiException>
+    struct TDBCommandDM : CSqlFunc::TDBCommand<TDmdpiException>
     {
         CCtrlDM& m_own;
         dhcon& conn;
@@ -197,6 +242,9 @@ protected:
         string &m_back;
         string m_nowTime;       // 时间标志，用于创建临时表、输出参数名等
         string m_parmTmpTab;    // 返回参数的临时表名
+        const int m_savePoint = 500;
+        // 上次执行批量插入的行号
+        int m_batchInsertRowLastExec = -1;
 
         TDBCommandDM(CCtrlDM&, dhcon&, KeepStmtDMPtr, ICtrlApiData&, string sAct, string sSQL, string sMethod, string &sBack);
         ~TDBCommandDM(void);
@@ -207,7 +255,7 @@ protected:
         // 控制器数据接口
         ICtrlApiData& CtrlD(void) override { return m_objCtrlD; }
 
-        //  控制器 信息
+        // 控制器 信息
         string ActInfo(void) override;
 
         // SQL语句
@@ -226,6 +274,10 @@ protected:
         void TranBegin(void) override;
         void TranCommit(void) override;
         void TranRollback(void) override;
+        // 保存点，只针对达梦版的批量插入
+        int TranSavePoint(std::string) override;
+        void TranRollbackToSavePoint(void) override;
+        int GetSavePoint(void) override;
 
         // 预执行
         void PrepareSQL(void) override;
@@ -236,7 +288,7 @@ protected:
         // 批量操作
         pair<int, string> ExecuteBatch(void) override;
         // 批量插入结束
-        void BatchInsertEnd(bool) override;
+        int BatchInsertEnd(bool) override;
 
         // 查询
         CSqlFunc::TRecordSetPtr ExecuteQuery(int &rows_affected) override;

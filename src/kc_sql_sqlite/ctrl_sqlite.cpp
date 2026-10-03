@@ -839,7 +839,10 @@ void CCtrlSqlite::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm& at
     int iExecSort = 0;
     auto fExceptInfo = [&](void)
     {
-        return (format("\n%d.%s%s%s%s%s%s%s\n%s?act=%s") % iExecSort % act.GetSingleInfo("UniqueConnID") % c_strLineShow % sSQL % c_strLineShow % sJsonParm % c_strLineShow % act.GetSingleInfo("the_request") % pLocalFile % sAct).str();
+        return (format("\n%d.%s%s%s%s%s\n%s%s\n%s?act=%s")
+                % iExecSort % act.GetSingleInfo("UniqueConnID") % c_strLineShow % sSQL % c_strLineShow
+                % (sJsonParm.size() < 4096 ? sJsonParm : (sJsonParm.substr(0, 4096) + " ..."))
+                % c_strLineShow % act.GetSingleInfo("the_request") % pLocalFile % sAct).str();
     };
     try
     {

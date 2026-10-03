@@ -111,9 +111,10 @@ void CCtrlODBC::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
     string sJsonParm, sOther, sAct = CUtilFunc::PCharSafeToStr(pAct);
     auto fExceptInfo = [&](void)
     {
-        return (format("%s%s%s%s%s%s\n%s\n%s?act=%s\n")
+        return (format("%s%s%s%s%s%s\n%s\n\n%s?act=%s\n")
                 % c_strLineShow % CUtilFunc::PCharSafeToStr(pSQL) % c_strLineShow % sOther % c_strLineShow
-                % act.GetSingleInfo("the_request") % sJsonParm % pLocalFile % sAct).str();
+                % act.GetSingleInfo("the_request") % (sJsonParm.size() < 4096 ? sJsonParm : (sJsonParm.substr(0, 4096) + " ..."))
+                % pLocalFile % sAct).str();
     };
     try
     {

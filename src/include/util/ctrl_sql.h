@@ -192,7 +192,7 @@ namespace KC
                 // 请求的字段
                 TFields vecFields;
                 if (atRoot) CSqlFunc::RequestFeilds(CtrlD().ActionData(), vecFields);
-                return DataSetToOut(vecFields,
+                const int iRecCount = DataSetToOut(vecFields,
                     [&](){
                         // 重置字段
                         jset.DelItem(c_RESTful_feilds);
@@ -204,6 +204,8 @@ namespace KC
                         for (auto fFeild : vecFields) AddVal(jsonRow, *fFeild);
                         return true;
                     });
+                jset.SetVal(c_RESTful_RecCount, iRecCount);
+                return iRecCount;
             }
             int DataSetToJsonOne(IKCJson& jset)
             {
@@ -261,7 +263,8 @@ namespace KC
             unsigned iPos = 0;  // 有效参数，从1开始
             std::string sName;
             EParmType ePTp = EParmType::eptUnknown;
-            EDataType eDTp = EDataType::edtUnknown;
+            EDataType eDTp = EDataType::edtUnknown;                 // 通过参数值识别出的参数类型
+            const EDataType eDTpCfg = EDataType::edtUnknown;        // kc文件里设置的参数类型（不可修改）
             bool bIsNull = true;
             // std::string sVal;
             boost::any anyVal;
@@ -279,6 +282,8 @@ namespace KC
             virtual void SetInt(int) = 0;
             virtual void SetString(std::string) = 0;
             virtual void SetClob(std::string) = 0;
+            // 未绑定参数值
+            virtual void SetUnbind(void) {}
             // 设置参数值的函数是否有效
             virtual bool IsValidSetXX(void) const { return true; }
             // 获取参数值
@@ -298,7 +303,7 @@ namespace KC
             void Init(void)
             {
                 ePTp = EParmType::eptUnknown;
-                eDTp = EDataType::edtUnknown;
+                eDTp = eDTpCfg;
                 // sVal.clear();
                 anyVal.clear();
                 bIsNull = true;
@@ -461,7 +466,10 @@ namespace KC
                         // 设置参数类型
                         auto it = mapParms.find(sName);
                         if (mapParms.end() != it && EDataType::edtUnknown == it->second->eDTp)
+                        {
                             it->second->SetDbTp(sType);
+                            const_cast<EDataType&>(it->second->eDTpCfg) = it->second->eDTp;
+                        }
                     }
             }
 
@@ -699,7 +707,8 @@ namespace KC
                             {
                                 if (const auto* ptr = boost::any_cast<double>(&prmPtr->anyVal)) prmPtr->SetNumber(*ptr);
                                 else if (const auto* ptr = boost::any_cast<int>(&prmPtr->anyVal)) prmPtr->SetNumber(*ptr);
-                                else if (const auto* ptr = boost::any_cast<long long>(&prmPtr->anyVal)) prmPtr->SetNumber(*ptr);
+                                else if (const auto* ptr = boost::any_cast<long long>(&prmPtr->anyVal))
+                                    prmPtr->SetNumber(static_cast<double>(*ptr));
                                 else
                                 {
                                     std::string sVal = BoostAnyToStdString(prmPtr->anyVal);
@@ -741,7 +750,8 @@ namespace KC
                                 }
                                 // 整型
                                 else if (const auto* ptr = boost::any_cast<int>(&prmPtr->anyVal)) prmPtr->SetInt(*ptr);
-                                else if (const auto* ptr = boost::any_cast<long long>(&prmPtr->anyVal)) prmPtr->SetNumber(*ptr);
+                                else if (const auto* ptr = boost::any_cast<long long>(&prmPtr->anyVal))
+                                    prmPtr->SetNumber(static_cast<double>(*ptr));
                                 // 其他类型，按字符串
                                 else
                                 {
@@ -793,8 +803,12 @@ namespace KC
                                 fSetGlobalParm();
                                 // std::string strVal = parm.second->sVal;
                                 std::string strVal = BoostAnyToStdString(parm.second->anyVal);
-                                Srv().WriteLogTrace(("Global Param Value: " + prmName + " = " + strVal).c_str(), __CURR_CODE_PLACE_C__);
+                                std::string sMsg = "Global Param Value: " + prmName + " = " + strVal;
+                                // Srv().WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
+                                // std::cout << sMsg << std::endl;
                             }
+                            // 未绑定
+                            if (!bHasBind) prmPtr->SetUnbind();
                             // 调试
                             if (row % 10000 == 0)
                             {
@@ -802,8 +816,9 @@ namespace KC
                                 {
                                     // std::string strVal = parm.second->sVal;
                                     std::string strVal = BoostAnyToStdString(parm.second->anyVal);
+                                    std::string sMsg = "User Param Value: " + prmName + " = " + (strVal.size() < 8192 ? strVal : (strVal.substr(0, 8192) + " ..."));
                                     // std::cout << "\t*[Knewcode] " << prmName << "=" << strVal << std::endl;
-                                    Srv().WriteLogTrace(("User Param Value: " + prmName + " = " + strVal).c_str(), __CURR_CODE_PLACE_C__);
+                                    Srv().WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
                                 }
                                 else if (prmPtr->ePTp != EParmType::eptOutParm)
                                 {
@@ -887,9 +902,11 @@ namespace KC
             void ParseOutParms(void)
             {
                 // 控制器附加参数里的输出参数
-                TParmGrp<TExcept>::ParseOutParms(mapOutParms, CtrlD().ActionData().GetValsName(), CtrlD().JsonAttach().GetItem(c_RESTful_outParm), [&](std::string sName, unsigned) -> TParmPtr{ return this->MakePram(sName); });
+                TParmGrp<TExcept>::ParseOutParms(mapOutParms, CtrlD().ActionData().GetValsName(), CtrlD().JsonAttach().GetItem(c_RESTful_outParm),
+                                                [&](std::string sName, unsigned) -> TParmPtr{ return this->MakePram(sName); });
             }
-            static void ParseOutParms(std::map<std::string, TParmPtr, TLessStr> &mapOutParms, const std::string sValsName, const IKCJson& jsonOutP, std::function<TParmPtr(std::string, unsigned)> fMkPrm, std::vector<std::string> *pPath = nullptr)
+            static void ParseOutParms(std::map<std::string, TParmPtr, TLessStr> &mapOutParms, const std::string sValsName,
+                const IKCJson& jsonOutP, std::function<TParmPtr(std::string, unsigned)> fMkPrm, std::vector<std::string> *pPath = nullptr)
             {
                 bool bHasFirstRootDataSet = true;
                 std::vector<std::string> pth;
@@ -923,6 +940,7 @@ namespace KC
                                 auto parm = fMkPrm(sName, 0);
                                 parm->ePTp = EParmType::eptOutParm;
                                 parm->SetDbTp(sType);
+                                const_cast<EDataType&>(parm->eDTpCfg) = parm->eDTp;
                                 if (!pth.empty()) parm->m_path.assign(pth.begin(), pth.end());
                                 mapOutParms.insert(make_pair(sName, parm));
                                 // 根节点内出现首个数据集（并且名字为vals）
@@ -957,6 +975,7 @@ namespace KC
                             op.second->iPos = it->second->iPos;
                             it->second->ePTp = op.second->ePTp;
                             it->second->SetDbTp(op.second->eDTp);
+                            const_cast<EDataType&>(it->second->eDTpCfg) = it->second->eDTp;
                             op.second->RegOutParam();
                             sInfo += (boost::format("%s @%d $%d \t") % op.first % it->second->iPos % static_cast<int>(it->second->eDTp)).str();
                         }
@@ -989,7 +1008,8 @@ namespace KC
                         try
                         {
                             op.second->ePTp = EParmType::eptSessionParm;
-                            if (EDataType::edtUnknown == op.second->eDTp) op.second->SetDbTp(EDataType::edtString);
+                            if (EDataType::edtUnknown == op.second->eDTp)
+                                op.second->SetDbTp(EDataType::edtString);
                             op.second->RegOutParam();
                             auto parmSession = MakePram(op.first, op.second->iPos);
                             parmSession->ePTp = EParmType::eptSessionParm;
@@ -1151,11 +1171,11 @@ namespace KC
                                                                                                         : jsonPth->AddItem(op.first.c_str(), false);
                                             // 按类型添加数据集
                                             if (EDataType::edtDbSetOne == op.second->eDTp)
-                                                rset->DataSetToJsonOne(jset);
+                                                iRecCount = rset->DataSetToJsonOne(jset);
                                             else if (EDataType::edtDbSetArray == op.second->eDTp)
-                                                rset->DataSetToJsonArray(jset);
+                                                iRecCount = rset->DataSetToJsonArray(jset);
                                             else
-                                                rset->DataSetToJson(jset, false);
+                                                iRecCount = rset->DataSetToJson(jset, false);
                                         }
                                     }
                                 }
@@ -1301,6 +1321,11 @@ namespace KC
             const long long m_execSort = ++s_execSort;
             const std::string m_sExecSort = std::to_string(m_execSort);
 
+            // 批量插入的当前行号
+            const std::atomic_int m_batchInsertRow = 0;
+            // 批量插入的保存点行和最后一行
+            const bool m_isBatchSavePointRow = false, m_isBatchInsertEndRow = false;
+
             // 所属的服务
             virtual IKCSql& Srv(void) = 0;
 
@@ -1331,9 +1356,13 @@ namespace KC
             virtual void TranBegin(void) = 0;
             virtual void TranCommit(void) = 0;
             virtual void TranRollback(void) = 0;
-            // 以下，只针对postgresql
-            virtual void TranSavePoint(std::string) {}
+            // 保存点，只针对postgresql和达梦
+            virtual int TranSavePoint(std::string) { return 0; }
             virtual void TranRollbackToSavePoint(void) {};
+            virtual int GetSavePoint(void)
+            {
+                return atoi(CUtilFunc::PCharSafeToPChar(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetStr("savePoint", "1000")));
+            }
 
             // 预执行
             virtual void PrepareSQL(void) = 0;
@@ -1341,7 +1370,7 @@ namespace KC
             // 批量操作
             virtual std::pair<int, std::string> ExecuteBatch(void) = 0;
             // 批量插入结束
-            virtual void BatchInsertEnd(bool) {}
+            virtual int BatchInsertEnd(bool) { return 0; }
 
             // 增删改
             virtual unsigned int ExecuteUpdate(void) = 0;
@@ -1544,18 +1573,26 @@ namespace KC
                 std::string sBatchParm = CUtilFunc::PCharSafeToStr(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, ""));
                 std::string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : CtrlD().ActionData().GetValsName();
                 // 出错时的处理方式。 1：出错继续（默认）；2：出错停止；3：出错回滚（只针对带事务的SQL）
-                int iBatchMethod = static_cast<int>(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetVal(c_RESTful_batchMethod, 1));
+                const int iBatchMethod = static_cast<int>(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetVal(c_RESTful_batchMethod, 1));
                 // 是否设置保存点
-                int iSavePoint = atoi(CUtilFunc::PCharSafeToPChar(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetStr("savePoint", "1000")));
+                const int iSavePoint = GetSavePoint();
                 // 出现在日志里的提示行数。默认为0，即不提示。
-                int iHintRow = static_cast<int>(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetVal("hintRow", 10000));
+                auto fGetHintRow = [&](void)
+                {
+                    int iHintRow = static_cast<int>(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetVal("hintRow", 10000));
+                    if (iSavePoint > 0 && iHintRow < iSavePoint) iHintRow = iSavePoint;
+                    else if (iSavePoint > 0 && iHintRow % iSavePoint > 0) iHintRow -= iHintRow % iSavePoint;
+                    return iHintRow;
+                };
+                const int iHintRow = fGetHintRow();
                 // 结果变量
                 unsigned affect = 0, iCount = 0;
                 int errCode = 0;
                 std::string errMsg = "", strOth = "\n", sDontInsert;
                 bool bIgnore = false;
                 // 循环变量
-                std::atomic_int iLoopInsert = 0, iLoopRead = 0, iGetDbSetUseTime = 0, iGetNextRowUseTime = 0, iGetRowUseTime = 0, iUseTimeWait = 0;
+                std::atomic_int iLoopRead = 0, iGetDbSetUseTime = 0, iGetNextRowUseTime = 0, iGetRowUseTime = 0, iUseTimeWait = 0;
+                const_cast<std::atomic_int&>(m_batchInsertRow) = 0;
                 // 用时统计
                 int iUseTimeTotal = 0, iBindParmUseTime = 0, iExecuteBatchUseTime = 0, iTranSavePointUseTime = 0, iUseTimeInsert = 0, iUseTimeInsertRow = 0;
                 long long iNowTotal = CUtilFunc::GetCurrentStampMS();
@@ -1566,25 +1603,27 @@ namespace KC
                 CAutoRelease _auto([&](){
                     iUseTimeTotal = static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNowTotal);
                     std::string sMsg = (boost::format("<B%s.> BatchInsert End. Affect = %d, Count = %d, Loop = %d. TotalUseTime = %d, GetDbSetUseTime = %d, GetNextRowUseTime = %d, GetRowUseTime = %d, BindParmUseTime = %d, ExecuteBatchUseTime = %d, TranSavePointUseTime = %d, UseTimeInsert = %d, UseTimeInsertRow = %d, UseTimeWait = %d.")
-                                        % m_sExecSort % affect % iCount % iLoopInsert % iUseTimeTotal % iGetDbSetUseTime % iGetNextRowUseTime % iGetRowUseTime % iBindParmUseTime % iExecuteBatchUseTime % iTranSavePointUseTime % iUseTimeInsert % iUseTimeInsertRow % iUseTimeWait).str();
+                                        % m_sExecSort % affect % iCount % m_batchInsertRow % iUseTimeTotal % iGetDbSetUseTime % iGetNextRowUseTime % iGetRowUseTime % iBindParmUseTime % iExecuteBatchUseTime % iTranSavePointUseTime % iUseTimeInsert % iUseTimeInsertRow % iUseTimeWait).str();
                     Srv().WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
                     std::cout << sMsg << std::endl;
                 });
+
+                #pragma region lambda函数
                 // 每隔设定行数（如，一万条），提示一次
                 auto fHintAtFixRows = [&](void)
                 {
                     // 提示标头
-                    if (0 == iLoopInsert && iHintRow > 0)
+                    if (0 == m_batchInsertRow && iHintRow > 0)
                     {
                         std::string sMsg = "<B" + m_sExecSort + ".> 0: 0 \t\t GetVal #= GetNext + GetRow. \t InsertRow #= BindParm + ExecuteBatch + TranSavePoint";
                         Srv().WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
                         std::cout << sMsg << std::endl;
                     }
                     // 定期用时显示
-                    if (99 == iLoopInsert || (iHintRow > 0 && iLoopInsert % iHintRow == 0))
+                    if (99 == m_batchInsertRow || (iHintRow > 0 && m_batchInsertRow % iHintRow == 0))
                     {
                         std::string sMsg = (boost::format("<B%s.> %d / %d: %d \t\t %d #= %d + %d. \t %d #= %d + %d + %d")
-                                            % m_sExecSort % (iLoopInsert + 1) % (iLoopRead + 1) % affect
+                                            % m_sExecSort % (m_batchInsertRow + 1) % (iLoopRead + 1) % affect
                                             % iGetDbSetUseTime % iGetNextRowUseTime % iGetRowUseTime
                                             % iUseTimeInsertRow % iBindParmUseTime % iExecuteBatchUseTime % iTranSavePointUseTime).str();
                         Srv().WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
@@ -1615,13 +1654,13 @@ namespace KC
                     parms.ParseOutParms();
                 };
                 // 绑定参数
-                auto fBindJsonParms = [&](const IKCJson& jsonVal, const TRowData* rowData)
+                auto fBindParms = [&](const IKCJson& jsonVal, const TRowData* rowData)
                 {
                     long long iNow = CUtilFunc::GetCurrentStampMS();
                     CAutoRelease _auto([&](){ iBindParmUseTime += static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNow); });
                     TParms& parms = this->GetParms();
                     // 行号、行数
-                    int iRowID = iLoopInsert, iRowCount = iCount;
+                    int iRowID = m_batchInsertRow, iRowCount = iCount;
                     if (nullptr != rowData) iRowID = iRowCount = rowData->m_row;
                     // parms.ResetParms();
                     // 预执行前，绑定参数值
@@ -1636,7 +1675,7 @@ namespace KC
                     if (!parms.m_isPrePrepareBind) parms.BindParms(jsonVal, rowData, iRowID, iRowCount);
                 };
                 // 执行sql
-                auto fExecBatch = [&]()
+                auto fExecBatch = [&](void)
                 {
                     std::pair<int, std::string> res;
                     {
@@ -1652,8 +1691,9 @@ namespace KC
                         if (0 == res.first)
                         {
                             std::string sParm = fGetValStr();
-                            if (sDontInsert.size() < 4000)
-                                sDontInsert += "[" + std::to_string(iLoopInsert + 1) + "] " + sParm.substr(0, 66) + "...\n";
+                            if (sDontInsert.size() < 8192)
+                                sDontInsert += "[" + std::to_string(m_batchInsertRow + 1) + "] " + (sParm.size() < 4096 ? sParm : sParm.substr(0, 4096) + " ...") + "\n";
+                            else sDontInsert += ".";
                         }
                     }
                     else
@@ -1662,11 +1702,11 @@ namespace KC
                         throw std::runtime_error(res.second);
                     }
                     // 设置保存点
-                    if (iSavePoint > 0 && iLoopInsert % iSavePoint == 0)
+                    if (m_isBatchSavePointRow)
                     {
                         long long iNow = CUtilFunc::GetCurrentStampMS();
                         CAutoRelease _auto([&](){ iTranSavePointUseTime += static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNow); });
-                        this->TranSavePoint("s" + std::to_string(iLoopInsert));
+                        this->TranSavePoint("s" + std::to_string(m_batchInsertRow));
                     }
                 };
                 // 异常处理
@@ -1675,9 +1715,9 @@ namespace KC
                     if (0 == errCode) errCode = 207;
                     std::string sParm = fGetValStr();
                     if (strOth.size() < 4000)
-                        strOth += "[" + std::to_string(iLoopInsert + 1) + "]" + sParm + " \n";
+                        strOth += "[" + std::to_string(m_batchInsertRow + 1) + "]" + sParm + " \n";
                     if (errMsg.size() < 4000)
-                        errMsg += "[" + std::to_string(iLoopInsert + 1) + "]" + sErr + "  [" + sParm.substr(0, 66) + "...] \n";
+                        errMsg += "[" + std::to_string(m_batchInsertRow + 1) + "]" + sErr + "  [" + sParm.substr(0, 66) + "...] \n";
                     else if (!bIgnore)
                     {
                         bIgnore = true;
@@ -1693,11 +1733,11 @@ namespace KC
                     // fNotInsertMsg(sErr);
                     this->TranRollbackToSavePoint();
                     if (1 != iBatchMethod) return false;
-                    this->TranSavePoint("s" + std::to_string(iLoopInsert));
+                    affect += this->TranSavePoint("s" + std::to_string(m_batchInsertRow));
                     return true;
                 };
                 // 处理事务
-                auto fTranDeal = [&]()
+                auto fTranDeal = [&](void)
                 {
                     const bool bRollback = 0 != errCode && 3 == iBatchMethod;
                     if (bRollback) this->TranRollback();
@@ -1710,9 +1750,11 @@ namespace KC
                     CAutoRelease _auto([&](){ iUseTimeWait += static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNowIn); });
                     std::this_thread::yield();
                 };
+                #pragma endregion
 
+                #pragma region 批量处理函数
                 // 开始批量插入（从json参数）
-                auto fBatchFromJson = [&]()
+                auto fBatchFromJson = [&](void)
                 {
                     // json批量数组参数
                     const IKCJson& jsonVals = CtrlD().GetBatchArrayJson(sBatchParm.c_str());
@@ -1731,11 +1773,15 @@ namespace KC
                     // 预先处理
                     fBeforeExec();
                     // 循环插入
-                    for (; iLoopInsert < iCount; iLoopRead = ++iLoopInsert)
+                    for (; m_batchInsertRow < static_cast<int>(iCount); iLoopRead = ++const_cast<std::atomic_int&>(m_batchInsertRow))
                     {
                         CAutoRelease _auto(fHintAtFixRows);
                         try
                         {
+                            // 是否保存点行
+                            const_cast<bool&>(m_isBatchSavePointRow) = iSavePoint > 0 && (m_batchInsertRow + 1) % iSavePoint == 0;
+                            // 是否最后一行
+                            const_cast<bool&>(m_isBatchInsertEndRow) = m_batchInsertRow == static_cast<int>(iCount) - 1;
                             // 统计用时
                             const long long iNowIn = CUtilFunc::GetCurrentStampMS();
                             CAutoRelease _auto([&](){ iUseTimeInsertRow += static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNowIn); });
@@ -1745,9 +1791,15 @@ namespace KC
                             if (!jsonVal.IsValid()) break;
                             fGetValStr = [&]() { return jsonVal.ToStr(); };
                             // 绑定参数
-                            fBindJsonParms(jsonVal, nullptr);
+                            fBindParms(jsonVal, nullptr);
                             // 执行sql
                             fExecBatch();
+                        }
+                        catch (TExcept &ex)
+                        {
+                            auto [iCode, sMsg, sPos] = ParmExceptInfo(ex);
+                            errCode = iCode;
+                            if (!fCatchDeal(sMsg)) break;
                         }
                         catch (std::exception& ex)
                         {
@@ -1768,30 +1820,35 @@ namespace KC
                     // 执行插入的线程
                     auto fBatchInsertQueue = [&]()
                     {
-                        for (int iReadSize = 0; bRunning || iReadSize > 0; iReadSize = queRowData.read_available())
+                        for (int iReadSize = 0; bRunning || iReadSize > 0; iReadSize = static_cast<int>(queRowData.read_available()))
                         {
                             try
                             {
                                 if (iReadSize > 0)
                                 {
                                     std::vector<TRowDataPtr> vctRowData(iReadSize);
-                                    int iRealSize = queRowData.pop(vctRowData.data(), vctRowData.size());
-                                    for (int i = 0; i < iRealSize; ++i, ++iLoopInsert)
+                                    int iRealSize = static_cast<int>(queRowData.pop(vctRowData.data(), vctRowData.size()));
+                                    for (int i = 0; i < iRealSize; ++i, ++const_cast<std::atomic_int&>(m_batchInsertRow))
                                     {
                                         CAutoRelease _autoHint(fHintAtFixRows);
                                         try
                                         {
+                                            // 是否保存点行
+                                            const_cast<bool&>(m_isBatchSavePointRow) = iSavePoint > 0 && (m_batchInsertRow + 1) % iSavePoint == 0;
+                                            // 是否最后一行
+                                            const_cast<bool&>(m_isBatchInsertEndRow) = !bRunning && i == iRealSize - 1;
                                             // 统计用时
                                             const long long iNowIn = CUtilFunc::GetCurrentStampMS();
                                             CAutoRelease _auto([&](){ iUseTimeInsertRow += static_cast<int>(CUtilFunc::GetCurrentStampMS() - iNowIn); });
                                             // 绑定参数
-                                            fBindJsonParms(CtrlD().ActionData().InvalidJson(), vctRowData[i].get());
+                                            fBindParms(CtrlD().ActionData().InvalidJson(), vctRowData[i].get());
                                             // 执行sql
                                             fExecBatch();
                                         }
                                         catch (TExcept &ex)
                                         {
                                             auto [iCode, sMsg, sPos] = ParmExceptInfo(ex);
+                                            errCode = iCode;
                                             if (!fCatchDeal(sMsg))
                                             {
                                                 bRunning = false;
@@ -1861,6 +1918,7 @@ namespace KC
                     // 等待批量插入结束
                     if (thrdBatchInsertQue.joinable()) thrdBatchInsertQue.join();
                 };
+                #pragma endregion
 
                 // *** 开始批量插入 ***
                 {
@@ -1881,10 +1939,11 @@ namespace KC
 
                 // 结束批量插入
                 if (!sDontInsert.empty())
-                    Srv().WriteLogTrace(("BatchInsert, Not Insert Items:\n" + sDontInsert).c_str(), __CURR_CODE_PLACE_C__);
+                    Srv().WriteLogTrace(("BatchInsert, Not Insert Items:\n" + sDontInsert + "\r\n").c_str(), __CURR_CODE_PLACE_C__);
                 try
                 {
-                    this->BatchInsertEnd(0 == errCode || 3 != iBatchMethod);
+                    const_cast<std::atomic_int&>(m_batchInsertRow) = iCount - 1;
+                    affect += this->BatchInsertEnd(0 == errCode || 3 != iBatchMethod);
                 }
                 catch (TExcept &ex)
                 {

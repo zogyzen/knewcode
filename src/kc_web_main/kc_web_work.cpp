@@ -15,26 +15,8 @@ CKCWebWork::~CKCWebWork()
 // 初始化/释放
 bool CKCWebWork::init(void)
 {
-    string sCfgMod = string("Config.Modules.") + m_bundle.getName();
-    // 添加响应头
-    auto fAddHeader = [&](string key, string val)
-    {
-        if (!key.empty() /*&& !val.empty()*/)
-        {
-            auto iter = m_CfgHeader.find(key);
-            if (m_CfgHeader.end() == iter)
-                m_CfgHeader.insert(make_pair(key, val));
-            else iter->second = val;
-        }
-    };
-    // 版本信息
-    fAddHeader("Knewcode-Api-Ver", m_context.VersionInfo());
-    fAddHeader("Server-Api-Ext", c_DefaultWorkUriExtension);
-    // 配置中的响应头信息
-    string sHeaderNode = sCfgMod + ".Header";
-    for (int i = 0, c = m_context.GetCfgSubCount(sHeaderNode.c_str()); i < c; ++i)
-        if (m_context.IsCfgSubValid(sHeaderNode.c_str(), i))
-            fAddHeader(m_context.GetCfgSubInfo(sHeaderNode.c_str(), i, "key", ""), m_context.GetCfgSubInfo(sHeaderNode.c_str(), i, "value", ""));
+    // 得到配置的静态响应头
+    CUtilFuncKC::GetCfgHeadeStatic(m_CfgHeader, m_context, m_bundle.getName());
     return true;
 }
 bool CKCWebWork::free(void)
