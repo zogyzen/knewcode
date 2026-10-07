@@ -9,10 +9,10 @@
 	<body>
         <div>
 			<br>
-			<input id="uri" type="text" value="https://127.0.0.1:24122/api/sample.kc?act=Login" style="width:80%; height: 20px" />
+			<input id="uri" type="text" value="https://127.0.0.1/api/sample.kc?act=main" style="width:80%; height: 20px" />
 			<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
 			<textarea id="prm" rows="6" style="width:96vw">{"id":0}</textarea>
-			<div id="recv" style="width:95vw; height: calc(98vh - 210px); overflow: auto;"></div>
+			<div id="recv" style="width:97vw; height: calc(98vh - 210px); overflow: auto;"></div>
 		</div>
 		<div>
 			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:230px; height: 25px">
@@ -31,15 +31,15 @@
 				localStorage["ajaxTestPrm-" + selectedValue] = prm;
 			}
 			// 获取调用参数
-			function loadCallParm() {
+			function loadCallParm(init = true) {
 				let select = document.getElementById('selFunction');
 				let selectedValue = select.value;
 				let localUri = localStorage["ajaxTestUri-" + selectedValue];
 				let localPrm = localStorage["ajaxTestPrm-" + selectedValue];
 				if (localUri) document.getElementById("uri").value = localUri;
-				else document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample.kc?act=Login";
+				else if (init) document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample.kc?act=main";
 				if (localPrm) document.getElementById("prm").value = localPrm;
-				else document.getElementById("prm").value = '{"id":0}';
+				else if (init) document.getElementById("prm").value = '{"id":0}';
 			}
 			// 保存列表
 			function saveSelList() {
@@ -188,7 +188,7 @@
 			}
 			function selChange(element) {
 				console.log('选中方法: ' + element.value);
-				loadCallParm();
+				loadCallParm(false);
 				document.getElementById("stt").innerText = "";
 				document.getElementById("recv").innerText = "";
 			}

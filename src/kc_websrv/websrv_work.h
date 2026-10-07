@@ -14,6 +14,8 @@ public:
     void Init(void);
     // 释放
     void Free(void);
+    // 阻塞
+    void Block(void);
 
     // 客户端连接
     bool ClientConn(long, std::string, KCSrv::KcSrvConnectPtr);

@@ -2,6 +2,7 @@
 #include "request_respond.h"
 #include "websrv_conn.h"
 
+static std::atomic_bool s_normalExit = false;
 std::shared_ptr<KCWebSrvProxy> g_wsProxy;
 
 extern "C"
@@ -18,6 +19,7 @@ extern "C"
     // 释放代理接口
     void CALL_TYPE releaseProxy(void)
     {
+        s_normalExit = true;
         g_wsProxy.reset();
         cout << "*[knewcode] releaseProxy." << endl;
     }
@@ -36,17 +38,22 @@ KCWebSrvProxy::KCWebSrvProxy(IWSProxyServerCB& srv)
 
 KCWebSrvProxy::~KCWebSrvProxy()
 {
-    m_running = false;
-    // 释放链接
+    try
     {
-        boost::unique_lock<boost::shared_mutex> lck(m_mtxWC);
-        m_wcs.clear();
+        if (!s_normalExit) exit(1);
+        m_running = false;
+        // 释放链接
+        {
+            boost::unique_lock<boost::shared_mutex> lck(m_mtxWC);
+            m_wcs.clear();
+        }
+        // 释放框架
+        IServiceReference* webApiWrk = &m_WebApiWrkRef;
+        m_BundleContextIF.freeServiceReference(webApiWrk);
+        IServiceReference* webMain = &m_WebMainRef;
+        m_BundleContextIF.freeServiceReference(webMain);
     }
-    // 释放框架
-    IServiceReference* webApiWrk = &m_WebApiWrkRef;
-    m_BundleContextIF.freeServiceReference(webApiWrk);
-    IServiceReference* webMain = &m_WebMainRef;
-    m_BundleContextIF.freeServiceReference(webMain);
+    catch (...) {}
 }
 
 // 初始化

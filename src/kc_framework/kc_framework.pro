@@ -64,6 +64,10 @@ win32 {
     #copyCmd.commands = $$QMAKE_COPY $$varCopyCmdPath
     QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$varCopyHintFile $$escape_expand(\\n\\t)
 
+    varCopyLibFile = \"$$LIBRARYPTH3RD/windows/bin\" \"$$DESTDIR/\"
+    varCopyLibFile ~= s,/,\\,g
+    QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$varCopyLibFile $$escape_expand(\\n\\t)
+
     varCopyInclude = \"$$PWD\..\include\for_user\" \"$$DESTDIR/include/for_user\"
     varCopyInclude ~= s,/,\\,g
     QMAKE_POST_LINK += $$QMAKE_COPY_DIR $$varCopyInclude $$escape_expand(\\n\\t)

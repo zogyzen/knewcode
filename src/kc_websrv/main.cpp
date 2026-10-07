@@ -16,8 +16,7 @@ int main(int argc, char *argv[])
         CAutoRelease _auto([=](){g_work.reset(); });
         g_work->Init();
         CAutoRelease _auto2([=](){g_work->Free(); });
-        for (string sIn; "quit" != sIn; cin >> sIn)
-            boost::this_thread::sleep(boost::posix_time::milliseconds(999));
+        g_work->Block();
     }
     catch (std::exception &ex)
     {

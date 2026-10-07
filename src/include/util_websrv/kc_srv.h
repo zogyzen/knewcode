@@ -7,6 +7,7 @@
 #include <set>
 #include <atomic>
 
+#include <boost/system/error_code.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/any.hpp>
@@ -535,77 +536,88 @@ namespace KCSrv
         // 读请求
         void do_read(void)
         {
-            auto self(this->shared_from_this());
-            // 读请求头，使用动态自动扩展缓冲区
-            std::shared_ptr<boost::asio::streambuf> bufReadPtr(new boost::asio::streambuf);
-            // 读请求头，直到指定标记。（可能会多读一些数据）
-            boost::asio::async_read_until(this->m_socket, *bufReadPtr, "\r\n\r\n",
-                [this, self, bufReadPtr](const boost::system::error_code& ec, std::size_t length)
-                {
-                    try
+            try
+            {
+                if (!this->m_own.m_own.IsRunning()) return;
+                auto self(this->shared_from_this());
+                // 读请求头，使用动态自动扩展缓冲区
+                std::shared_ptr<boost::asio::streambuf> bufReadPtr(new boost::asio::streambuf);
+                // 读请求头，直到指定标记。（可能会多读一些数据）
+                boost::asio::async_read_until(this->m_socket, *bufReadPtr, "\r\n\r\n",
+                    [this, self, bufReadPtr](const boost::system::error_code& ec, std::size_t length)
                     {
-                        if (!this->m_own.m_own.IsRunning()) return;
-                        if (!ec)
+                        try
                         {
-                            // boost::asio::streambuf::const_buffers_type bufReadData = bufReadPtr->data();
-                            std::string dataHeader(buffers_begin(bufReadPtr->data()), buffers_begin(bufReadPtr->data()) + length);
-                            bufReadPtr->consume(length);    // 消费掉请求头这部分数据
-                            // bufReadPtr->commit(length);
-                              std::cout << "[" << this->GetID() << "] read: " << std::dec << bufReadPtr->size() << " / " << length
-                                      << std::endl << dataHeader << std::endl;
-                            KcSrvRequest *pReq = new KcSrvRequest(self, dataHeader);
-                            KcSrvRequestPtr reqPtr(pReq);
-                            // 如果存在多读数据，先放到请求体里
-                            if (bufReadPtr->size() > 0)
-                                pReq->m_body.append(buffers_begin(bufReadPtr->data()), buffers_end(bufReadPtr->data()));
-                            // 剩余未读数据
-                            long long iResidue = reqPtr->m_ContentLength - bufReadPtr->size();
-                            // 读请求体
-                            if (iResidue > 0)
+                            if (!this->m_own.m_own.IsRunning()) return;
+                            if (!ec)
                             {
-                                boost::shared_array<char> strResidue(new char[iResidue + 1]{ 0 });
-                                boost::asio::async_read(this->m_socket, boost::asio::buffer(strResidue.get(), iResidue),
-                                    [this, self, pReq, reqPtr, strResidue, iResidue](const boost::system::error_code& ec, std::size_t length)
-                                    {
-                                        try
+                                this->m_readErrorCount = 0;
+                                // boost::asio::streambuf::const_buffers_type bufReadData = bufReadPtr->data();
+                                std::string dataHeader(buffers_begin(bufReadPtr->data()), buffers_begin(bufReadPtr->data()) + length);
+                                bufReadPtr->consume(length);    // 消费掉请求头这部分数据
+                                // bufReadPtr->commit(length);
+                                  std::cout << "[" << this->GetID() << "] read: " << std::dec << bufReadPtr->size() << " / " << length
+                                          << std::endl << dataHeader << std::endl;
+                                KcSrvRequest *pReq = new KcSrvRequest(self, dataHeader);
+                                KcSrvRequestPtr reqPtr(pReq);
+                                // 如果存在多读数据，先放到请求体里
+                                if (bufReadPtr->size() > 0)
+                                    pReq->m_body.append(buffers_begin(bufReadPtr->data()), buffers_end(bufReadPtr->data()));
+                                // 剩余未读数据
+                                long long iResidue = reqPtr->m_ContentLength - bufReadPtr->size();
+                                // 读请求体
+                                if (iResidue > 0)
+                                {
+                                    boost::shared_array<char> strResidue(new char[iResidue + 1]{ 0 });
+                                    boost::asio::async_read(this->m_socket, boost::asio::buffer(strResidue.get(), iResidue),
+                                        [this, self, pReq, reqPtr, strResidue, iResidue](const boost::system::error_code& ec, std::size_t length)
                                         {
-                                            if (!this->m_own.m_own.IsRunning()) return;
-                                            if (!ec)
+                                            try
                                             {
-                                                if (iResidue != length)
-                                                    std::cout << (boost::format("? [%d / %s] Read Body: %d != %d") % this->GetID() % this->ClientIP() % iResidue % length).str() << std::endl;
-                                                // 拼请求体
-                                                pReq->m_body.append(strResidue.get(), length);
-                                                // 处理
-                                                this->Deal(reqPtr);
+                                                if (!this->m_own.m_own.IsRunning()) return;
+                                                if (!ec)
+                                                {
+                                                    this->m_readErrorCount = 0;
+                                                    if (iResidue != length)
+                                                        std::cout << (boost::format("? [%d / %s] Read Body: %d != %d") % this->GetID() % this->ClientIP() % iResidue % length).str() << std::endl;
+                                                    // 拼请求体
+                                                    pReq->m_body.append(strResidue.get(), length);
+                                                    // 处理
+                                                    this->Deal(reqPtr);
+                                                }
+                                                else
+                                                {
+                                                    std::cout << "[" << this->GetID() << " / " << ++this->m_readErrorCount << " / " << this->ClientIP() << "] Read Body: " << ec.message() << std::endl;
+                                                    WaitNextRequest(self, ec, 555);
+                                                }
                                             }
-                                            else
+                                            catch (...)
                                             {
-                                                std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Read Body: " << ec.message() << std::endl;
+                                                std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Read Body: Unknown Error" << std::endl;
                                                 WaitNextRequest(self, ec, 555);
                                             }
-                                        }
-                                        catch (...)
-                                        {
-                                            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] Read Body: Unknown Error" << std::endl;
-                                            WaitNextRequest(self, ec, 555);
-                                        }
-                                    });
+                                        });
+                                }
+                                else this->Deal(reqPtr);
                             }
-                            else this->Deal(reqPtr);
+                            else
+                            {
+                                std::cout << "[" << this->GetID() << " / " << ++this->m_readErrorCount << " / " << this->ClientIP() << "] async_read_until Error: " << ec.value() << "-" << ec.message() << std::endl;
+                                WaitNextRequest(self, ec, 555);
+                            }
                         }
-                        else
+                        catch (...)
                         {
-                            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] async_read_until Error: " << ec.value() << "-" << ec.message() << std::endl;
+                            std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] async_read_until Error: Unknown Error" << std::endl;
                             WaitNextRequest(self, ec, 555);
                         }
-                    }
-                    catch (...)
-                    {
-                        std::cout << "[" << this->GetID() << " / " << this->ClientIP() << "] async_read_until Error: Unknown Error" << std::endl;
-                        WaitNextRequest(self, ec, 555);
-                    }
-                });
+                    });
+            }
+            catch (...)
+            {
+                std::cout << "[" << this->GetID() << "] Lost Connection" << std::endl;
+                this->CloseConn();
+            }
         }
 
         // 写应答
@@ -848,7 +860,7 @@ namespace KCSrv
             try
             {
                 bool bIsBreakEC = IsBreakErrCode(ec);
-                if (!bIsBreakEC && this->IsOpen())
+                if (!bIsBreakEC && m_readErrorCount < 60 && this->IsOpen())
                 {
                     std::cout << "[" << this->GetID() << "] Wait Next Request - " << ims << std::endl;
                     boost::this_thread::sleep(boost::posix_time::milliseconds(ims));
@@ -856,11 +868,17 @@ namespace KCSrv
                 }
                 else
                 {
+                    std::cout << "[" << this->GetID() << " / " << this->m_readErrorCount << " / " << ec.value() << "] Lost Connection" << std::endl;
+                    this->m_readErrorCount = 0;
                     this->CloseConn();
-                    std::cout << "[" << this->GetID() << "] Lost Connection" << std::endl;
                 }
             }
-            catch (...) {}
+            catch (...)
+            {
+                this->CloseConn();
+                std::cout << "[" << this->GetID() << " / " << this->m_readErrorCount << " / " << ec.value() << "] Lost Connection" << std::endl;
+                this->m_readErrorCount = 0;
+            }
         }
 
         // 代表连接断开的错误码
@@ -877,6 +895,7 @@ namespace KCSrv
         TSock m_socket;
         static inline long s_id = 0;
         const long m_id = ++s_id;
+        int m_readErrorCount = 0;
 
     private:
         KcSrvHttpPtr m_keepOwn;
@@ -949,7 +968,8 @@ namespace KCSrv
             // ctx->use_certificate_chain_file("./ssl/fullchain.pem");
             // ctx->use_private_key_file("./ssl/private.key", boost::asio::ssl::context::pem);
             // m_context.use_tmp_dh_file("dh4096.pem");
-            ctx->set_password_callback(std::bind(&KcSrvConnectSSL::get_password, this));
+            // ctx->set_password_callback(std::bind([&](void){ return "123"; }));
+            if (this->m_own.m_own.m_fGetSSLPass) ctx->set_password_callback(this->m_own.m_own.m_fGetSSLPass);
 
             // ctx->load_verify_file("./ssl/fullchain.pem");
 
@@ -1009,16 +1029,13 @@ namespace KCSrv
                 });
         }
 
-        std::string get_password() const
-        {
-            // return this->m_own.GetPassword();
-            return "123";
-        }
-
         // 代表连接断开的错误码
         bool IsBreakErrCode(const boost::system::error_code& ec) const override
         {
-            return TParentClass::IsBreakErrCode(ec) || boost::asio::ssl::error::stream_truncated == ec;
+            return TParentClass::IsBreakErrCode(ec)
+                    || boost::asio::ssl::error::stream_truncated == ec
+                    || boost::asio::ssl::error::unspecified_system_error == ec
+            ;
         }
 
     protected:
@@ -1077,16 +1094,34 @@ namespace KCSrv
 
         void do_accept()
         {
-            m_acceptor.async_accept(
-                [this](const boost::system::error_code& ec, boost::asio::ip::tcp::socket socket)
-                {
-                    if (!this->m_own.IsRunning()) return;
-                    if (!ec)
-                        DealAccept(socket);
-                    else
-                        std::cout << ec.message() << std::endl;
-                    this->do_accept();
-                });
+            try
+            {
+                if (!this->m_own.IsRunning()) return;
+                m_acceptor.async_accept(
+                    [this](const boost::system::error_code& ec, boost::asio::ip::tcp::socket socket)
+                    {
+                        if (!this->m_own.IsRunning()) return;
+                        if (!ec)
+                            DealAccept(socket);
+                        else
+                            std::cout << ec.message() << std::endl;
+                        this->do_accept();
+                    });
+            }
+            catch (std::exception &ex)
+            {
+                std::cout << ex.what() << std::endl;
+                m_own.m_own.WriteLogError(ex.what(), __FUNCTION__);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(666));
+                this->do_accept();
+            }
+            catch (...)
+            {
+                std::cout << "unknown error" << std::endl;
+                m_own.m_own.WriteLogError("unknown error", __FUNCTION__);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(666));
+                this->do_accept();
+            }
         }
 
     protected:
@@ -1174,6 +1209,7 @@ namespace KCSrv
         TOwn &m_own;
         TParmKcSrv m_parm;
         const std::string m_version = "Knewcode v1.2";
+        std::function<std::string(std::size_t, boost::asio::ssl::context_base::password_purpose)> m_fGetSSLPass;
 
         KcSrvMainExec(TOwn &own, std::string sVersion, FRequestRespond frr, FClientConnStart fcc = [](long, std::string, KcSrvConnectPtr){ return true; })
             : m_own(own), m_version(sVersion), m_frr(frr), m_fcc(fcc)
@@ -1185,6 +1221,7 @@ namespace KCSrv
             auto self(this->shared_from_this());
             bool bRunHttp = false, bRunHttps = false;
             m_parm.portHttpIsStart = m_parm.portHttp > 0;
+            m_running = true;
             if (m_parm.portHttpIsStart)
             {
                 try
@@ -1193,11 +1230,16 @@ namespace KCSrv
                     m_srvHttp->Start();
                     bRunHttp = true;
                 }
+                catch (std::exception &ex)
+                {
+                    std::cout << "Can't Run Http: " << m_parm.portHttp << ". \t" << ex.what() << std::endl;
+                }
                 catch (...)
                 {
                     std::cout << "Can't Run Http: " << m_parm.portHttp << std::endl;
                 }
             }
+            m_parm.portHttpIsStart = bRunHttp;
             m_parm.portHttpsIsStart = m_parm.portHttps > 0 && boost::filesystem::exists(m_parm.sslCert) && boost::filesystem::exists(m_parm.sslKey);
             if (m_parm.portHttpsIsStart)
             {
@@ -1207,17 +1249,22 @@ namespace KCSrv
                     m_srvHttps->Start();
                     bRunHttps = true;
                 }
+                catch (std::exception &ex)
+                {
+                    std::cout << "Can't Run Https: " << m_parm.portHttps << ". \t" << ex.what() << std::endl;
+                }
                 catch (...)
                 {
                     std::cout << "Can't Run Https: " << m_parm.portHttps << std::endl;
                 }
             }
+            m_parm.portHttpsIsStart = bRunHttps;
             m_running = bRunHttp || bRunHttps;
             if (m_running)
             {
                 m_thrdIoCtx.resize(m_parm.threadCount);
                 for (auto &thrd : m_thrdIoCtx)
-                    thrd.reset(new boost::thread([this, self](){ this->m_ioContext.run(); }));
+                    thrd.reset(new boost::thread([this, self](){ this->Block(); }));
             }
         }
         void Stop(void)
@@ -1225,14 +1272,35 @@ namespace KCSrv
             m_running = false;
             if (!m_ioContext.stopped()) m_ioContext.stop();
             for (auto &thrd : m_thrdIoCtx)
-                if (thrd->joinable()) thrd->timed_join(boost::posix_time::milliseconds(555));
+                if (thrd->joinable()) thrd->timed_join(boost::posix_time::milliseconds(66));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(66));
             m_thrdIoCtx.clear();
             m_srvHttp.reset();
             m_srvHttps.reset();
         }
+
         void Block(void)
         {
-            m_ioContext.run();
+            while (m_running)
+            try
+            {
+                m_ioContext.run();
+                boost::this_thread::sleep(boost::posix_time::milliseconds(66));
+            }
+            catch (std::exception &ex)
+            {
+                std::string sErr = std::string("[boost::asio::io_context] Run Exception - ") + ex.what();
+                std::cout << sErr << std::endl;
+                m_own.WriteLogError(sErr.c_str(), __FUNCTION__);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(6666));
+            }
+            catch (...)
+            {
+                std::string sErr = "[boost::asio::io_context] Run Exception";
+                std::cout << sErr << std::endl;
+                m_own.WriteLogError(sErr.c_str(), __FUNCTION__);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(6666));
+            }
         }
 
         bool IsRunning(void) { return m_running; }

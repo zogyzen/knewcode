@@ -360,6 +360,23 @@ void CWebSrvWork::Free(void)
     catch (...) {}
 }
 
+// 阻塞
+void CWebSrvWork::Block(void)
+{
+    if (m_kcSrv->m_parm.portHttpIsStart || m_kcSrv->m_parm.portHttpsIsStart)
+    {
+        auto &cntx = dynamic_cast<IBundleContextEx&>(m_proxy.GetContext());
+        const bool isBlock = boost::algorithm::to_lower_copy(string(cntx.GetCfgInfo("Config.WebServer", "isBlock", "true"))) == "true";
+        if (isBlock && m_kcSrv.get() != nullptr)
+            m_kcSrv->Block();
+        else
+        {
+            for (string sIn; "quit" != sIn; cin >> sIn)
+                boost::this_thread::sleep(boost::posix_time::milliseconds(999));
+        }
+    }
+}
+
 // 客户端连接
 bool CWebSrvWork::ClientConn(long id, std::string ipCln, KCSrv::KcSrvConnectPtr)
 {
