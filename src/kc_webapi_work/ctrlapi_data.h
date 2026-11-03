@@ -86,6 +86,9 @@ public:
     int CALL_TYPE GetCfgLogLevel(void) const override;
     // 获取固定字段的名称
     std::string CALL_TYPE GetFixParmName(std::string) const override;
+    const char* CALL_TYPE GetFixParmName(const char*) const override;
+    // 首个数据集为主数据集，默认为false（默认是首个数据集并且名字为vals为主数据集）
+    bool CALL_TYPE FirstIsMainVals(void) const override;
 
 public:
     // 活动数据类实例

@@ -22,13 +22,13 @@ CBoostLog::CBoostLog(IBundleContext& own) : m_own(own), m_path(own.getPath())
 }
 
 // 初始化
-const char* CBoostLog::Init(const char* dir, const char* id, TLogLevel lv, int szFile, const char* eachPrefix, bool inDay)
+const char* CBoostLog::Init(const char* dir, const char* id, TLogLevel lv, unsigned szFileM, const char* eachPrefix, bool inDay)
 {
     static thread_local string sResult;
     sResult.clear();
     try
     {
-        m_log.Init(dir, id, static_cast<boost::log::trivial::severity_level>(lv), szFile, eachPrefix, inDay);
+        m_log.Init(dir, id, static_cast<boost::log::trivial::severity_level>(lv), szFileM, eachPrefix, inDay);
     }
     catch (std::exception &ex)
     {

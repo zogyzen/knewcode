@@ -9,7 +9,7 @@
 		end;
 	</UpdData>
 
-	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"outParms":{"errCode":"int","errMsg":"varchar"}, "dbsetParms":{"vals":"dbset", "r2":"dbset-array"}}' needToken="false">
+	<Select type="bundle" srv="dmdbms" ctrl="connect1" attach='{"fixParmName":{"recCount":"RecCount"},"outParms":{"errCode":"int","errMsg":"varchar"}, "dbsetParms":{"vals":"dbset", "r2":"dbset"}}' needToken="false">
 		begin
 			--select :KC__SESSION_sys__Ftype a, * from city where region_id = :id;
 			--select * from city where region_id = :id2;
@@ -20,6 +20,14 @@
 	<query type="bundle" srv="dmdbms" ctrl="connect1" method="query" attach='{"replace":{"QrySQL":"NoCheck"}}' needToken="false">
 		#@QrySQL#
 	</query>
+	
+	<Select2 type="bundle" srv="dmdbms" ctrl="connect1" method="procedures" attach='{"fixParmName":{"recCount":"RecCount"},"outParms":{"rset1":"dbset", "rset2":"dbset"}}' needToken="false">
+		begin
+		  OPEN :rset1 for select * from test;
+		  OPEN :rset2 for select * from test;
+		end;
+	</Select2>
+
 	
 	<Login type="bundle" srv="dmdbms" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","errMsg":"varchar2","s_zhandianh":"varchar2","parms":{"username":"varchar2","isAdmin":"int"}}}' needToken="false">
 		declare
@@ -76,7 +84,14 @@
 		end;
 	</Logout>
 	
-	<Batch1 type="bundle" srv="dmdbms" ctrl="connect1" method="batch" attach ="" needToken="false">
+	<GetClob type="bundle" srv="dmdbms" ctrl="connect1" method="procedures" attach ='{"outParms":{"errCode":"int","errMsg":"clob"}}' needToken="false">
+		begin
+			:errCode := 0;
+			:errMsg := :KC__GLOBAL_CONSTANT__User_Agent;
+		end;
+	</GetClob>
+
+	<Batch1 type="bundle" srv="dmdbms" ctrl="connect1" method="procedures" attach ='{"parmsType":{"txt":"clob"}}' needToken="false">
 		declare
 			v_i_in_sort int;
 			v_inid int;
@@ -88,6 +103,7 @@
 			values
 			(
 				:txt
+				--TO_CHAR(:txt)
 			);
 		end;
 	</Batch1>
@@ -106,5 +122,84 @@
 			);
 		end;
 	</Batch2>
+	
+	<!-- 创建临时表 -->
+	<CreateTmpTable type="bundle" srv="dmdbms" ctrl="connect1" method="create" attach='' needToken="false">
+		CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS t_tmp_table
+		(
+			a int PRIMARY KEY,
+			b varchar2(200)
+		) ON COMMIT DELETE ROWS;
+	</CreateTmpTable>
+	
+	<!-- 查询临时包 -->
+	<SelectPack type="bundle" srv="dmdbms" ctrl="connect1" method="select" attach='' needToken="false">
+		SELECT * FROM ALL_OBJECTS WHERE object_type IN ('PACKAGE', 'PACKAGE BODY')
+		and REGEXP_LIKE(object_name, 'Z\$TEMP[0-9]{6}_[0-9|A-F]+_[0-9|A-F]+_[0-9|A-F]+_\w*')
+	</SelectPack>
+
+	<!-- 创建包 -->
+	<CreatePackageHead type="bundle" srv="dmdbms" ctrl="connect1" method="create" attach=''>
+		CREATE OR REPLACE PACKAGE Z$TEMP261011_abc_AB_C_GetID IS
+			wjid int;
+			function f_parm return int;
+		end;
+	</CreatePackageHead>
+	<CreatePackageBody type="bundle" srv="dmdbms" ctrl="connect1" method="create" attach=''>
+		create OR REPLACE package body Z$TEMP261011_abc_AB_C_GetID as
+			function f_parm return int is
+			begin
+				wjid = 12;
+				return wjid;
+			end;
+		end;
+	</CreatePackageBody>
+	<CreatePackage type="group" exec="order" needToken="false">	<!-- order, parallel, branch -->
+		<C1 url="?act=CreatePackageHead" />
+		<C2 url="?act=CreatePackageBody" />
+	</CreatePackage>
+	
+	<!-- 临时包 -->
+	<TmpPackage type="bundle" srv="dmdbms" ctrl="connect1" method="package">
+		<declare>
+			function F_add
+			(
+			   a in int,
+			   b in int
+			)
+			return int;
+		</declare>
+		function F_add
+		(
+		   a in int,
+		   b in int
+		)
+		return int IS
+			v_res int;
+
+		BEGIN
+			v_res = a + b;
+			return v_res;
+		END;
+	</TmpPackage>
+	<UseTmpPackage type="bundle" srv="dmdbms" ctrl="connect1" method="query" needToken="false">
+		<depend>
+			<C1 url="?act=TmpPackage" />
+		</depend>	
+		select ##KCTmp__TmpPackage.F_add(1, 2) v from dual
+	</UseTmpPackage>
+	
+	<!-- 临时视图-->
+	<TmpCreateView type="bundle" srv="dmdbms" ctrl="connect1" method="create" attach=''>
+		CREATE OR REPLACE VIEW ##KCTmp__chaxun as
+		select :a a from dual
+	</TmpCreateView>
+	<TmpCreateViewQuery type="bundle" srv="dmdbms" ctrl="connect1" method="select" attach=''>
+		select * from ##KCTmp__chaxun
+	</TmpCreateViewQuery>
+	<TmpCreateViewTest type="group" exec="order" needToken="false">
+		<C1 url="?act=TmpCreateView" />
+		<C2 url="?act=TmpCreateViewQuery" />
+	</TmpCreateViewTest>
 
 </Controllers>

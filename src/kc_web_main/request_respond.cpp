@@ -240,7 +240,7 @@ IActionData& CKCRequestRespond::ActionData(void)
 
 ////////////////////////////请求部分///////////////////////////
 // 得到服务器端全部信息
-const char* CKCRequestRespond::GetAllInfo(const char* endTag)
+const char* CKCRequestRespond::GetAllInfo(const char* endTag) const
 {
     static thread_local string sAllInfo;
     sAllInfo = m_re.GetAllInfo(endTag);
@@ -254,7 +254,7 @@ const char* CKCRequestRespond::GetAllInfo(const char* endTag)
 }
 
 // 得到服务器端各单个请求信息
-const char* CKCRequestRespond::GetSingleInfo(const char* pName, const char* pDef)
+const char* CKCRequestRespond::GetSingleInfo(const char* pName, const char* pDef) const
 {
     try
     {
@@ -369,11 +369,11 @@ int CKCRequestRespond::GetPort(void)
 }
 
 // GET的参数
-const char* CKCRequestRespond::GetGetArgStr(void)
+const char* CKCRequestRespond::GetGetArgStr(void) const
 {
     return m_re.GetGetArgStr();
 }
-const char* CKCRequestRespond::GetGetArg(const char* sName, const char* sDef)
+const char* CKCRequestRespond::GetGetArg(const char* sName, const char* sDef) const
 {
     auto it = m_getParms.find(sName);
     if (m_getParms.end() != it) return it->second.c_str();
@@ -440,7 +440,7 @@ const char* CKCRequestRespond::GetLocalPagePath(void)
 }
 
 // 按名称得到请求头
-const char* CKCRequestRespond::GetRequestHeader(const char* name)
+const char* CKCRequestRespond::GetRequestHeader(const char* name) const
 {
     return m_re.GetRequestHeader(name);
 }
@@ -466,6 +466,16 @@ const char* CKCRequestRespond::GetVirtualPath(unsigned pos)
 const char* CKCRequestRespond::GetVirtualPathUri(unsigned pos)
 {
     return m_re.GetVirtualPath(pos);
+}
+
+// 全局常量
+IActionData::EGlobalValTpe CKCRequestRespond::GetGlobalConstType(const char* name) const
+{
+    return m_re.GetGlobalConstType(name);
+}
+const char* CKCRequestRespond::GetGlobalConst(const char* name, const char* def) const
+{
+    return m_re.GetGlobalConst(name, def);
 }
 
 ////////////////////////////应答部分///////////////////////////

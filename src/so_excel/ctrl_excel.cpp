@@ -59,7 +59,8 @@ void CCtrlExcel::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
             xlsxDoc.write(1, c + 1, sName.c_str(), xlsxFormat1);
         }
         // 值
-        const IKCJson& jsonVals = jsonRequest.GetItem(objCtrlD.ActionData().GetValsName());
+        // const IKCJson& jsonVals = jsonRequest.GetItem(objCtrlD.ActionData().GetValsName());
+        const IKCJson& jsonVals = jsonRequest.GetItem(objCtrlD.GetFixParmName(c_RESTful_vals));
         int iRowCount = jsonVals.GetItemCount();
         for (int r = 0; r < iRowCount; ++r)
         {

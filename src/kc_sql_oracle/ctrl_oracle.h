@@ -17,17 +17,18 @@ protected:
 
 protected:
     // 页面活动对象（用于保存数据库连接，在整个页面执行期间有效）
-    struct TOraConnObj final : public IActionData::TActObj
+    struct TOraConnObj final : CSqlFuncOra::TOraConnObjBase
     {
         CCtrlOracle& m_own;
         Connection *m_conn = nullptr;
-        const unsigned m_connid = 0;
-        // 临时对象（临时表、临时视图、临时函数，等等）
-        map<string, string> mapTmpObjs;
-        // 临时对象计数
-        std::atomic_uint m_tmpID;
 
         TOraConnObj(CCtrlOracle& own, unsigned connid);
+
+        IKCSql& Srv(void) override { return m_own.m_own; }
+
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
+        // 释放
         void Release(void) override;
     };
     friend struct TOraConnObj;
@@ -75,7 +76,7 @@ protected:
         static void SetClob(Connection&, Statement&, unsigned iPos, string strVal);
         static string GetClob(Statement&, unsigned iPos, string sDef = "");
     };
-    typedef CSqlFunc::TParmGrp<SQLException> TParmGrpOraBase;
+    typedef CSqlFuncOra::TParmGrpOraBase<SQLException> TParmGrpOraBase;
     struct TParmGrpOra : public TParmGrpOraBase
     {
         CCtrlOracle& m_ctrl;
@@ -130,7 +131,7 @@ protected:
     };
 
     // 数据库执行命令
-    struct TDBCommandOra : public CSqlFunc::TDBCommand<SQLException>
+    struct TDBCommandOra : public CSqlFuncOra::TDBCommandOraBase<SQLException>
     {
         IKCSqlOracle& m_own;
         CCtrlOracle& m_ctrl;
@@ -144,16 +145,20 @@ protected:
         bool m_batchIsProc = false;
         TParmGrpOra m_parms;
 
+        // 针对DDL语句，为临时参数包里的参数赋值的sql语句
+        string m_tmpParmPackageAssignValSQL;
+
         TDBCommandOra(CCtrlOracle& ctrl, KeepStmtOraPtr st, ICtrlApiData& ctrlD, string sAct, string sActName, string sMethod, TOraConnObj&);
 
         // 所属的服务
-        IKCSql& Srv(void) override;
+        IKCSql& Srv(void) override { return m_own; }
 
         // 控制器数据接口
         ICtrlApiData& CtrlD(void) override { return m_objCtrlD; }
 
         //  控制器 信息
         string ActInfo(void) override;
+        string ActName(void) override;
 
         // SQL语句
         std::string GetSQL(void) override { return stmt.getSQL(); }
@@ -167,6 +172,9 @@ protected:
             return make_tuple(ex.getErrorCode(), ex.getMessage(), "");
         }
 
+        // 页面活动对象
+        CSqlFuncOra::TOraConnObjBase& ConnObj(void) override { return m_connObj; }
+
         // 事务
         void TranBegin(void) override;
         void TranCommit(void) override;
@@ -174,6 +182,9 @@ protected:
 
         // 预执行
         void PrepareSQL(void) override;
+
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
 
         // 执行
         unsigned int ExecuteUpdate(void) override;
@@ -185,17 +196,13 @@ protected:
 
         // 执行过程
         int ExecuteProcedures(void) override;
-        // 针对DDL语句，创建临时参数包
-        void CreateTmpParmPackage(void);
-        // 创建临时包
-        void CreateTmpPackage(ICtrlApiData&);
+        // 针对DDL语句，创建临时对象
+        bool CreateTmpParmPackage(void);
         // 临时对象的随机名称
-        string GetTmpObjRandName(string sName);
+        string GetTmpObjRandName(string sName) override;
     };
 
 protected:
-    // 获取配置
-    string GetConfig(property_tree::ptree&, string sAttr, string sDef = "");
     // 创建oracle环境
     Environment& CreateOracleEnv(property_tree::ptree&);
     // 创建连接池
@@ -217,6 +224,10 @@ private:
     double m_version = 19;
     // 单字节字符集、宽字节字符集
     const string m_Charset = "AL32UTF8", m_NCharset = "AL32UTF8";
+    // 字段转大小写
+    const string m_feildCaseSensitive;
+    // 数据集预读行数
+    const int m_prefetchRowCount = -1;
     // oracle数据库环境
     Environment &m_env;
     // 链接池

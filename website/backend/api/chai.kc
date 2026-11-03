@@ -15,7 +15,7 @@
 		</addition>	
 		<!-- #include "./chai.kc?act=main2"# -->
 		var i2 = func(3);
-		<!-- var iErrCode = this.ExecUrlApi("pgsql.kc?act=main"); -->
+		<!-- var iErrCode = This.ExecUrlApi("pgsql.kc?act=main"); -->
 		var iErrCode = This.Request.GetInt("a");
 		This.Json.SetVal("ErrCode", iErrCode);
 		print("ErrCode: ${iErrCode}. Val: ${i2}");
@@ -59,6 +59,12 @@
 		<C3 url="?act=main3" />
 	</main4>
 	
+	<main5>
+		var iErrCode = This.ExecUrlApi("dm.kc?act=Select");
+		This.Json.SetVal("ErrCode", iErrCode);
+		print("ErrCode: ${iErrCode}. Val: ${iErrCode}");
+	</main5>
+
 	<SoTest1>
 		<addition>
 			<L1 so="/bin/so_chai_sys" classPrefix="Test" />

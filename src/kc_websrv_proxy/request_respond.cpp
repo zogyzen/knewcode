@@ -20,7 +20,7 @@ bool CWebRequestRespond::IsSSL(void)
 }
 
 // 得到服务器端全部信息
-const char* CWebRequestRespond::GetAllInfo(const char* endTag)
+const char* CWebRequestRespond::GetAllInfo(const char* endTag) const
 {
     static thread_local string sAllInfo;
     sAllInfo.clear();
@@ -31,7 +31,7 @@ const char* CWebRequestRespond::GetAllInfo(const char* endTag)
 }
 
 // 得到服务器端各单个请求信息
-const char* CWebRequestRespond::GetSingleInfo(const char* pName, const char* pDef)
+const char* CWebRequestRespond::GetSingleInfo(const char* pName, const char* pDef) const
 {
     return m_recb.GetSingleInfo(pName, pDef);
 }
@@ -97,7 +97,7 @@ int CWebRequestRespond::GetPort(void)
 }
 
 // GET的参数
-const char* CWebRequestRespond::GetGetArgStr(void)
+const char* CWebRequestRespond::GetGetArgStr(void) const
 {
     return GetSingleInfo("args");
 }
@@ -144,7 +144,7 @@ const char* CWebRequestRespond::GetLocalRootPath(void)
 }
 
 // 按名称得到请求头
-const char* CWebRequestRespond::GetRequestHeader(const char* name)
+const char* CWebRequestRespond::GetRequestHeader(const char* name) const
 {
     return m_recb.GetRequestHeader(name);
 }
@@ -162,6 +162,67 @@ const char* CWebRequestRespond::GetVirtualPath(unsigned pos)
 const char* CWebRequestRespond::GetVirtualPathUri(unsigned pos)
 {
     return m_recb.VirtualPathCount() > 0 ? m_recb.GetVirtualPathUri(pos) : m_own.GetVirtualPathUri(pos);
+}
+
+// 全局常量
+IActionData::EGlobalValTpe CWebRequestRespond::GetGlobalConstType(const char* pName) const
+{
+    IActionData::EGlobalValTpe eResult = IActionData::egtIsnot;
+    string sName = CUtilFunc::PCharSafeToStr(pName);
+    // 系统常量
+    if (sName.substr(0, sizeof(c_RESTful_KCGlobalConst) - 1) == c_RESTful_KCGlobalConst)
+        eResult = IActionData::egtGloConst;
+    else if (sName.substr(0, sizeof(c_RESTful_KCConst) - 1) == c_RESTful_KCConst)
+        eResult = IActionData::egtConst;
+    return eResult;
+}
+const char* CWebRequestRespond::GetGlobalConst(const char* pName, const char* pDef) const
+{
+    static thread_local string sResult;
+    sResult.clear();
+    string sName = CUtilFunc::PCharSafeToStr(pName);
+    IActionData::EGlobalValTpe eGloVTp = GetGlobalConstType(pName);
+    if (IActionData::egtGloConst == eGloVTp || IActionData::egtConst == eGloVTp)
+    {
+        string sConst = sName.substr((IActionData::egtConst == eGloVTp ? sizeof(c_RESTful_KCConst) : sizeof(c_RESTful_KCGlobalConst)) - 1);
+        // 服务器编号
+        if (c_RESTful_srvID == sConst)
+        {
+            sResult = std::to_string(m_own.GetContext().GetSrvID());
+            return sResult.c_str();
+        }
+        // 系统标志
+        else if (c_RESTful_sysFlag == sConst)
+            return m_own.GetContext().GetSysFlag("customer");
+        // 进程编号
+        else if (c_RESTful_KCPID == sConst)
+        {
+            sResult = std::to_string(this_process::get_id());
+            return sResult.c_str();
+        }
+        // 链接编号
+        else if (c_RESTful_KCConnectID == sConst)
+        {
+            sResult = (format("%d_%s") % this_process::get_id() % this->GetSingleInfo("connection_id")).str();
+            return sResult.c_str();
+        }
+        // 服务器当前时间戳（毫秒）
+        else if (c_RESTful_SrvTimestamp == sConst)
+        {
+            sResult = std::to_string(CUtilFunc::GetCurrentStampMS());
+            return sResult.c_str();
+        }
+        // 服务器当前时间
+        else if (c_RESTful_SrvDatatime == sConst)
+        {
+            sResult = CUtilFunc::TimeToStr();
+            return sResult.c_str();
+        }
+        // Web常量
+        else
+            return this->GetSingleInfo(sConst.c_str(), pDef);
+    }
+    return nullptr;
 }
 
 ////////////////////////////应答部分///////////////////////////

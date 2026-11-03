@@ -73,8 +73,9 @@ int CKCWebWork::RenderKC(ISrcRequestRespond& re)
             // re.AddResponseHeader("Unique-ConnID", re.GetSingleInfo("UniqueConnID"));
 
             // 固定的响应头信息
-            for (auto &h: m_CfgHeader)
-                re.AddResponseHeader(h.first.c_str(), h.second.c_str());
+            // for (auto &h: m_CfgHeader)
+            //     re.AddResponseHeader(h.first.c_str(), h.second.c_str());
+            FixHead(re);
         }
         // 首次运行的日志
         static bool bFirstCall = true;
@@ -137,11 +138,23 @@ int CKCWebWork::RenderKC(ISrcRequestRespond& re)
 // 静态页面处理
 void CKCWebWork::StaticPage(ISrcRequestRespond& re)
 {
+    FixHead(re);
+}
+// 固定的响应头
+void CKCWebWork::FixHead(ISrcRequestRespond& re)
+{
     try
     {
         // 固定的响应头信息
         for (auto &h: m_CfgHeader)
-            re.AddResponseHeader(h.first.c_str(), h.second.c_str());
+        {
+            string sName = h.first;
+            string sVal = h.second;
+            if (re.GetGlobalConstType(sVal.c_str()) == IActionData::egtIsnot)
+                re.AddResponseHeader(sName.c_str(), sVal.c_str());
+            else
+                re.AddResponseHeader(sName.c_str(), re.GetGlobalConst(sVal.c_str(), sVal.c_str()));
+        }
     }
     catch (...) {}
 }

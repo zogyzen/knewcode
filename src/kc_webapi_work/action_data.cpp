@@ -135,48 +135,15 @@ const char* CActionData::GetGlobalVal(const char* pName, const char* pDef)
     if (IActionData::egtGloConst == eGloVTp || IActionData::egtConst == eGloVTp)
     {
         string sConst = sName.substr((IActionData::egtConst == eGloVTp ? sizeof(c_RESTful_KCConst) : sizeof(c_RESTful_KCGlobalConst)) - 1);
-        // 服务器编号
-        if (c_RESTful_srvID == sConst)
-        {
-            sResult = std::to_string(m_webapi.getContext().GetSrvID());
-            return sResult.c_str();
-        }
-        // 系统标志
-        else if (c_RESTful_sysFlag == sConst)
-            return m_webapi.getContext().GetSysFlag("customer", m_GrpBranchCtrl.c_str());
         // 持久对象编号
-        else if (c_RESTful_KCAliveID == sConst)
+        if (c_RESTful_KCAliveID == sConst)
             return GetAliveID();
-        // 进程编号
-        else if (c_RESTful_KCPID == sConst)
-        {
-            sResult = std::to_string(this_process::get_id());
-            return sResult.c_str();
-        }
-        // 链接编号
-        else if (c_RESTful_KCConnectID == sConst)
-        {
-            sResult = (format("%d_%s") % this_process::get_id() % m_re.GetSingleInfo("connection_id")).str();
-            return sResult.c_str();
-        }
         // 控制器是否需要登录
         else if (c_RESTful_needToken == sConst)
             return m_needToken ? "1" : "0";
-        // 服务器当前时间戳（毫秒）
-        else if (c_RESTful_SrvTimestamp == sConst)
-        {
-            sResult = std::to_string(CUtilFunc::GetCurrentStampMS());
-            return sResult.c_str();
-        }
-        // 服务器当前时间
-        else if (c_RESTful_SrvDatatime == sConst)
-        {
-            sResult = CUtilFunc::TimeToStr();
-            return sResult.c_str();
-        }
         // Web常量
         else
-            return m_re.GetSingleInfo(sConst.c_str(), pDef);
+            return GetGlobalConst(pName, pDef);
     }
     // GET参数
     else if (IActionData::egtGetParm == eGloVTp)
@@ -302,10 +269,8 @@ IActionData::EGlobalValTpe CActionData::GetGlobalValType(const char* pName) cons
     {
         string sName(pName);
         // 系统常量
-        if (sName.substr(0, sizeof(c_RESTful_KCGlobalConst) - 1) == c_RESTful_KCGlobalConst)
-            eResult = IActionData::egtGloConst;
-        else if (sName.substr(0, sizeof(c_RESTful_KCConst) - 1) == c_RESTful_KCConst)
-            eResult = IActionData::egtConst;
+        eResult = GetGlobalConstType(pName);
+        if (IActionData::egtIsnot != eResult) ;
         // GET参数
         else if (sName.substr(0, sizeof(c_RESTful_KCGetParm) - 1) == c_RESTful_KCGetParm)
             eResult = IActionData::egtGetParm;
@@ -333,6 +298,14 @@ IActionData::EGlobalValTpe CActionData::GetGlobalValType(const char* pName) cons
         }
     }
     return eResult;
+}
+IActionData::EGlobalValTpe CActionData::GetGlobalConstType(const char* name) const
+{
+    return m_re.GetGlobalConstType(name);
+}
+const char* CActionData::GetGlobalConst(const char* name, const char* def) const
+{
+    return m_re.GetGlobalConst(name, def);
 }
 
 // 新建浏览器编号

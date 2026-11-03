@@ -240,6 +240,14 @@ namespace KC
                 }
                 return s;
             }
+            static std::string GbkAndUtf8Note(std::string s)
+            {
+                return (boost::format("%s\n \t(toUTF8:  %s )\n") % s % GbkToUtf8(s)).str();
+            }
+            static std::string Utf8AndGbkNote(std::string s)
+            {
+                return (boost::format("%s\n \t(toGBK:  %s )\n") % s % Utf8ToGbk(s)).str();
+            }
 
             static std::wstring M2W(std::string s, std::string loc = "UTF-8")
             {
@@ -997,6 +1005,20 @@ namespace KC
             }
             catch (...) {}
             return def;
+        }
+
+        // 获取xml整数属性值
+        template <typename TVal>
+        static TVal GetXmlAttrValue(boost::property_tree::ptree& pt, std::string sAttr, TVal def)
+        {
+            TVal result = def;
+            if (pt.get_child_optional(sAttr))
+                try { result = pt.get<TVal>(sAttr); } catch (...) {}
+            return result;
+        }
+        static std::string GetXmlAttrValue(boost::property_tree::ptree& pt, std::string sAttr, const char* def)
+        {
+            return GetXmlAttrValue<std::string>(pt, sAttr, def);
         }
     };
 

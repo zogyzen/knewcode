@@ -100,6 +100,7 @@ CKCWebApiWork::CKCWebApiWork(const IBundle& bundle)
         WriteLogDebug(sLogInfo.c_str(), __CURR_CODE_PLACE_C__);
         return setRes;
     }())
+    , m_firstIsMainVals(boost::algorithm::to_lower_copy(string(m_context.GetCfgInfo((m_cfgMod + ".SrvCtrl").c_str(), "firstIsMainVals", "false"))) == "true")
     , m_srvCtrlAliasDefault(m_context.GetSysFlag("customer", "KC"))
     , m_srvCtrlAliasLs([&](){
         map<string, TSrvCtrlAlias> setRes;
@@ -407,7 +408,7 @@ CKCJsonPackRespond::TCoreParmJsonRespondPtr CKCWebApiWork::Work(CActionData& act
             {
                 string sKeyName = h.first;
                 string sValName = h.second;
-                string sValue = act.GetGlobalVal(sValName.c_str(), sValName.c_str());
+                string sValue = CUtilFunc::PCharSafeToStr(act.GetGlobalVal(sValName.c_str(), sValName.c_str()));
                 act.re().AddResponseHeader(sKeyName.c_str(), sValue.c_str());
             }
         }
@@ -435,10 +436,11 @@ CKCJsonPackRespond::TCoreParmJsonRespondPtr CKCWebApiWork::Work(CActionData& act
         if (!m_apiUriLs.empty() && !act.re().getRe().IsSubCall())
         {
             // string sUrlRoot = act.re().GetUrlPageRootPath();
-            string sUrlRoot = this->GetUrlPageRootPath(act.re().GetUriFilename());
+            string sUrl = act.re().GetUriFilename();
+            string sUrlRoot = this->GetUrlPageRootPath(sUrl.c_str());
             auto it = m_apiUriLs.find(sUrlRoot);
             if (m_apiUriLs.end() == it || !it->second.m_grant)
-                throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork_ApiNoAccess, __CURR_CODE_PLACE_C__, string(this->getHint("No_Access_")) + "[" + sUrlRoot + "]  " + act.GetSingleInfo("the_request"), *this);
+                throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork_ApiNoAccess, __CURR_CODE_PLACE_C__, string(this->getHint("No_Access_")) + "[" + sUrlRoot + "]  " + act.GetSingleInfo("the_request"), *this, sUrl);
         }
         // 根控制器api数据接口
         auto rootCtrlDPtr = CRootCtrlApiData::CreatePtr(act);
@@ -557,7 +559,7 @@ void CKCWebApiWork::ExecCtrlApi(CCtrApilData &objCtrlD)
     {
         ExecGroup(objCtrlD, sDepend);
         // 有错误，退出
-        if (0 != objCtrlD.JsonRespond().GetVal(c_RESTful_errCode, 0))
+        if (0 != objCtrlD.JsonRespond().GetVal(objCtrlD.GetFixParmName(c_RESTful_errCode), 0))
             return;
     }
     // 类型
@@ -584,7 +586,7 @@ void CKCWebApiWork::ExecCtrlApi(CCtrApilData &objCtrlD)
     {
         ExecGroup(objCtrlD, sComplete);
         // 有错误，退出
-        if (0 != objCtrlD.JsonRespond().GetVal(c_RESTful_errCode, 0))
+        if (0 != objCtrlD.JsonRespond().GetVal(objCtrlD.GetFixParmName(c_RESTful_errCode), 0))
             return;
     }
     // 根调用控制器（客户端直接调用的控制器）
@@ -605,16 +607,19 @@ CKCJsonPackRespond::TCoreParmJsonRespondPtr CKCWebApiWork::SubCallCtrlApi(CCtrAp
     vector<string> urlVec;
     split(urlVec, sUrl, is_any_of("?"));
     // 子控制器完整本地文件名（默认与主调用控制器相同）
-    string sSubFilePath = act.re().GetLocalFilename();
+    // string sSubFilePath = act.re().GetLocalFilename();
+    // string sSubFilePath = objCtrlD.LocalFile();
     // 子控制器url文件
     string sSubFileUrl = algorithm::trim_left_copy(urlVec[0]);
-    if (!sSubFileUrl.empty())
-    {
-        sSubFilePath = CUtilFunc::PCharSafeToStr(objCtrlD.transItemUrlToFullPath(sSubFileUrl.c_str()));
-        if (!boost::filesystem::exists(sSubFilePath))
-            throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 16, __CURR_CODE_PLACE_C__, string(this->getHint("Don_t_exists_file_")) + sSubFileUrl, *this, sSubFilePath + "\n" + act.re().GetSingleInfo("the_request") + " [" + sName + ": " + sUrl + "]");
-    }
-    else sSubFileUrl = CUtilFunc::PCharSafeToStr(objCtrlD.Url());
+    if (sSubFileUrl.empty())
+        sSubFileUrl = CUtilFunc::PCharSafeToStr(objCtrlD.Url());
+    if (sSubFileUrl.empty())
+        throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 16, __CURR_CODE_PLACE_C__, string(this->getHint("Don_t_exists_file_")) + sUrl, *this, act.re().GetSingleInfo("the_request") + string(" [") + sName + ": " + sUrl + "]");
+    // 子控制器完整本地文件名
+    string sSubFilePath = CUtilFunc::PCharSafeToStr(objCtrlD.transItemUrlToFullPath(sSubFileUrl.c_str()));
+    if (!boost::filesystem::exists(sSubFilePath))
+        throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 17, __CURR_CODE_PLACE_C__, string(this->getHint("Don_t_exists_file_")) + sSubFileUrl, *this, sSubFilePath + "\n" + act.re().GetSingleInfo("the_request") + " [" + sName + ": " + sUrl + "]");
+    sSubFilePath = boost::filesystem::canonical(sSubFilePath).string();
     // else throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 17, __CURR_CODE_PLACE_C__, string(this->getHint("Not_Assigned_Controller_")) + "\r\n" + re.GetSingleInfo("the_request") + " [" + sName + ": " + sUrl + "]", *this);
     // 子控制器的get参数
     const string sUrlArg = urlVec.size() >= 2 ? urlVec[1] : "";
@@ -942,7 +947,7 @@ void CKCWebApiWork::CheckToken(CRootCtrlApiData &objCtrlD, const property_tree::
             if (0 != errCode)
             {
                 if (errMsg.empty()) errMsg = string(this->getHint("No_Access_")) + act.GetSingleInfo(c_RESTful_RootActUri);
-                throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 18, __CURR_CODE_PLACE_C__, errMsg, *this);
+                throw TKCWebApiWorkException(ecd_ErrCode_KCWebApiWork + 18, __CURR_CODE_PLACE_C__, errMsg, *this, act.re().GetSingleInfo("the_request"));
             }
         }
     }
@@ -985,7 +990,8 @@ void CKCWebApiWork::ExecGroup(CCtrApilData& objCtrlD, string sActNode, string sM
         // 附加参数
         const int iBatchMethod = static_cast<int>(objCtrlD.JsonAttach().GetItem(c_RESTful_batchParm).GetVal(c_RESTful_batchMethod, 1));
         string sBatchParm = objCtrlD.JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, "");
-        string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : objCtrlD.ActionData().GetValsName();
+        // string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : objCtrlD.ActionData().GetValsName();
+        string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : objCtrlD.GetFixParmName(c_RESTful_vals);
 
         // 从内部数据集里取
         CSqlFunc::TRecordSetPtr lastInnerDbSet = objCtrlD.DataSetInnerLast(sSrcDbSetName);

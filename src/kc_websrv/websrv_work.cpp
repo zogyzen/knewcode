@@ -339,10 +339,13 @@ void CWebSrvWork::Init(void)
     cntx.WriteLogDebug(sMsg.c_str(), __CURR_CODE_PLACE_C__);
     // 写入进程编号
     // CUtilFunc::SaveFile(m_exePath + ".pid", std::to_string(getpid()));
+    /*
     string sPidPth = m_MainExecPath + "/pid/";
     if (!boost::filesystem::exists(sPidPth)) boost::filesystem::create_directories(sPidPth);
     string sXmlFile = boost::filesystem::path(m_CfgFile).filename().string();
     CUtilFunc::SaveFile(sPidPth + sXmlFile + ".pid", std::to_string(getpid()));
+    */
+    CUtilFunc::SaveFile(m_CfgFile + ".pid", std::to_string(getpid()));
 }
 
 // 释放

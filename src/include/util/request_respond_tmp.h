@@ -22,7 +22,7 @@ namespace KC
         }
 
         // 得到服务器端全部信息
-        const char* CALL_TYPE GetAllInfo(const char* endTag = "\n") override
+        const char* CALL_TYPE GetAllInfo(const char* endTag = "\n") const override
         {
             static thread_local string sAllInfo;
             sAllInfo.clear();
@@ -32,7 +32,7 @@ namespace KC
             return sAllInfo.c_str();
         }
         // 得到服务器端各单个请求信息
-        const char* CALL_TYPE GetSingleInfo(const char* pName = "the_request", const char* /*pDef*/ = "") override
+        const char* CALL_TYPE GetSingleInfo(const char* pName = "the_request", const char* /*pDef*/ = "") const override
         {
             auto it = m_exSingleInfo.find(pName);
             if (m_exSingleInfo.end() != it)
@@ -81,7 +81,7 @@ namespace KC
             return result;
         }
         // GET的参数
-        const char* CALL_TYPE GetGetArgStr(void) override
+        const char* CALL_TYPE GetGetArgStr(void) const override
         {
             return GetSingleInfo("args");
         }
@@ -114,7 +114,7 @@ namespace KC
             return m_PgPath.c_str();
         }
         // 按名称得到请求头
-        const char* CALL_TYPE GetRequestHeader(const char* name) override
+        const char* CALL_TYPE GetRequestHeader(const char* name) const override
         {
             return GetStrInfo(m_headerInfo, name);
         }
@@ -130,6 +130,17 @@ namespace KC
         const char* CALL_TYPE GetVirtualPathUri(unsigned pos) override
         {
             return m_work.GetVirtualPathUri(pos);
+        }
+        // 全局常量
+        IActionData::EGlobalValTpe GetGlobalConstType(const char* name) const override
+        {
+            // return IActionData::egtIsnot;
+            return m_work.GetGlobalConstType(name);
+        }
+        const char* CALL_TYPE GetGlobalConst(const char* name, const char* def = "") const override
+        {
+            // return name;
+            return m_work.GetGlobalConst(name, def);
         }
 
         ////////////////////////////应答部分///////////////////////////
@@ -219,7 +230,7 @@ namespace KC
 
     protected:
         // 信息
-        const char* GetStrInfo(std::map<std::string, std::string>& infos, std::string sName)
+        const char* GetStrInfo(const std::map<std::string, std::string>& infos, std::string sName) const
         {
             auto it = infos.find(sName);
             if (infos.end() != it)
@@ -255,12 +266,12 @@ namespace KC
         }
 
         // 得到服务器端全部信息
-        const char* CALL_TYPE GetAllInfo(const char* endTag = "\n") override
+        const char* CALL_TYPE GetAllInfo(const char* endTag = "\n") const override
         {
             return m_re.GetAllInfo(endTag);
         }
         // 得到服务器端各单个请求信息
-        const char* CALL_TYPE GetSingleInfo(const char* pName = "the_request", const char* /*pDef*/ = "") override
+        const char* CALL_TYPE GetSingleInfo(const char* pName = "the_request", const char* /*pDef*/ = "") const override
         {
             auto it = m_exSingleInfo.find(pName);
             if (m_exSingleInfo.end() != it)
@@ -303,7 +314,7 @@ namespace KC
             return m_re.GetPort();
         }
         // GET的参数
-        const char* CALL_TYPE GetGetArgStr(void) override
+        const char* CALL_TYPE GetGetArgStr(void) const override
         {
             return m_re.GetGetArgStr();
         }
@@ -330,7 +341,7 @@ namespace KC
             return m_re.GetLocalRootPath();
         }
         // 按名称得到请求头
-        const char* CALL_TYPE GetRequestHeader(const char* name) override
+        const char* CALL_TYPE GetRequestHeader(const char* name) const override
         {
             return m_re.GetRequestHeader(name);
         }
@@ -346,6 +357,15 @@ namespace KC
         const char* CALL_TYPE GetVirtualPathUri(unsigned pos) override
         {
             return m_re.GetVirtualPathUri(pos);
+        }
+        // 全局常量
+        IActionData::EGlobalValTpe GetGlobalConstType(const char* name) const override
+        {
+            return m_re.GetGlobalConstType(name);
+        }
+        const char* CALL_TYPE GetGlobalConst(const char* name, const char* def = "") const override
+        {
+            return m_re.GetGlobalConst(name, def);
         }
 
         ////////////////////////////应答部分///////////////////////////

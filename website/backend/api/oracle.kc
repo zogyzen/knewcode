@@ -4,6 +4,12 @@
 	<main method="select" content="select * from test" attach='{"dbset-inner":"true"}' />	
 
 	<main2 method="select" ctrl="connect1" content="select '中01中02中03中04中05中06中07中08中09中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27中28中29中30中31' 中文 from dual" />	
+	<main3 method="select" content="select * from dingeglyw.T_YG_YONGHUXX t where i_y = 2026 and rownum <= 1000" attach='{"dbset-inner":"true"}' />	
+	<main4 type="bundle" method="procedures" attach='{"outParms":{"rset1":"cursor"}}'>
+		begin
+		  OPEN :rset1 for select * from dingeglyw.T_YG_YONGHUXX t where i_y = 2026 and 1000 >= rownum;
+		end;
+	</main4>
 
 	<AddSession type="bundle" srv="IKCSessionCookie_B6E289BB-ADB8-55F8-CF31-BD411D2F52BF" ctrl="user" method="set" attach=''>		<!-- set, get, del -->
 	</AddSession>
@@ -203,11 +209,11 @@
 	</SSO>
 	
 	<!-- 临时视图-->
-	<TmpCreateView type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="create" attach=''>
+	<TmpCreateView type="bundle" srv="SQLSrvOra" ctrl="connect1" method="create" attach=''>
 		CREATE OR REPLACE VIEW ##KCTmp__chaxun as
 		select :a a from dual
 	</TmpCreateView>
-	<TmpCreateViewQuery type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="select" attach=''>
+	<TmpCreateViewQuery type="bundle" srv="SQLSrvOra" ctrl="connect1" method="select" attach=''>
 		select * from ##KCTmp__chaxun
 	</TmpCreateViewQuery>
 	<TmpCreateViewTest type="group" exec="order" needToken="false">
@@ -216,7 +222,7 @@
 	</TmpCreateViewTest>
 	
 	<!-- 临时包函数 -->
-	<TmpCreatePck type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="package">
+	<TmpCreatePck type="bundle" srv="SQLSrvOra" ctrl="connect1" method="package">
 		<declare>
 			s_var varchar2(100);
 			function fn_test(i int) return varchar2;
@@ -228,7 +234,7 @@
 			return s_var;
 		end;
 	</TmpCreatePck>
-	<TmpCreatePckQuery type="bundle" srv="IKCSqlOracle_A5E289BB-ADB8-92F8-CF31-BD411D2F52BA" ctrl="connect1" method="select" attach=''>
+	<TmpCreatePckQuery type="bundle" srv="SQLSrvOra" ctrl="connect1" method="select" attach=''>
 		select ##KCTmp__TmpCreatePck.fn_test(1) a from dual
 	</TmpCreatePckQuery>
 	<TmpCreatePckTest type="group" exec="order" needToken="false">

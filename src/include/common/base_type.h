@@ -184,10 +184,10 @@ namespace KC
     const char c_RESTful_create[] = "create";
     const char c_RESTful_package[] = "package";
 
-    const char c_RESTful_sql_DDL[] = "DDL";
-    const char c_RESTful_sql_DQL[] = "DQL";
-    const char c_RESTful_sql_DML[] = "DML";
-    const char c_RESTful_sql_DCL[] = "DCL";
+    const char c_RESTful_sql_DDL[] = "DDL";     // 数据定义语言：用来创建、修改或删除数据库里的表、索引、视图等结构对象
+    const char c_RESTful_sql_DQL[] = "DQL";     // 数据查询语言：用于从数据库中查询记录，核心语句是SELECT
+    const char c_RESTful_sql_DML[] = "DML";     // 数据操作语言：用于操作数据库数据的核心子语言，主要包含增、删、改等
+    const char c_RESTful_sql_DCL[] = "DCL";     // 数据控制语言：用于控制用户对数据库对象的访问权限，核心指令只有两个——‌GRANT（授权）‌和‌REVOKE（撤销权限）
 
     const char c_RESTful_url[] = "url";
     const char c_RESTful_ignoreError[] = "ignoreError";
@@ -240,7 +240,7 @@ namespace KC
     const char c_RESTful_outParm[] = "outParms";
     const char c_RESTful_parmType[] = "parmsType";
     const char c_RESTful_defParm[] = "defaultParms";
-    const char c_RESTful_fixedParmName[] = "fixParmName";       // 固定字段的名称，可修改
+    const char c_RESTful_fixParmName[] = "fixParmName";       // 固定字段的名称，可修改
     const char c_RESTful_inParm[] = "parms";
     const char c_RESTful_dbsetParms[] = "dbsetParms";
 

@@ -133,6 +133,8 @@ namespace KC
                     IKCController *pCtrl = fCon(sName, pt);
                     if (nullptr != pCtrl)
                         ctrls.insert(make_pair(sName, std::shared_ptr<IKCController>(pCtrl)));
+                    else
+                        ctrl.WriteLogWarning(("Can't Create - " + sName).c_str(), __CURR_CODE_PLACE_C__, sCtrlNode.c_str());
                 };
                 // boost::property_tree::ptree pt;
                 try
@@ -287,7 +289,7 @@ namespace KC
         static std::string EncryptConnStrDB(IKCContext& cntx, std::string str)
         {
             // return CUtilFuncEx::BaseXXEncodeByStr(str);
-            return cntx.Encrypted(str.c_str(), str.size(), GetDefaultAesKey(cntx).c_str());
+            return cntx.Encrypted(str.c_str(), static_cast<unsigned long>(str.size()), GetDefaultAesKey(cntx).c_str());
         }
         static std::string DecryptConnStrDB(IKCContext& cntx, std::string str)
         {

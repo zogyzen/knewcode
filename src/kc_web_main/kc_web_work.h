@@ -35,6 +35,8 @@ public:
 
     // 固定响应类型字符串
     const char* FixContentTypeString(const char*);
+    // 固定的响应头
+    void FixHead(ISrcRequestRespond&);
 
 private:
     // 插件及上下文

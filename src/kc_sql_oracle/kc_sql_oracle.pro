@@ -23,53 +23,71 @@ HEADERS += \
         ctrl_oracle.h \
         std.h
 
-#DEFINES += OCCI_ORACLE12C
 win32 {
     msvc {
         DEF_FILE = activator.def
         DISTFILES += activator.def
 
         # Oracle库
-        # 32位
-        contains(QT_ARCH, i386) {
-            contains(DEFINES, OCCI_ORACLE12C) {
-                OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x86-12c
-            } else {
-                OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x86
-            }
-        }
-        # 64位
-        else {
+        # # 32位
+        # contains(QT_ARCH, i386) {
+        #     contains(DEFINES, OCCI_ORACLE12C) {
+        #         OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x86-12c
+        #     } else {
+        #         OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x86
+        #     }
+        # }
+        # # 64位
+        # else {
+        #     OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x64/instantclient_21_20
+        #     OCCIPTHLIB = $$OCCIPTH/lib/msvc
+        #     # OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x64/instantclient_23_26
+        #     # OCCIPTHLIB = $$OCCIPTH/lib/msvc
+        # }
+        # 操作系统版本
+        WINVER = $$QMAKE_HOST.version
+        WINVER = $$str_member($$WINVER, 0, 1)
+        # message(windows: $$WINVER)
+        greaterThan(WINVER, 7) {
+            message("Win10")
             OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x64/instantclient_21_20
             OCCIPTHLIB = $$OCCIPTH/lib/msvc
-            # OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x64/instantclient_23_26
-            # OCCIPTHLIB = $$OCCIPTH/lib/msvc
+        } else {
+            message("Win7")
+            OCCIPTH = $$LIBRARYPTH3RD/windows/occi-sdk-x64/instantclient_12_2
+            OCCIPTHLIB = $$OCCIPTH/lib/msvc
         }
         INCLUDEPATH += $$OCCIPTH/include
         CONFIG(debug, debug | release) {
-            contains(DEFINES, OCCI_ORACLE12C) {
-                LIBS += $$OCCIPTH/lib/MSVC/vc12/oraocci12d.lib
-            } else {
+            greaterThan(WINVER, 7) {
                 LIBS += $$OCCIPTHLIB/oraocci21d.lib
                 # LIBS += $$OCCIPTHLIB/oraocci23d.lib
+            } else {
+                LIBS += $$OCCIPTHLIB/oraocci12d.lib
             }
         }
         else {
-            contains(DEFINES, OCCI_ORACLE12C) {
-                LIBS += $$OCCIPTH/lib/MSVC/vc12/oraocci12.lib
-            } else {
+            greaterThan(WINVER, 7) {
                 LIBS += $$OCCIPTHLIB/oraocci21.lib
                 # LIBS += $$OCCIPTHLIB/oraocci23.lib
+            } else {
+                LIBS += $$OCCIPTHLIB/oraocci12.lib
             }
         }
         # 拷贝Oracle库
-        contains(DEFINES, OCCI_ORACLE12C) {
-            varCopyConfig = \"$$OCCIPTH/lib/msvc/vc12/*.dll\" \"$$DESTDIR\"
-        } else {
-            varCopyConfig = \"$$OCCIPTHLIB/*.dll\" \"$$DESTDIR\"
-        }
+        # contains(DEFINES, OCCI_ORACLE12C) {
+        #     varCopyConfig = \"$$OCCIPTH/lib/msvc/vc12/*.dll\" \"$$DESTDIR\"
+        # } else {
+        #     varCopyConfig = \"$$OCCIPTHLIB/*.dll\" \"$$DESTDIR\"
+        # }
+        varCopyConfig = \"$$OCCIPTHLIB/*.dll\" \"$$DESTDIR\"
         varCopyConfig ~= s,/,\\,g
         QMAKE_POST_LINK += $$QMAKE_COPY $$varCopyConfig $$escape_expand(\\n\\t)
+        !greaterThan(WINVER, 7) {
+            varCopyConfig = \"$$OCCIPTHLIB/vc14/*.dll\" \"$$DESTDIR\"
+            varCopyConfig ~= s,/,\\,g
+            QMAKE_POST_LINK += $$QMAKE_COPY $$varCopyConfig $$escape_expand(\\n\\t)
+        }
         export(QMAKE_POST_LINK)
     }
     mingw {

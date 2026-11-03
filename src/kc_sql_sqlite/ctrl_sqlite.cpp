@@ -226,7 +226,11 @@ void CCtrlSqlite::TRecordSetSqlite::GetColumnListMetaData(CSqlFunc::TFields &vec
         string sColName = sqlite3_column_name(&m_dbset, i);
         auto sTypeName = CCtrlSqlite::GetTypeName(iColType);
         int iSize = sqlite3_column_bytes(&m_dbset, i);
-        sColName = algorithm::to_lower_copy(sColName);
+        // sColName = algorithm::to_lower_copy(sColName);
+        if ("lower" == m_own.m_own.m_feildCaseSensitive)
+            algorithm::to_lower(sColName);
+        else if ("upper" == m_own.m_own.m_feildCaseSensitive)
+            algorithm::to_upper(sColName);
         mapFeilds.insert(make_pair(sColName, std::shared_ptr<CSqlFunc::TField>(
                                                  new CSqlFunc::TField(sColName, i + 1, iColType, sTypeName, iSize))));
     }
@@ -234,7 +238,11 @@ void CCtrlSqlite::TRecordSetSqlite::GetColumnListMetaData(CSqlFunc::TFields &vec
         for (int i = 0; i < m_fieldCount; ++i)
         {
             string sFieldName = sqlite3_column_name(&m_dbset, i);
-            sFieldName = algorithm::to_lower_copy(sFieldName);
+            // sFieldName = algorithm::to_lower_copy(sFieldName);
+            if ("lower" == m_own.m_own.m_feildCaseSensitive)
+                algorithm::to_lower(sFieldName);
+            else if ("upper" == m_own.m_own.m_feildCaseSensitive)
+                algorithm::to_upper(sFieldName);
             auto it = mapFeilds.find(sFieldName);
             if (mapFeilds.end() != it) vecFeilds.push_back(it->second);
         }
@@ -337,6 +345,12 @@ void CCtrlSqlite::TDBCommandSqlite::TranCommit(void)
 void CCtrlSqlite::TDBCommandSqlite::TranRollback(void)
 {
     sqlite3_exec(&m_con, "ROLLBACK", nullptr, nullptr, nullptr);
+}
+
+// 单独执行sql语句
+void CCtrlSqlite::TDBCommandSqlite::ExecSQL(const char* sql)
+{
+    sqlite3_exec(&m_con, sql, nullptr, nullptr, nullptr);
 }
 
 // 预备sql语句
@@ -536,7 +550,8 @@ void CCtrlSqlite::TDBCommandSqlite::CopyBatch(void)
     string sToTable = CUtilFunc::PCharSafeToPChar(m_objCtrlD.JsonAttach().GetItem("copyParm").GetStr("toTable", ""));
     auto &jsnPKey = m_objCtrlD.JsonAttach().GetItem("copyParm").GetItem("primaryKey");
     // 源数据集名称
-    string sSrcDbSetName = sCopyValsParm.empty() ? m_objCtrlD.ActionData().GetValsName() : sCopyValsParm;
+    // string sSrcDbSetName = sCopyValsParm.empty() ? m_objCtrlD.ActionData().GetValsName() : sCopyValsParm;
+    string sSrcDbSetName = sCopyValsParm.empty() ? CUtilFunc::PCharSafeToStr(m_objCtrlD.GetFixParmName(c_RESTful_vals)) : sCopyValsParm;
     // 目标数据集名称（插入的表或临时表名称）
     string sTableName = sToTable.empty() ? sSrcDbSetName : CUtilFunc::PCharSafeToStr(m_objCtrlD.GetParmVal(sToTable.c_str(), sToTable.c_str()));
     // 主键
@@ -770,6 +785,7 @@ CCtrlSqlite::CCtrlSqlite(IKCSqlite& own, string sName, property_tree::ptree& pt)
             sPRAGMA = pt.get<string>("<xmlattr>.m_PRAGMA");
         return sPRAGMA;
     }())
+    , m_feildCaseSensitive(algorithm::to_lower_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.feildCaseSensitive", "")))
 {
     // 记录函数地址
     m_own.WriteLogDebug((m_name + ": "

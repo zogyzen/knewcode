@@ -2,8 +2,6 @@
     global:
         InitActor;
         UninitActor;
-        create;
-        destroy;
     local:
         *;
 };

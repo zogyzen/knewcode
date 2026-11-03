@@ -94,8 +94,8 @@ void CCtrlOSExec::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
             m_own.WriteLogInfo(fExecInfo("[Exec Cmd] > ").c_str(), __CURR_CODE_PLACE_C__);
         }
         // 设置错误返回信息
-        objCtrlD.JsonRespond().SetVal(c_RESTful_errCode, iErrCode);
-        objCtrlD.JsonRespond().SetStr(c_RESTful_errMsg, sErrMsg.c_str());
+        objCtrlD.JsonRespond().SetVal(objCtrlD.GetFixParmName(c_RESTful_errCode), iErrCode);
+        objCtrlD.JsonRespond().SetStr(objCtrlD.GetFixParmName(c_RESTful_errMsg), sErrMsg.c_str());
         // 设置获取到的信息
         CCltrFunc::SetParm(objCtrlD, mpCfgs, "$result", sErrMsg);
         // 如果失败，则退出

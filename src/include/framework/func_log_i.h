@@ -23,7 +23,7 @@ namespace KC
 
     public:
         // 初始化
-        virtual const char* Init(const char* dir, const char* id, TLogLevel lv = lglvInfo, int szFile = 2, const char* eachPrefix = "", bool inDay = false) = 0;
+        virtual const char* Init(const char* dir, const char* id, TLogLevel lv = lglvInfo, unsigned szFileM = 2, const char* eachPrefix = "", bool inDay = false) = 0;
         // 释放
         virtual void Free(void) = 0;
 

@@ -13,6 +13,7 @@
 #include "framework/func_log_i.h"
 #include "framework/bundle_context_i.h"
 
+
 using namespace std;
-using namespace boost;
+//using namespace boost;
 using namespace KC;

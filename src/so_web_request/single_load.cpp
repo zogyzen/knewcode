@@ -4,7 +4,7 @@
 extern "C"
 {
     // 创建实例
-    ISLWebRequest& create(IKCSingleLoadSoCB& cb)
+    ISLWebRequest& create(ISLWebRequestCB& cb)
     {
         return *new CSLWebRequest(cb);
     }
@@ -17,7 +17,7 @@ extern "C"
 
 ////////////////////////////////////////////////////////////////////////////////
 // CSLWebRequest 类
-CSLWebRequest::CSLWebRequest(IKCSingleLoadSoCB& cb) : m_cb(cb)
+CSLWebRequest::CSLWebRequest(ISLWebRequestCB& cb) : m_cb(cb)
 {
 }
 
@@ -52,6 +52,51 @@ void CSLWebRequest::MakeCookie(string sSrv, string /*sPth*/, string &sClnCookies
         h.insert(std::make_pair(c_RequestHeaderCookie, sCks));
     }
     sClnCookies = sCks;
+}
+
+// 转发请求
+string CSLWebRequest::PostGet(ICtrlApiData& objCtrlD, map<string, string>& mpCfgs, bool isPost)
+{
+    [[maybe_unused]] IActionData &act = objCtrlD.ActionData();
+    // 服务器地址
+    string sSrv = CCltrFunc::GetParm(objCtrlD, mpCfgs, "$server");
+    if (sSrv.empty())
+        throw std::runtime_error((boost::format("%s\n ❌ `$server` Not Set - %s") % __CURR_CODE_PLACE_C__ % objCtrlD.Url()).str());
+    // 路径
+    string sPth = CCltrFunc::GetParm(objCtrlD, mpCfgs, "$path");
+    // 参数
+    string sPrm = CCltrFunc::ReplaceParm(objCtrlD, mpCfgs, "$parm");
+    if (!sPrm.empty()) sPrm = "?" + sPrm;
+    // 请求body
+    string sRequstBody;
+    if (isPost)
+    {
+        // 数据部分
+        sRequstBody = CCltrFunc::GetParm(objCtrlD, mpCfgs, "$data");
+        // 为空，则取上一个控制器的返回
+        if (sRequstBody.empty() && objCtrlD.JsonRespondLast().GetItemCount() > 0)
+            sRequstBody = objCtrlD.JsonRespondLast().GetStr();
+        // 为空，则取子控制器的最终结果
+        if (sRequstBody.empty() && objCtrlD.JsonRespond().GetItemCount() > 0)
+            sRequstBody = objCtrlD.JsonRespond().GetStr();
+        // 仍为空，则取输入参数
+        if (sRequstBody.empty())
+            sRequstBody = objCtrlD.JsonRequest().GetStr();
+    }
+    // 请求头
+    KcHeaders headers;
+    MakeRequestHeaders(headers, objCtrlD, mpCfgs, sSrv, sPth);
+    // 超时设置
+    unsigned iTimeout = static_cast<unsigned>(objCtrlD.JsonAttach().GetVal("timeout", 30));
+    // 延迟设置
+    int iDelay = static_cast<int>(objCtrlD.JsonAttach().GetVal("delay", 0));
+    if (iDelay > 0)
+        boost::this_thread::sleep(boost::posix_time::milliseconds(iDelay));
+    // 请求
+    string sRespond = _PostGet(*this, headers, sSrv, sPth, sPrm, sRequstBody, isPost, iTimeout);
+    // 重置应答json
+    objCtrlD.JsonRespond().ResetByStr(sRespond.c_str());
+    return sSrv + sPth + sPrm;
 }
 
 // POST请求
@@ -139,6 +184,46 @@ const char* CSLWebRequest::Cookie(const char* srv)
         pResult = sCookie.c_str();
     }
     return pResult;
+}
+
+// 生成请求头
+void CSLWebRequest::MakeRequestHeaders(KcHeaders &headers, ICtrlApiData &objCtrlD, map<string, string> &mpCfgs, string sSrv, string sPth)
+{
+    IActionData &act = objCtrlD.ActionData();
+    // 客户端cookie值
+    string sCookies = CUtilFunc::PCharSafeToStr(act.GetSingleInfo(c_RequestHeaderCookie));
+    // 请求头
+    string sJsonHeaders = CCltrFunc::GetParm(objCtrlD, mpCfgs, "$headers");
+    if (!sJsonHeaders.empty())
+    {
+        // 解析json
+        boost::system::error_code ec;
+        auto jsnHeaders = boost::json::parse(sJsonHeaders, ec);
+        if (ec.failed())
+            throw std::runtime_error((boost::format("%s\n ❌ %s\n%s\n%s") % __CURR_CODE_PLACE_C__ % ec.message() % objCtrlD.Url() % sJsonHeaders).str());
+        if (!jsnHeaders.is_object())
+            throw std::runtime_error((boost::format("%s\n%s\n ❌ Json Format Error - Isn't a JsonObject\n%s") % __CURR_CODE_PLACE_C__ % objCtrlD.Url() % sJsonHeaders).str());
+        // 循环每个头信息
+        for (auto &jsn: jsnHeaders.as_object())
+        {
+            string sKey = jsn.key();
+            string sVal = jsn.value().as_string().c_str();
+            // sVal = CCltrFunc::GetParmVal(objCtrlD, sVal, sJsonHeaders);
+            if (!sVal.empty())
+            {
+                // cookie另处理
+                if (c_RequestHeaderCookie == sKey)
+                    sCookies = sVal;
+                // 添加请求头
+                else
+                    headers.insert(std::make_pair(sKey, sVal));
+            }
+        }
+    }
+    // 添加cookie
+    CSLWebRequest::MakeCookie(sSrv, sPth, sCookies, headers, m_cookieMan);
+    std::cout << "\t 🍩 " << __FUNCTION__ << ": " << sCookies << std::endl;
+    WriteLogTrace((boost::format(" 🍩 Request: %s \t%s") % sCookies % sJsonHeaders).str().c_str(), __CURR_CODE_PLACE_C__);
 }
 
 // 得到响应头

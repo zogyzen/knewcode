@@ -15,8 +15,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <httplib.h>
-
 #include <boost/smart_ptr.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
@@ -31,16 +29,16 @@
 
 #include "common/base_type.h"
 #include "util/auto_release.h"
-#include "util/util_http.h"
 #include "util/ctrl_script.h"
 #include "util/proc_meminfo.h"
 #include "util/backtrace_symbols.h"
 #include "util/bundle_activator.h"
+#include "util/load_sub_lib.h"
 #include "framework/bundle_activator_i.h"
 #include "framework_ex/service_reference_ex_i.h"
 #include "kc_web/web_exception.h"
 #include "kc_controller/kc_relay_rest_i.h"
-#include "for_user/kc_single_loadso_i.h"
+#include "for_cpp/kc_web_request_ex_i.h"
 
 using namespace std;
 //using namespace boost;

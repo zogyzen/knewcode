@@ -8,19 +8,76 @@
 	</head>
 	<body>
         <div>
-			<br><input id="uri" type="text" value="https://127.0.0.1:24122/api/sample_pgsql.kc?act=Login" style="width:80%" />
+			<br>
+			<input id="uri" type="text" value="https://127.0.0.1/api/sample.kc?act=main" style="width:80%; height: 20px" />
 			<button onclick="onTestClick()">测试</button>&emsp;<span id="stt"></span><br><br>
-			<textarea id="prm" rows="6" style="width:96%">{"artid":0}</textarea>
+			<textarea id="prm" rows="6" style="width:96vw">{"id":0}</textarea>
+			<div id="recv" style="width:97vw; height: calc(98vh - 210px); overflow: auto;"></div>
 		</div>
-		<div id="recv"></div>
+		<div>
+			<select name="selFunction" id="selFunction" onchange="selChange(this)" style="width:230px; height: 25px">
+			</select>
+			<div style="float: right;">
+				<input id="txtFunc" type="text" value="测试" style="width:200px; height: 20px" /><button onclick="addSelOption()">添加</button>&ensp;
+				<button onclick="delSelOption()">移除</button>
+			</div>
+		</div>
 		<script type="text/javascript">
+			// 保存调用参数
+			function saveCallParm(uri, prm) {
+				let select = document.getElementById('selFunction');
+				let selectedValue = select.value;
+				localStorage["ajaxTestUri-" + selectedValue] = uri;
+				localStorage["ajaxTestPrm-" + selectedValue] = prm;
+			}
+			// 获取调用参数
+			function loadCallParm(init = true) {
+				let select = document.getElementById('selFunction');
+				let selectedValue = select.value;
+				let localUri = localStorage["ajaxTestUri-" + selectedValue];
+				let localPrm = localStorage["ajaxTestPrm-" + selectedValue];
+				if (localUri) document.getElementById("uri").value = localUri;
+				else if (init) document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample.kc?act=main";
+				if (localPrm) document.getElementById("prm").value = localPrm;
+				else if (init) document.getElementById("prm").value = '{"id":0}';
+			}
+			// 保存列表
+			function saveSelList() {
+				let jsonArray = [];
+				let select = document.getElementById('selFunction');
+				let options = select.options;
+				for (let i = 0; i < options.length; ++i)
+					jsonArray.push(options[i].value);
+				localStorage.ajaxTestFuncList = JSON.stringify(jsonArray);
+			}
+			// 加载列表
+			function loadSelList() {
+				let select = document.getElementById('selFunction');
+				select.options = localStorage.ajaxTestFuncList;
+				try {
+					let jsonArray = JSON.parse(localStorage.ajaxTestFuncList);
+					if (Array.isArray(jsonArray) && jsonArray.length > 0)
+						jsonArray.forEach(obj => {
+							addSelOptionVal(obj);
+						});
+					else loadCallParm();
+				}
+				catch (err) {
+					console.warn(err);
+					loadCallParm();
+				}
+			}
+			loadSelList();
+			
+			// 调用
 			function preflight() {
 				// 参数
-				var uri = document.getElementById("uri").value;
+				let uri = document.getElementById("uri").value;
 				let prm = document.getElementById("prm").value;
 				// 保存cookie
-				localStorage.ajaxTestUri = uri;
-				localStorage.ajaxTestPrm = prm;
+				//localStorage.ajaxTestUri = uri;
+				//localStorage.ajaxTestPrm = prm;
+				saveCallParm(uri, prm);
 				// ajax对象
 				var xhr = new XMLHttpRequest();
 				xhr.open('PUT', uri, true);//请求方式，请求地址，是否异步
@@ -41,16 +98,16 @@
 				// 发送ajax请求
 				xhr.send(prm);
 			}
-			
 			function ajaxTest() {
 				document.getElementById("stt").innerText = "";
 				document.getElementById("recv").innerText = "";
 				// 参数
-				var uri = document.getElementById("uri").value;
+				let uri = document.getElementById("uri").value;
 				let prm = document.getElementById("prm").value;
 				// 保存cookie
-				localStorage.ajaxTestUri = uri;
-				localStorage.ajaxTestPrm = prm;
+				//localStorage.ajaxTestUri = uri;
+				//localStorage.ajaxTestPrm = prm;
+				saveCallParm(uri, prm);
 				// ajax对象
 				var xhr = new XMLHttpRequest();
 				xhr.open('POST', uri, true);//请求方式，请求地址，是否异步
@@ -86,10 +143,55 @@
 				//preflight();
 				ajaxTest();
 			}
-
-			if (localStorage.ajaxTestUri) document.getElementById("uri").value = localStorage.ajaxTestUri;
-			else document.getElementById("uri").value = window.location.protocol + "//" + window.location.host + "/api/sample_pgsql.kc?act=Login";
-			if (localStorage.ajaxTestPrm) document.getElementById("prm").value = localStorage.ajaxTestPrm;
+			
+			// 自定义方法
+			function addSelOptionVal(txtFunc) {
+				// 查找已存在的子项
+				let eleExists = document.querySelector('#selFunction option[value="' + txtFunc + '"]');
+				if (eleExists) {
+					alert("已存在");
+					return;
+				}
+				// 获取select元素
+				let select = document.getElementById("selFunction");
+				// 创建一个新的option元素
+				let option = document.createElement("option");
+				// 设置option的文本内容和值
+				option.text = txtFunc;
+				option.value = txtFunc;
+				// 将新创建的option元素添加到select元素中
+				select.add(option);
+				select.selectedIndex = select.length - 1;
+				// 重选
+				selChange(select);
+			}
+			function addSelOption() {
+				addSelOptionVal(document.getElementById("txtFunc").value);
+				// 保存列表
+				saveSelList();
+			}
+			function delSelOption() {
+				let select = document.getElementById('selFunction');
+				let selIndex = select.selectedIndex;
+				// 获取当前选中的选项
+				let selectedOption = select.options[selIndex];
+				// 移除选中的选项
+				if (selectedOption) {
+					select.removeChild(selectedOption);
+					// 重选
+					let iNewSel = Math.min(selIndex, select.length - 1);
+					if (iNewSel >= 0) select.selectedIndex = iNewSel;
+					selChange(select);
+					// 保存列表
+					saveSelList();
+				}
+			}
+			function selChange(element) {
+				console.log('选中方法: ' + element.value);
+				loadCallParm(false);
+				document.getElementById("stt").innerText = "";
+				document.getElementById("recv").innerText = "";
+			}
 		</script>
 	</body>
 </html>

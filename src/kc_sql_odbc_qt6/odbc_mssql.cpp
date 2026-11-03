@@ -576,9 +576,9 @@ pair<int, string> TDBCommandODBCmssql::ExecuteBatch(void)
         int iErrCode = 0;
         string sErrMsg, sLogMsg;
         MakeParmVals([&](string sParmName, QVariant val){
-            if (c_RESTful_errCode == sParmName) iErrCode = val.toInt();
-            else if (c_RESTful_errMsg == sParmName) sErrMsg = val.toString().toStdString();
-            else if (c_RESTful_logMsg == sParmName) sLogMsg = val.toString().toStdString();
+            if (m_objCtrlD.GetFixParmName(c_RESTful_errCode) == sParmName) iErrCode = val.toInt();
+            else if (m_objCtrlD.GetFixParmName(c_RESTful_errMsg) == sParmName) sErrMsg = val.toString().toStdString();
+            else if (m_objCtrlD.GetFixParmName(c_RESTful_logMsg) == sParmName) sLogMsg = val.toString().toStdString();
         });
         if (!sLogMsg.empty())
             m_own.Srv().WriteLogInfo((boost::format("ExecuteBatch: %s - %s\n%s") % CtrlD().LocalFile() % m_act % sLogMsg).str().c_str(), __CURR_CODE_PLACE_C__);

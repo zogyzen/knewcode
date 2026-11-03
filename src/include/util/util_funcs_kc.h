@@ -14,6 +14,7 @@ namespace KC
         {
             if (!key.empty() /*&& !val.empty()*/)
             {
+                // val = CUtilFunc::Utf8ToGbk(val);
                 auto iter = cfgHeader.find(key);
                 if (cfgHeader.end() == iter)
                     cfgHeader.insert(make_pair(key, val));

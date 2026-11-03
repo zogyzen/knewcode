@@ -12,19 +12,22 @@ CCtrlOracle::TParmOra::TParmOra(TParmGrpOra& own, std::string s, unsigned p) : m
 bool CCtrlOracle::TParmOra::SetNumber(double fVal)
 {
     m_own.stmt.setNumber(iPos, fVal);
+    eDTp = CSqlFunc::EDataType::edtNumber;
     return false;
 }
 
 void CCtrlOracle::TParmOra::SetInt(int iVal)
 {
     m_own.stmt.setInt(iPos, iVal);
+    eDTp = CSqlFunc::EDataType::edtInt;
 }
 
 void CCtrlOracle::TParmOra::SetString(string strVal)
 {
-    if (CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp)
+    if (CSqlFunc::EParmType::eptOutParm == ePTp || CSqlFunc::EParmType::eptInOutParm == ePTp || CSqlFunc::EParmType::eptSessionParm == ePTp)
         m_own.stmt.setMaxParamSize(iPos, c_KCMaxParmBufSize);
     m_own.stmt.setString(iPos, strVal.substr(0, c_KCMaxParmBufSize));
+    eDTp = CSqlFunc::EDataType::edtString;
 }
 
 void CCtrlOracle::TParmOra::SetClob(Connection& conn, Statement& stmt, unsigned iPos, string strVal)
@@ -58,6 +61,7 @@ void CCtrlOracle::TParmOra::SetClob(Connection& conn, Statement& stmt, unsigned 
 void CCtrlOracle::TParmOra::SetClob(string strVal)
 {
     SetClob(m_own.conn, m_own.stmt, iPos, strVal);
+    eDTp = CSqlFunc::EDataType::edtClob;
 }
 
 void CCtrlOracle::TParmOra::SetNull(void)
@@ -171,9 +175,21 @@ void CCtrlOracle::TParmOra::SetDbTp(void)
     else if (eDTp == CSqlFunc::EDataType::edtUnknown)
     {
         // 未指定类型，通过值类型
-        if (anyVal.type() == typeid(int) || anyVal.type() == typeid(long long)) eDbTP = OCCIINT;
-        else if (anyVal.type() == typeid(double)) eDbTP = OCCINUMBER;
-        else eDbTP = OCCISTRING;
+        if (anyVal.type() == typeid(int) || anyVal.type() == typeid(long long))
+        {
+            eDbTP = OCCIINT;
+            eDTp = CSqlFunc::EDataType::edtInt;
+        }
+        else if (anyVal.type() == typeid(double))
+        {
+            eDbTP = OCCINUMBER;
+            eDTp = CSqlFunc::EDataType::edtNumber;
+        }
+        else
+        {
+            eDbTP = OCCISTRING;
+            eDTp = CSqlFunc::EDataType::edtString;
+        }
     }
     else eDbTP = OCCISTRING;
 }
@@ -188,7 +204,7 @@ void CCtrlOracle::TParmOra::RegOutParam(void)
 
 // CCtrlOracle::TParmGrpOra类
 CCtrlOracle::TParmGrpOra::TParmGrpOra(CCtrlOracle& ctrl, KeepStmtOraPtr st, ICtrlApiData& ctrlD, string sAct, bool bMultiParm)
-    : TParmGrpOraBase(false, bMultiParm), m_ctrl(ctrl), m_own(ctrl.m_own), keepStmt(st), conn(st->conn), stmt(st->stmt), m_objCtrlD(ctrlD), m_act(sAct)
+    : TParmGrpOraBase(false, bMultiParm, false), m_ctrl(ctrl), m_own(ctrl.m_own), keepStmt(st), conn(st->conn), stmt(st->stmt), m_objCtrlD(ctrlD), m_act(sAct)
 {
 }
 
@@ -220,6 +236,8 @@ string CCtrlOracle::TParmGrpOra::ParmExceptInfo(SQLException& ex)
 CCtrlOracle::TRecordSetOra::TRecordSetOra(CCtrlOracle& ctrl, KeepStmtOraPtr st, ResultSet& rs, ICtrlApiData& ctrlD)
     : m_ctrl(ctrl), keepStmt(st), stmt(st->stmt), rset(rs), m_objCtrlD(ctrlD)
 {
+    if (ctrl.m_prefetchRowCount >= 0) rset.setPrefetchRowCount(ctrl.m_prefetchRowCount);
+    // rset.setPrefetchMemorySize(1024 * 1024 * 100);
 }
 CCtrlOracle::TRecordSetOra::~TRecordSetOra(void)
 {
@@ -240,7 +258,12 @@ bool CCtrlOracle::TRecordSetOra::GetColumnListMetaDataBeforeFetch(CSqlFunc::TFie
         auto eDataType = CCtrlOracle::GetTypeName(iColType);
         //cout << sColName << "\t" << iColType << "\t" << iColSize << endl;
         // 字段名
-        string sFieldName = algorithm::to_lower_copy(sColName);
+        // string sFieldName = algorithm::to_lower_copy(sColName);
+        string sFieldName = sColName;
+        if ("lower" == m_ctrl.m_feildCaseSensitive)
+            algorithm::to_lower(sFieldName);
+        else if ("upper" == m_ctrl.m_feildCaseSensitive)
+            algorithm::to_upper(sFieldName);
         // 插入
         CSqlFunc::TField *pFeild = new CSqlFunc::TField(sFieldName, i + 1, iColType, eDataType);
         if ("ZHS16GBK" == m_ctrl.m_Charset) pFeild->m_nameShow = CUtilFunc::GbkToUtf8(sFieldName);
@@ -264,7 +287,12 @@ bool CCtrlOracle::TRecordSetOra::GetColumnListMetaDataBeforeFetch(CSqlFunc::TFie
         //for (auto it : mapFeilds) vecFeilds.push_back(it);
         for (auto &md : metafields)
         {
-            string sFieldName = algorithm::to_lower_copy(md.getString(MetaData::ATTR_NAME));
+            // string sFieldName = algorithm::to_lower_copy(md.getString(MetaData::ATTR_NAME));
+            string sFieldName = md.getString(MetaData::ATTR_NAME);
+            if ("lower" == m_ctrl.m_feildCaseSensitive)
+                algorithm::to_lower(sFieldName);
+            else if ("upper" == m_ctrl.m_feildCaseSensitive)
+                algorithm::to_upper(sFieldName);
             auto it = mapFeilds.find(sFieldName);
             if (mapFeilds.end() != it) vecFeilds.push_back(it->second);
         }
@@ -366,16 +394,14 @@ CCtrlOracle::TDBCommandOra::TDBCommandOra(CCtrlOracle& ctrl, KeepStmtOraPtr st, 
 {
 }
 
-// 所属的服务
-IKCSql& CCtrlOracle::TDBCommandOra::Srv(void)
-{
-    return m_own;
-}
-
 //  控制器 信息
 string CCtrlOracle::TDBCommandOra::ActInfo(void)
 {
     return m_act;
+}
+string CCtrlOracle::TDBCommandOra::ActName(void)
+{
+    return m_actName;
 }
 
 // 事务
@@ -400,189 +426,31 @@ void CCtrlOracle::TDBCommandOra::PrepareSQL(void)
     string sSQL = stmt.getSQL();
     if (sSQL.empty())
         throw TKCSqlOracleException(ecd_ErrCode_KCSqlOracle + 5, __CURR_CODE_PLACE_C__, string(m_own.getHint("SQL_Empty_")) + m_objCtrlD.ActionData().GetSingleInfo("the_request") + " - " + m_actName, m_own);
-    // 解析临时名字
-    m_parms.ParseSqlTmpTab(sSQL, std::string("##") + c_RESTful_KCTmpObj + "\\w+");
-    // 循环每个临时对象
-    for (auto &tmpTab : m_parms.mapTmpTabs)
+    // DDL语句，创建临时对象
+    if (CreateTmpParmPackage()) ;
+    // 非DDL语句
+    else
     {
-        // 原临时对象名
-        string sName = tmpTab.first.substr(2, tmpTab.first.size() - 2);
-        // 在本次链接里是否存在
-        auto it = m_connObj.mapTmpObjs.find(sName);
-        // 不存在
-        if (m_connObj.mapTmpObjs.end() == it)
-        {
-            // 生成临时对象名
-            tmpTab.second = this->GetTmpObjRandName(sName);
-            // 插入本次链接里
-            m_connObj.mapTmpObjs.insert(make_pair(sName, tmpTab.second));
-            m_own.WriteLogDebug("Add Temp Object", __CURR_CODE_PLACE_C__, (sName + "<=>" + tmpTab.second).c_str());
-        }
-        // 存在
-        else
-        {
-            // 取出本次链接里的临时对象名
-            tmpTab.second = it->second;
-        }
-        // 替换临时对象名
-        algorithm::replace_all(sSQL, tmpTab.first, tmpTab.second);
+        // 执行非DDL语句，替换临时对象名
+        sSQL = ReplaceTmpObjName(sSQL);
+        // 更新sql语句
+        if (!m_parms.mapTmpTabs.empty()) stmt.setSQL(sSQL);
     }
-    if (!m_parms.mapTmpTabs.empty()) stmt.setSQL(sSQL);
-    // DDL语句中，用临时包替换参数
-    CreateTmpParmPackage();
+}
+
+// 单独执行sql语句
+void CCtrlOracle::TDBCommandOra::ExecSQL(const char* sql)
+{
+    m_connObj.ExecSQL(sql);
 }
 
 // 针对DDL语句，创建参数临时包
-void CCtrlOracle::TDBCommandOra::CreateTmpParmPackage(void)
+bool CCtrlOracle::TDBCommandOra::CreateTmpParmPackage(void)
 {
-    string sSQLPack, sSQLBody, sSQLAssign;
-    auto fExceptInfo = [&](void)
-    {
-        return "\n" + sSQLPack + "\n\n/\n\n" + sSQLBody + "\n\n/\n\n" + sSQLAssign + "\n\n/\n\n" + stmt.getSQL() + "\n";
-    };
-    if (c_RESTful_create == m_method && !m_parms.mapParms.empty())
-    try
-    {
-        string sSQL = stmt.getSQL();
-        // 临时包名称
-        string sTmpName = c_RESTful_KCTmpObj + m_actName;
-        if (m_connObj.mapTmpObjs.end() != m_connObj.mapTmpObjs.find(sTmpName))
-            throw TKCSqlOracleException(ecd_ErrCode_KCSqlOracle + 3, __CURR_CODE_PLACE_C__, m_own.getHint("Repeating_Define_") + sTmpName, m_own);
-        string sTmpPack = this->GetTmpObjRandName(sTmpName);
-        m_connObj.mapTmpObjs.insert(make_pair(sTmpName, sTmpPack));
-        // 生成SQL语句
-        sSQLPack = "CREATE OR REPLACE PACKAGE " + sTmpPack + " IS\n";
-        sSQLBody = "CREATE OR REPLACE PACKAGE BODY " + sTmpPack + " AS\n";
-        sSQLAssign = "BEGIN\n";
-        for (auto &parm : m_parms.mapParms)
-        {
-            // 参数类型
-            string sType = "varchar2";
-            if (parm.second->eDTp == CSqlFunc::EDataType::edtInt) sType = "int";
-            else if (parm.second->eDTp == CSqlFunc::EDataType::edtNumber) sType = "number";
-            else if (parm.second->eDTp == CSqlFunc::EDataType::edtClob) sType = "clob";
-            // 字符串宽度
-            string sLen = "";
-            if ("varchar2" == sType)
-            {
-                string strVal = BoostAnyToStdString(parm.second->anyVal);
-                // string strVal = parm.second->sVal;
-                unsigned iLen = static_cast<unsigned>(strVal.size());
-                if (iLen < 100) sLen = "(100)";
-                else if (iLen < 500) sLen = "(500)";
-                else if (iLen < 4000) sLen = "(4000)";
-                else sLen = "(32767)";
-            }
-            // 包函数定义
-            string sFunc = "function f$" + parm.first + " return " + sType;
-            // 拼SQL语句
-            sSQLPack += parm.first + " " + sType + sLen + "; " + sFunc + ";\n";
-            sSQLBody += sFunc + " is begin return " + parm.first + "; end;\n";
-            sSQLAssign += sTmpPack + "." + parm.first + " := :" + parm.first + ";\n";
-            // 用包函数替换原SQL里的参数
-            algorithm::replace_all(sSQL, ":" + parm.first, sTmpPack + ".f$" + parm.first);
-        }
-        sSQLPack += "END;";
-        sSQLBody += "END;";
-        sSQLAssign += "END;";
-        // 执行包定义
-        {
-            Statement *stmtTmp = conn.createStatement();
-            if (nullptr != stmtTmp)
-            {
-                CAutoRelease _auto([&](){ conn.terminateStatement(stmtTmp); });
-                stmtTmp->execute(sSQLPack);
-                stmtTmp->execute(sSQLBody);
-            }
-        }
-        // 为包变量赋值
-        {
-            Statement *stmtTmp = conn.createStatement();
-            if (nullptr != stmtTmp)
-            {
-                CAutoRelease _auto([&](){ conn.terminateStatement(stmtTmp); });
-                stmtTmp->setSQL(sSQLAssign);
-                // 循环所有参数
-                unsigned iPos = 1;
-                for (auto &parm : m_parms.mapParms)
-                {
-                    // 空值
-                    if (parm.second->bIsNull)
-                        stmtTmp->setNull(iPos, OCCISTRING);
-                    // 按数据类型，设置数据库参数值
-                    else
-                    {
-                        // 整型
-                        if (CSqlFunc::EDataType::edtInt == parm.second->eDTp)
-                            // stmtTmp->setInt(iPos, atoi(parm.second->sVal.c_str()));
-                            stmtTmp->setInt(iPos, static_cast<int>(CastBoostAnyToInt(parm.second->anyVal)));
-                        // 浮点型
-                        else if (CSqlFunc::EDataType::edtNumber == parm.second->eDTp)
-                            // stmtTmp->setNumber(iPos, atof(parm.second->sVal.c_str()));
-                            stmtTmp->setNumber(iPos, CastBoostAnyToFloat(parm.second->anyVal));
-                        // 长字符串型
-                        else if (CSqlFunc::EDataType::edtClob == parm.second->eDTp)
-                            // TParmOra::SetClob(conn, *stmtTmp, iPos, parm.second->sVal);
-                            TParmOra::SetClob(conn, *stmtTmp, iPos, BoostAnyToStdString(parm.second->anyVal));
-                        // 字符型
-                        else
-                            // stmtTmp->setString(iPos, parm.second->sVal.c_str());
-                            stmtTmp->setString(iPos, BoostAnyToStdString(parm.second->anyVal));
-                    }
-                    ++iPos;
-                }
-                stmtTmp->execute();
-            }
-        }
-        // 更换原SQL语句
-        stmt.setSQL(sSQL);
-        //m_own.WriteLogDebug("success", __CURR_CODE_PLACE_C__, fExceptInfo().c_str());
-    }
-    catch (SQLException& ex)
-    {
-        m_own.WriteLogFatal(ex.getMessage().c_str(), __CURR_CODE_PLACE_C__, fExceptInfo().c_str());
-        throw;
-    }
-}
-
-// 创建临时包
-void CCtrlOracle::TDBCommandOra::CreateTmpPackage(ICtrlApiData& objCtrlD)
-{
-    string sSQLPack, sSQLBody, sSQLAssign;
-    auto fExceptInfo = [&](void)
-    {
-        return "\n" + sSQLPack + "\n\n/\n\n" + sSQLBody + "\n\n/\n\n" + sSQLAssign + "\n\n/\n\n" + stmt.getSQL() + "\n";
-    };
-    try
-    {
-        string sSQLPack = objCtrlD.GetSubInfo("declare");
-        string sSQLBody = stmt.getSQL();
-        // 临时包名称
-        string sTmpName = c_RESTful_KCTmpObj + m_actName;
-        if (m_connObj.mapTmpObjs.end() != m_connObj.mapTmpObjs.find(sTmpName))
-            throw TKCSqlOracleException(ecd_ErrCode_KCSqlOracle + 4, __CURR_CODE_PLACE_C__, m_own.getHint("Repeating_Define_") + sTmpName, m_own);
-        string sTmpPack = this->GetTmpObjRandName(sTmpName);
-        m_connObj.mapTmpObjs.insert(make_pair(sTmpName, sTmpPack));
-        // 生成SQL语句
-        sSQLPack = "CREATE OR REPLACE PACKAGE " + sTmpPack + " IS " + sSQLPack + " \nEND;";
-        sSQLBody = "CREATE OR REPLACE PACKAGE BODY " + sTmpPack + " AS " + sSQLBody + " \nEND;";
-        // 执行包定义
-        Statement *stmtTmp = conn.createStatement();
-        if (nullptr != stmtTmp)
-        {
-            CAutoRelease _auto([&](){ conn.terminateStatement(stmtTmp); });
-            m_own.WriteLogDebug(sSQLPack.c_str(), __CURR_CODE_PLACE_C__);
-            stmtTmp->execute(sSQLPack);
-        }
-        stmt.setSQL(sSQLBody);
-        m_own.WriteLogDebug(sSQLBody.c_str(), __CURR_CODE_PLACE_C__);
-        stmt.execute();
-    }
-    catch (SQLException& ex)
-    {
-        m_own.WriteLogFatal(ex.getMessage().c_str(), __CURR_CODE_PLACE_C__, fExceptInfo().c_str());
-        throw;
-    }
+    const bool bResult = c_RESTful_create == m_method;
+    if (bResult)
+        stmt.setSQL(CreateTmpObjAndParmPack(stmt.getSQL()));
+    return bResult;
 }
 
 // 临时对象的随机名称
@@ -599,20 +467,13 @@ string CCtrlOracle::TDBCommandOra::GetTmpObjRandName(string sName)
         // 临时包名称
         return (format("Z%x$%x_%X_%X_%s") % days % boost::this_process::get_id() % m_connObj.m_connid % (++m_connObj.m_tmpID) % sName).str().substr(0, sIdnLen);
     }
-    else
-    {
-        // 日期
-        boost::gregorian::date dtToday = boost::gregorian::day_clock::local_day();
-        // 根据数据库版本，设置标识符最大长度
-        unsigned sIdnLen = 128;
-        // 临时包名称
-        return (format("Z$%02d%02d%02d_%x_%X_%X_%s") % (dtToday.year() % 100) % (int)dtToday.month() % dtToday.day() % boost::this_process::get_id() % m_connObj.m_connid % (++m_connObj.m_tmpID) % sName).str().substr(0, sIdnLen);
-    }
+    else return CSqlFuncOra::TDBCommandOraBase<SQLException>::GetTmpObjRandName(sName);
 }
 
 // 执行
 unsigned int CCtrlOracle::TDBCommandOra::ExecuteUpdate(void)
 {
+    // 执行主sql
     return stmt.executeUpdate();
 }
 // 批量操作
@@ -654,6 +515,8 @@ pair<int, string> CCtrlOracle::TDBCommandOra::ExecuteBatch(void)
 CSqlFunc::TRecordSetPtr CCtrlOracle::TDBCommandOra::ExecuteQuery(int &rows_affected)
 {
     rows_affected = -1;
+    if (m_ctrl.m_prefetchRowCount >= 0) stmt.setPrefetchRowCount(m_ctrl.m_prefetchRowCount);
+    // stmt.setPrefetchMemorySize(1024 * 1024 * 100);
     return CSqlFunc::TRecordSetPtr(new TRecordSetOra(m_ctrl, keepStmt, *stmt.executeQuery(), m_objCtrlD));
 }
 
@@ -664,7 +527,8 @@ int CCtrlOracle::TDBCommandOra::ExecuteProcedures(void)
 }
 
 // CCtrlOracle::TOraConnObj类
-CCtrlOracle::TOraConnObj::TOraConnObj(CCtrlOracle& own, unsigned connid) : m_own(own), m_connid(connid), m_tmpID(0)
+CCtrlOracle::TOraConnObj::TOraConnObj(CCtrlOracle& own, unsigned connid)
+    : CSqlFuncOra::TOraConnObjBase(connid), m_own(own)
 {
     try
     {
@@ -686,65 +550,55 @@ CCtrlOracle::TOraConnObj::TOraConnObj(CCtrlOracle& own, unsigned connid) : m_own
         throw;
     }
 }
+
+// 单独执行sql语句
+void CCtrlOracle::TOraConnObj::ExecSQL(const char* sql)
+{
+    if (nullptr == m_conn)
+        throw TKCSqlOracleException(ecd_ErrCode_KCSqlOracle + 5, __CURR_CODE_PLACE_C__, m_own.m_own.getHint("Database_Connection_Error_") + m_own.m_srv, m_own.m_own);
+    Statement *stmtTmp = m_conn->createStatement();
+    if (nullptr != stmtTmp)
+    {
+        CAutoRelease _auto([&](){ m_conn->terminateStatement(stmtTmp); });
+        stmtTmp->execute(sql);
+    }
+}
+
+// 释放
 void CCtrlOracle::TOraConnObj::Release(void)
 {
-    m_own.m_own.WriteLogDebug("Remove Oracle Connect Object", __CURR_CODE_PLACE_C__, (format("Connect ID: %d") % m_connid).str().c_str());
-    // 删除临时对象
-    Statement *stmt = nullptr != m_conn ? m_conn->createStatement() : nullptr;
-    if (nullptr != stmt)
+    try
     {
-        CAutoRelease _auto2([&](){ m_conn->terminateStatement(stmt); });
-        // 异常信息
-        string sCurrDrop = "";
-        auto fExceptInfo = [&](string sMsg)
-        {
-            string sInfo = sMsg + "\n";
-            for (auto &tmpObj : mapTmpObjs)
-                sInfo += tmpObj.first + "<=>" + tmpObj.second + "\n";
-            return sInfo + "=>" + sCurrDrop;
-        };
-        // 循环删除临时对象
-        for (auto &tmpObj : mapTmpObjs)
-        {
-            try
-            {
-                sCurrDrop = tmpObj.first;
-                string sDropSQL = (format(R"(
-                    begin
-                          for x in (select object_name, object_type from user_objects where upper(object_name) = upper('%1%')) loop
-                              execute immediate 'drop ' || x.object_type || ' ' || x.object_name;
-                          end loop;
-                    end;
-                )") % tmpObj.second).str();
-                stmt->execute(sDropSQL);
-                m_own.m_own.WriteLogDebug("Del Temp Object", __CURR_CODE_PLACE_C__, (sCurrDrop + "<=>" + tmpObj.second).c_str());
-            }
-            catch (SQLException& ex)
-            {
-                m_own.m_own.WriteLogFatal(fExceptInfo(ex.getMessage()).c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
-            }
-            catch (...)
-            {
-                m_own.m_own.WriteLogFatal(fExceptInfo(m_own.m_own.getHint("Unknown_exception")).c_str(), __CURR_CODE_PLACE_C__);
-            }
-        }
-        mapTmpObjs.clear();
+        m_own.m_own.WriteLogDebug("Remove Oracle Connect Object", __CURR_CODE_PLACE_C__, (format("Connect ID: %d") % m_connid).str().c_str());
+        // 删除临时对象
+        DropTmpObj();
+        // 释放链接
+        if (m_own.m_usePool && nullptr != m_own.m_connPool)
+            m_own.m_connPool->releaseConnection(m_conn);
+        else
+            m_own.m_env.terminateConnection(m_conn);
+        m_conn = nullptr;
+        // 删除自己
+        delete this;
     }
-    // 释放链接
-    if (m_own.m_usePool && nullptr != m_own.m_connPool)
-        m_own.m_connPool->releaseConnection(m_conn);
-    else
-        m_own.m_env.terminateConnection(m_conn);
-    m_conn = nullptr;
-    delete this;
+    catch (std::exception& ex)
+    {
+        m_own.m_own.WriteLogFatal(ex.what(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+    }
+    catch (...)
+    {
+        m_own.m_own.WriteLogFatal(Srv().getHint("Unknown_exception"), __CURR_CODE_PLACE_C__);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // CCtrlOracle类
 CCtrlOracle::CCtrlOracle(IKCSqlOracle& own, string sName, property_tree::ptree& pt)
     : m_own(own), m_name(sName)
-    , m_Charset(boost::algorithm::to_upper_copy(GetConfig(pt, "charset", "AL32UTF8")))
-    , m_NCharset(boost::algorithm::to_upper_copy(GetConfig(pt, "ncharset", "AL32UTF8")))
+    , m_Charset(boost::algorithm::to_upper_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.charset", "AL32UTF8")))
+    , m_NCharset(boost::algorithm::to_upper_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.ncharset", "AL32UTF8")))
+    , m_feildCaseSensitive(algorithm::to_lower_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.feildCaseSensitive", "")))
+    , m_prefetchRowCount(std::min(atoi(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.prefetchRowCount", "128").c_str()), 10240))
     , m_env(CreateOracleEnv(pt)), m_connPool(CreateConnPool(pt)), m_connID(0)
 {
     // 记录函数地址
@@ -756,16 +610,6 @@ CCtrlOracle::~CCtrlOracle()
 {
     // 释放数据库链接池
     if (m_usePool) m_env.terminateStatelessConnectionPool(m_connPool);
-}
-
-// 获取配置
-string CCtrlOracle::GetConfig(property_tree::ptree& pt, string sAttr, string sDef)
-{
-    string sResult = sDef;
-    if (pt.get_child_optional("<xmlattr>." + sAttr))
-        sResult = pt.get<string>("<xmlattr>." + sAttr);
-    if (sResult.empty()) sResult = sDef;
-    return sResult;
 }
 
 // 获取类型名
@@ -1001,7 +845,7 @@ void CCtrlOracle::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
                     comm.CreateDDL();
                 // 临时包（method="package"）
                 else if (c_RESTful_package == sMethod)
-                    comm.CreateTmpPackage(objCtrlD);
+                    comm.CreateTmpPackage(objCtrlD, sSQL);
                 // 增删改（method="update", "insert", "delete"）
                 else if (sMethod.empty() || c_RESTful_exec == sMethod || c_RESTful_insert == sMethod || c_RESTful_delete == sMethod || c_RESTful_update == sMethod)
                     comm.InsertDeleteUpdate();

@@ -10,7 +10,7 @@ public:
     ~CBoostLog() override = default;
 
     // 初始化
-    const char* Init(const char* dir, const char* id, TLogLevel lv = lglvInfo, int szFile = 2, const char* eachPrefix = "", bool inDay = false) override;
+    const char* Init(const char* dir, const char* id, TLogLevel lv = lglvInfo, unsigned szFileM = 2, const char* eachPrefix = "", bool inDay = false) override;
     // 释放
     void Free(void) override;
 

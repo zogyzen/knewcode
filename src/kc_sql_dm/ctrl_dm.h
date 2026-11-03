@@ -27,19 +27,27 @@ protected:
 
         TDmdpiException(int c, string s, string p, int d = DSQL_SUCCESS);
 
+        // 错误信息
+        string Message(void);
+
         // 检查错误
         static void CheckError(CCtrlDM& own, DPIRETURN rt, sdint2 hndl_type, dhandle hndl, string sPos, string sKey = "");
     };
     friend struct TDmdpiException;
 
     // 页面活动对象（用于保存数据库连接，在整个页面执行期间有效）
-    struct TDmConnObj final : public IActionData::TActObj
+    struct TDmConnObj final : public CSqlFuncOra::TOraConnObjBase
     {
         CCtrlDM& m_own;
         dhcon m_conn = nullptr;
-        const unsigned m_connid = 0;
 
         TDmConnObj(CCtrlDM& own, unsigned connid);
+
+        IKCSql& Srv(void) override { return m_own.m_own; }
+
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
+        // 释放
         void Release(void) override;
     };
     friend struct TDmConnObj;
@@ -47,9 +55,13 @@ protected:
     // 保持数据库执行实例
     struct KeepStmtDM
     {
-        dhstmt &stmt;
-        KeepStmtDM(dhstmt &s) : stmt(s) {}
-        ~KeepStmtDM(void) { try { dpi_free_stmt(stmt); } catch (...) {} }
+        dhstmt stmt = nullptr;
+        KeepStmtDM(dhstmt s) : stmt(s)
+        {
+            if (nullptr == stmt)
+                throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, "Null Point dhstmt", __CURR_CODE_PLACE_C__, DSQL_ERROR);
+        }
+        ~KeepStmtDM(void) { try { dpi_free_stmt(stmt); stmt = nullptr; } catch (...) {} }
     };
     typedef std::shared_ptr<KeepStmtDM> KeepStmtDMPtr;
 
@@ -104,6 +116,17 @@ protected:
         sdint2         nullable     = 0;
     };
 
+    // 达梦的clob输入输出类型
+    struct TDmLobctr
+    {
+        dhloblctr lob_locator = nullptr;
+
+        ~TDmLobctr(void)
+        {
+            if (nullptr != lob_locator) dpi_free_lob_locator(lob_locator);
+        }
+    };
+
     // 参数
     struct TParmGrpDM;
     struct TParmDM : CSqlFunc::TParm
@@ -113,15 +136,22 @@ protected:
         // 参数值
         TVal m_val;
 
+        // 输出游标（输出数据集参数）
+        KeepStmtDMPtr keepStmt;
+        // 输入输出clob
+        // TDmLobctr clobParm;
+
         // dm参数信息
         TDmParmDesc m_dmDesc;
 
         TParmDM(TParmGrpDM&, std::string = "", unsigned = 0);
+        ~TParmDM(void);
 
         // 设置参数值
         bool SetNumber(double) override;
         void SetInt(int) override;
         void SetString(string) override;
+        void SetString(string, sdint2);
         void SetClob(string) override;
         void SetNull(void) override;
         // 未绑定参数值
@@ -154,7 +184,7 @@ protected:
 
     // 参数组
     struct TDBCommandDM;
-    typedef CSqlFunc::TParmGrp<TDmdpiException> TParmGrpDMBase;
+    typedef CSqlFuncOra::TParmGrpOraBase<TDmdpiException> TParmGrpDMBase;
     struct TParmGrpDM : TParmGrpDMBase
     {
         TDBCommandDM& m_own;
@@ -228,7 +258,7 @@ protected:
     };
 
     // 数据库执行命令
-    struct TDBCommandDM : CSqlFunc::TDBCommand<TDmdpiException>
+    struct TDBCommandDM : CSqlFuncOra::TDBCommandOraBase<TDmdpiException>
     {
         CCtrlDM& m_own;
         dhcon& conn;
@@ -236,17 +266,18 @@ protected:
         dhstmt& stmt;
         ICtrlApiData& m_objCtrlD;
         TParmGrpDM m_parms;
-        string m_act;
+        string m_act, m_actName;
         string m_sql;
         string m_method;
         string &m_back;
+        TDmConnObj& m_connObj;
         string m_nowTime;       // 时间标志，用于创建临时表、输出参数名等
         string m_parmTmpTab;    // 返回参数的临时表名
         const int m_savePoint = 500;
         // 上次执行批量插入的行号
         int m_batchInsertRowLastExec = -1;
 
-        TDBCommandDM(CCtrlDM&, dhcon&, KeepStmtDMPtr, ICtrlApiData&, string sAct, string sSQL, string sMethod, string &sBack);
+        TDBCommandDM(CCtrlDM&, dhcon&, KeepStmtDMPtr, ICtrlApiData&, string sAct, string sActName, string sSQL, string sMethod, string &sBack, TDmConnObj&);
         ~TDBCommandDM(void);
 
         // 所属的服务
@@ -257,6 +288,7 @@ protected:
 
         // 控制器 信息
         string ActInfo(void) override;
+        string ActName(void) override;
 
         // SQL语句
         std::string GetSQL(void) override { return m_sql; }
@@ -270,6 +302,9 @@ protected:
             return make_tuple(ex.m_code, ex.m_msg, ex.m_pos);
         }
 
+        // 页面活动对象
+        CSqlFuncOra::TOraConnObjBase& ConnObj(void) override { return m_connObj; }
+
         // 事务
         void TranBegin(void) override;
         void TranCommit(void) override;
@@ -281,6 +316,9 @@ protected:
 
         // 预执行
         void PrepareSQL(void) override;
+
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
 
         // 执行
         unsigned int ExecuteUpdate(void) override;
@@ -297,8 +335,11 @@ protected:
         // 执行过程
         int ExecuteProcedures(void) override;
 
-        // 单独执行sql语句
-        void ExecSQL(const char*);
+        // 创建（临时或全局）对象（视图、表、存储过程、函数等）
+        void CreateDDL(void) override;
+
+        // 针对DDL语句，创建临时参数包
+        bool CreateTmpParmPackage(void);
     };
 
 private:
@@ -306,12 +347,17 @@ private:
     IKCSqlDM& m_own;
     // 名称
     string m_name = "connect1";
+    // 连接顺序号
+    std::atomic_uint m_connID;
     // 达梦数据库环境
     dhenv m_henv = nullptr;
     // 数据库配置
-    string m_srv = "127.0.0.1:5236", m_user = "SYSDBA", m_pass = "password", m_model = "sysdba";
-    string m_charset = "GBK", m_charsetCfg = "";;
-    std::atomic_uint m_connID;
+    const string m_srv = "127.0.0.1:5236", m_user = "SYSDBA", m_pass = "password", m_model = "sysdba";
+    const string m_charset = "GBK", m_charsetCfg = "";
     // 连接参数是否加密
-    bool m_encryptConnStr = false;
+    const bool m_encryptConnStr = false;
+    // 字段转大小写
+    const string m_feildCaseSensitive;
+    // 大字段缓冲区大小
+    const unsigned m_clobBufSizeM = 16 * 1024 * 1024;
 };

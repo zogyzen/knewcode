@@ -88,7 +88,7 @@
 		
 		<!-- session模块 -->
 		<kc_session_cookie Path="" Activation="2" srv="Session">
-			<controllers ShareMemSize="128" MapFileSize="8" Flag="2">								<!-- 共享内存的大小(ShareMemSize)（单位：兆），默认128。映射文件的大小(MapFileSize)（单位：兆），默认8。Flag用于共享内存名称。 -->
+			<controllers ShareMemSize="128" MapFileSize="8" Flag="1">								<!-- 共享内存的大小(ShareMemSize)（单位：兆），默认128。映射文件的大小(MapFileSize)（单位：兆），默认8。Flag用于共享内存名称。 -->
 				<config cctype="mapped_file" mapped_file="kc_session_cookie" isGlobal="true" />		<!-- 存储类型(cctype)：shared_memory（默认，变量存放在共享内存中，有过期设置）、mapped_file（变量存放在映射文件中，无过期设置）、local_ctrl（变量的读写通过本地控制器，程序控制过期设置） -->
 				<global Expire="1d" isGlobal="true" nameCaseSensitive="false" />					<!-- 超时(Expire)（默认1d）：d-天。h-小时。s-秒。是否全局(isGlobal)（默认是false）；为true，对所有请求开放。session名称区不区分大小写(nameCaseSensitive)，需配置成与数据库的参数名称一致。默认不区分。 -->
 				<sys cctype="local_ctrl">															<!-- 变量的读取通过本地控制器（一般是操作数据库的控制器） -->
@@ -154,10 +154,10 @@
 		
 		<!-- Oracle数据库模块 -->
 		<kc_sql_oracle Path="" Activation="2" srv="SQLSrvOra">
-			<controllers>		<!-- oracle的参数名称不区分大小写。连接串默认不加密 -->
-				<import str="dingeglyw/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)))" />
+			<controllers>		<!-- oracle的参数名称不区分大小写。 连接串默认不加密。 feildCaseSensitive：字段大小写，lower转小写；upper转大写；为空（默认）则不转。 prefetchRowCount预读行数。 -->
+				<import str="dingeglyw/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)))" feildCaseSensitive="" />
 				<import2 str="dingeglyw/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=mingye.fy.takin.cc)(PORT=15021))(CONNECT_DATA=(SERVICE_NAME=swtpdb)))" />
-				<connect1 str="planwater_user/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)(SQLNET.ALLOWED_LOGON_VERSION_SERVER=19)))" />
+				<connect1 str="dingeglyw/myKnewcode@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=172.16.1.252)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=swtpdb)(SQLNET.ALLOWED_LOGON_VERSION_SERVER=19)))" prefetchRowCount="128" />
 				<connect2 str="planwater_user/myKnewcode@172.16.1.252:1521/swtpdb" charset="ZHS16GBK" ncharset="AL32UTF8" maxConnNum="50" />
 			</controllers>
 		</kc_sql_oracle>
@@ -176,7 +176,7 @@
 			<controllers>		<!-- 达梦数据库的参数名称不区分大小写。连接参数默认不加密 -->
 				<connect1 srv="127.0.0.1:5236" uid="SYSDBA" pwd="myKnewcode2026" model="TEST" charset="GBK" encrypt="false" />
 				<connectJK srv="127.0.0.1:5236" uid="SYSDBA" pwd="myKnewcode2026" model="PDWB" charset="GBK" encrypt="false" />
-				<connect2 srv="mingye.fy.takin.cc:15021" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" />
+				<connect2 srv="mingye.fy.takin.cc:15021" uid="SYSDBA" pwd="myKnewcode2025" model="DINGEGLYW" charset="GBK" encrypt="false" clobBufSizeM="16" />
 			</controllers>
 		</kc_sql_dm>
 		
@@ -192,8 +192,8 @@
 
 		<!-- webapi主模块 -->
 		<kc_webapi_work Path="" Activation="2">
-			<!-- 服务控制器别名（主要针对各数据库插件）。default：默认的控制器别名，api未指定控制器的话，取该默认值；不设置的话，默认取“Config.Parameters.sys_flag.customer”的值。 valsName：默认的返回数据集的名称，默认为vals。 -->
-			<SrvCtrl default="pdwb-jk" valsName="vals">
+			<!-- 服务控制器别名（主要针对各数据库插件）。default：默认的控制器别名，api未指定控制器的话，取该默认值；不设置的话，默认取“Config.Parameters.sys_flag.customer”的值。 firstIsMainVals：首个数据集为主数据集，默认为false（默认是首个数据集并且名字为vals为主数据集）。 -->
+			<SrvCtrl default="pdwb-jk" firstIsMainVals="true">
 				<ywglxxxt bundle="kc_sql_postgresql" ctrl="kingbase" />
 				<dingeglyw srv="SQLSrv" ctrl="kingbase" />
 				<pdwb-jk srv="dmdbms" ctrl="connectJK" />
@@ -243,13 +243,6 @@
 			<Header>
 				<!-- 允许跨域访问 -->
 				<h1 key="Access-Control-Allow-Origin" value="KC__CONST__Origin" />
-				<!-- 客户端的ip和端口 -->
-				<h2 key="Clent-IP-Port" value="KC__CONST__ClientIpPort" />
-				<!-- 客户端链接的当前编号 -->
-				<h3 key="Unique-ConnID" value="KC__CONST__UniqueConnID" />
-				<!-- 服务器时间 -->
-				<h4 key="Srv-Now" value="KC__CONST__SrvDatatime" />
-				<!-- <h5 key="Srv-Timestamp" value="KC__CONST__SrvTimestamp" /> -->
 			</Header>
 		</kc_webapi_work>
 
@@ -257,16 +250,26 @@
 		<kc_web_main Path="" Activation="2">
 			<!-- 添加固定的响应头信息 -->
 			<Header>
-				<h0 key="Server" value="Tongweb7" />
+				<!-- 服务器信息 -->
+				<h1 key="Server" value="Tongweb" />
+				<!-- 项目名称 -->
+				<h2 key="Project-Name" value="KC__CONST__sysFlag" />
+				<!-- 客户端的ip和端口 -->
+				<h3 key="Clent-IP-Port" value="KC__CONST__ClientIpPort" />
+				<!-- 客户端链接的当前编号 -->
+				<h4 key="Unique-ConnID" value="KC__CONST__UniqueConnID" />
+				<!-- 服务器时间 -->
+				<h5 key="Srv-Now" value="KC__CONST__SrvDatatime" />
+				<!-- <h6 key="Srv-Timestamp" value="KC__CONST__SrvTimestamp" /> -->
 				<!-- 允许跨域访问 -->
-				<h1 key="Access-Control-Allow-Credentials" value="true" />
-				<h2 key="Access-Control-Allow-Methods" value="GET, POST, OPTIONS, PUT, DELETE" />
-				<h3 key="Access-Control-Allow-Headers" value="x-requested-with,content-type" />
-				<!-- <h5 key="Set-Cookie" value="sessionId=abc123; SameSite=None; Secure; HttpOnly; Path=/‌‌" /> -->
+				<h10 key="Access-Control-Allow-Credentials" value="true" />
+				<h11 key="Access-Control-Allow-Methods" value="GET, POST, OPTIONS, PUT, DELETE" />
+				<h12 key="Access-Control-Allow-Headers" value="x-requested-with,content-type" />
+				<!-- <h13 key="Set-Cookie" value="sessionId=abc123; SameSite=None; Secure; HttpOnly; Path=/‌‌" /> -->
 				<!-- 允许访问私有网络 -->
-				<h10 key="Access-Control-Allow-Private-Network" value="true" />
+				<h20 key="Access-Control-Allow-Private-Network" value="true" />
 				<!-- 允许客户端读取的头 -->
-				<h20 key="Access-Control-Expose-Headers" value="Content-Disposition" />
+				<h30 key="Access-Control-Expose-Headers" value="Content-Disposition" />
 			</Header>
 		</kc_web_main>
 	</Modules>

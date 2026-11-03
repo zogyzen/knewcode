@@ -316,6 +316,10 @@ void TRecordSetODBCmssql::GetColumnListMetaData(CSqlFunc::TFields &vecFeilds)
         // 插入
         // 按配置区分大小写
         string sFieldName = m_own.m_parmCaseSensitive ? sColName : algorithm::to_lower_copy(sColName);
+        if ("lower" == m_own.m_feildCaseSensitive)
+            algorithm::to_lower(sFieldName);
+        else if ("upper" == m_own.m_feildCaseSensitive)
+            algorithm::to_upper(sFieldName);
         mapFeilds.insert(make_pair(sFieldName, std::shared_ptr<CSqlFunc::TField>(new CSqlFunc::TField(sFieldName, i + 1, iColType, sTypeName))));
     }
     if (vecFeilds.empty())
@@ -324,6 +328,10 @@ void TRecordSetODBCmssql::GetColumnListMetaData(CSqlFunc::TFields &vecFeilds)
             string sFieldName = rec.fieldName(i).toStdString();
             // 按配置区分大小写
             if (!m_own.m_parmCaseSensitive) sFieldName = algorithm::to_lower_copy(sFieldName);
+            if ("lower" == m_own.m_feildCaseSensitive)
+                algorithm::to_lower(sFieldName);
+            else if ("upper" == m_own.m_feildCaseSensitive)
+                algorithm::to_upper(sFieldName);
             auto it = mapFeilds.find(sFieldName);
             if (mapFeilds.end() != it) vecFeilds.push_back(it->second);
         }
@@ -514,6 +522,17 @@ void TDBCommandODBCmssql::PrepareSQL(void)
     }
 }
 
+// 单独执行sql语句
+void TDBCommandODBCmssql::ExecSQL(const char* sql)
+{
+    QSqlQuery qry(m_connObj.m_odbc);
+    if (!qry.exec(sql))
+    {
+        m_back = qry.lastQuery().toStdString();
+        throw qry.lastError();
+    }
+}
+
 // 统一获取参数值
 void TDBCommandODBCmssql::MakeParmVals(std::function<void(string, QVariant)> fSetOutParm)
 {
@@ -523,8 +542,8 @@ void TDBCommandODBCmssql::MakeParmVals(std::function<void(string, QVariant)> fSe
     QSqlQuery qry(m_connObj.m_odbc);
     if (!qry.exec(("select * from " + m_parmTmpTab).c_str()))
     {
-        m_back = m_qry.lastQuery().toStdString();
-        throw m_qry.lastError();
+        m_back = qry.lastQuery().toStdString();
+        throw qry.lastError();
     }
     // 获取首条数据
     if (qry.next())
@@ -598,9 +617,9 @@ pair<int, string> TDBCommandODBCmssql::ExecuteBatch(void)
         int iErrCode = 0;
         string sErrMsg, sLogMsg;
         MakeParmVals([&](string sParmName, QVariant val){
-            if (c_RESTful_errCode == sParmName) iErrCode = val.toInt();
-            else if (c_RESTful_errMsg == sParmName) sErrMsg = val.toString().toStdString();
-            else if (c_RESTful_logMsg == sParmName) sLogMsg = val.toString().toStdString();
+            if (m_objCtrlD.GetFixParmName(c_RESTful_errCode) == sParmName) iErrCode = val.toInt();
+            else if (m_objCtrlD.GetFixParmName(c_RESTful_errMsg) == sParmName) sErrMsg = val.toString().toStdString();
+            else if (m_objCtrlD.GetFixParmName(c_RESTful_logMsg) == sParmName) sLogMsg = val.toString().toStdString();
         });
         if (!sLogMsg.empty())
             m_own.Srv().WriteLogInfo((boost::format("ExecuteBatch: %s - %s\n%s") % CtrlD().LocalFile() % m_act % sLogMsg).str().c_str(), __CURR_CODE_PLACE_C__);

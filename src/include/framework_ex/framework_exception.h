@@ -68,22 +68,22 @@ namespace KC
 #define CATCH_EXCEPTION_TO_WRITELOG(LogFunction, OtherSymbolic) \
 	catch(KC::TException& ex) \
 	{ \
-        TLogInfo log(ex.error_info(), __CURR_CODE_PLACE_C__, IFuncLog::lglvError, (OtherSymbolic)); \
+        TLogInfo log(CUtilFunc::GbkAndUtf8Note(ex.error_info()), __CURR_CODE_PLACE_C__, IFuncLog::lglvError, (OtherSymbolic)); \
 		log.m_excpType = typeid(ex).name(); \
 		log.m_excpID = ex.error_id(); \
 		(LogFunction).WriteLog(log); \
-                std::cout << CUtilFunc::Utf8ToGbk(ex.error_info()) << std::endl << (OtherSymbolic) << std::endl; \
+        std::cout << ex.error_info() << std::endl << (OtherSymbolic) << std::endl; \
 	} \
 	catch(std::exception& ex) \
 	{ \
-        TLogInfo log(ex.what(), __CURR_CODE_PLACE_C__, IFuncLog::lglvFatal, (OtherSymbolic)); \
+        TLogInfo log(CUtilFunc::GbkAndUtf8Note(ex.what()), __CURR_CODE_PLACE_C__, IFuncLog::lglvFatal, (OtherSymbolic)); \
 		log.m_excpType = typeid(ex).name(); \
 		(LogFunction).WriteLog(log); \
-                std::cout << CUtilFunc::Utf8ToGbk(ex.what()) << std::endl << (OtherSymbolic) << std::endl; \
-        } \
+        std::cout << ex.what() << std::endl << (OtherSymbolic) << std::endl; \
+    } \
 	catch(...) \
 	{ \
         TLogInfo log("Unknown exception", __CURR_CODE_PLACE_C__, IFuncLog::lglvFatal, (OtherSymbolic)); \
 		(LogFunction).WriteLog(log); \
-                std::cout << "Unknown exception" << std::endl << (OtherSymbolic) << std::endl; \
-        }
+        std::cout << "Unknown exception" << std::endl << (OtherSymbolic) << std::endl; \
+    }

@@ -31,12 +31,53 @@
 	</RelayDataAfter>
 
 	<RelayDataSim type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
-		$server: "http://172.16.0.187:18088";
-		$path: "/api/login.kc";
+		$server: "https://172.16.1.252:8086";
+		$path: "/pdwb-de/api/denglu.kc";
 		$parm: "act=Login";
 		$data: {"wtype":1,"account":"99999","pws":"1"};
 		$headers: {"content-type": "application/json"};
 	</RelayDataSim>
+	<RelayDataSimForReq type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
+		$server: "https://172.16.1.252:8086";
+		$path: "/pdwb-de/api/denglu.kc";
+		$parm: "act=Login";
+		$headers: {"content-type": "application/json"};
+	</RelayDataSimForReq>
+	
+	
+	<RelayDataSimForLastBefore type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" attach='{"outParms":{"errCode":"int","account":"varchar","pws":"varchar"}}' needToken="false">
+		begin
+			:errCode := 0;
+			:account := '99999';
+			:pws := '1';
+		end;
+	</RelayDataSimForLastBefore>
+	<RelayDataSimForLastExec type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
+		$server: "https://172.16.1.252:8086";
+		$path: "/pdwb-de/api/denglu.kc";
+		$parm: "act=Login";
+		$headers: {"content-type": "application/json"};
+	</RelayDataSimForLastExec>
+	<RelayDataSimForLastExec2 type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
+		$before: "?act=RelayDataSimForLastBefore";
+		$server: "https://172.16.1.252:8086";
+		$path: "/pdwb-de/api/denglu.kc";
+		$parm: "act=Login";
+		$headers: {"content-type": "application/json"};
+	</RelayDataSimForLastExec2>
+	<RelayDataSimForLast type="group" exec="order" needToken="false">
+		<C1 url="?act=RelayDataSimForLastBefore" />
+		<C2 url="?act=RelayDataSimForLastExec" />
+	</RelayDataSimForLast>
+	<RelayDataSimForLast2 type="group" exec="order" needToken="false">
+		<C1 url="?act=RelayDataSimForLastBefore" />
+		<if url="?act=RelayDataSimForLastBefore">
+			<then>
+				<C2 url="?act=RelayDataSimForLastExec" />
+			</then>
+		</if>
+	</RelayDataSimForLast2>
+
 
 	<RelayDataParm type="bundle" bundle="kc_request_relay" method="post" attach='{"timeout":3666}' needToken="false" Charset="UTF-8">
 		$server: "http://172.16.0.187:18088";

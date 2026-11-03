@@ -32,6 +32,8 @@ public:
     void CALL_TYPE SetSessionExpire(const char*, const char* = "1d") override;
     // 全局标识符类型
     IActionData::EGlobalValTpe CALL_TYPE GetGlobalValType(const char*) const override;
+    EGlobalValTpe GetGlobalConstType(const char* name) const override;
+    const char* CALL_TYPE GetGlobalConst(const char* name, const char* = "") const override;
     // Client编号
     const char* CALL_TYPE GetKCCLNID(void) override;
     // Session编号

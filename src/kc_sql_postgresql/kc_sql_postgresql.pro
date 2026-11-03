@@ -2,7 +2,7 @@
 #
 # Project created by QtCreator 2020-11-26 17:17:37
 # PostgreSQL数据库操作插件（也支持其他PostgreSQL衍生的数据库，如，电科金仓数据库）
-# 引用：libpq驱动
+# 引用：libpq驱动（https://www.postgresql.org/）
 #
 #-------------------------------------------------
 

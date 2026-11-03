@@ -36,7 +36,7 @@
 #include "common/base_type.h"
 #include "util/auto_release.h"
 #include "util/util_funcs.h"
-#include "util/ctrl_sql.h"
+#include "util/ctrl_sql_ora.h"
 #include "util/ctrl_script.h"
 #include "util/proc_meminfo.h"
 #include "util/backtrace_symbols.h"

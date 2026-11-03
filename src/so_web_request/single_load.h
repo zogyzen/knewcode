@@ -2,10 +2,10 @@
 
 #include "std.h"
 
-class CSLWebRequest : public ISLWebRequest
+class CSLWebRequest : public ISLWebRequestEx
 {
 public:
-    CSLWebRequest(IKCSingleLoadSoCB& cb);
+    CSLWebRequest(ISLWebRequestCB& cb);
     ~CSLWebRequest(void) override;
 
     // POST请求
@@ -17,6 +17,9 @@ public:
     const char* Cookie(const char* srv) override;
     // 得到响应头
     const char* RespondHeader(const char* key, const unsigned pos = 0) override;
+
+    // 转发请求
+    string PostGet(ICtrlApiData&, map<string, string>&, bool isPost = false) override;
 
 public:
     typedef httplib::Headers KcHeaders;
@@ -35,10 +38,12 @@ public:
     static void ParseCookie(string sSrv, const httplib::Headers&, CUtilHttp::TKCCookieManager&);
     // 生成cookie
     static void MakeCookie(string sSrv, string sPth, string &sClnCookies, httplib::Headers&, CUtilHttp::TKCCookieManager&);
+    // 生成请求头
+    void MakeRequestHeaders(KcHeaders&, ICtrlApiData&, map<string, string>&, string, string);
 
 private:
     // 回调接口
-    IKCSingleLoadSoCB& m_cb;
+    ISLWebRequestCB& m_cb;
     // cookie
     CUtilHttp::TKCCookieManager m_cookieMan;
     // 应答头

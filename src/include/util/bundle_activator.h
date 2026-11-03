@@ -84,7 +84,9 @@ namespace KC
         void initAllCtrl(void) override
         {
             this->m_srvAliasList = CCtrlCommon::GetAllCtrl(*this, m_pt, this->m_context.GetCfgFile(), this->m_ctrls,
-                [&](string sName, boost::property_tree::ptree& v) { return new TCtrl(*this, sName, v); });
+                [&](string sName, boost::property_tree::ptree& v) {
+                    return new TCtrl(*this, sName, v);
+                });
         }
 
     protected:

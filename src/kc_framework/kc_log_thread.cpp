@@ -88,9 +88,8 @@ void CLogThread::Start(string sOwnName)
     string sLogLib = m_context.GetCfgInfo("Config.Parameters.logging", c_RESTful_so);
     if (sLogLib.empty()) sLogLib = m_context.GetCfgInfo("Config.Parameters.logging", "lib", ">so_log_boost");
     sLogLib = m_context.transCfgPathToFullPath(sLogLib.c_str());
-    // 日志文件大小
-    int logFileSize = atoi(m_context.GetCfgInfo("Config.Parameters.logging", "fileSize", "2"));
-    if (logFileSize <= 0) logFileSize = 2;
+    // 日志文件大小（MB）
+    unsigned logFileSize = atoi(m_context.GetCfgInfo("Config.Parameters.logging", "fileSize", "2"));
     // 系统标识
     //boost::posix_time::time_duration dtNow = boost::posix_time::second_clock::local_time().time_of_day();
     //string sLogID = (format("%02d%02d%02d") % dtNow.hours() % dtNow.minutes() % dtNow.seconds()).str();

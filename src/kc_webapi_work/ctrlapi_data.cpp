@@ -168,7 +168,8 @@ const IKCJson& CCtrApilData::GetBatchArrayJson(const char* sBatchParm) const
 // 获取批量操作的数组参数json
 const CKCJsonPack& CCtrApilData::GetBatchArrayJsonImpl(string sBatchParm) const
 {
-    string sBatchParmNode = !sBatchParm.empty() ? sBatchParm : JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, m_act.GetValsName());
+    // string sBatchParmNode = !sBatchParm.empty() ? sBatchParm : JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, m_act.GetValsName());
+    string sBatchParmNode = !sBatchParm.empty() ? sBatchParm : JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, GetFixParmName(c_RESTful_vals));
     // 1.在上一个控制器的结果里找
     if (m_jsonRespondLast.IsValid())
     {
@@ -890,8 +891,8 @@ IKCJson& CCtrApilDataBase::JsonRespond(void)
 void CCtrApilDataBase::SetJsonRespond(int errNo, const char* errMsg)
 {
     IKCJson& jsonRespond = JsonRespond();
-    jsonRespond.SetVal(c_RESTful_errCode, errNo);
-    jsonRespond.SetStr(c_RESTful_errMsg, errMsg);
+    jsonRespond.SetVal(this->GetFixParmName(c_RESTful_errCode), errNo);
+    jsonRespond.SetStr(this->GetFixParmName(c_RESTful_errMsg), errMsg);
     cout << "*[Knewcode] Respond Msg: " << errMsg << endl;
 }
 // 控制器附加参数的json
@@ -920,7 +921,19 @@ void CCtrApilDataBase::DataSetSaveToInner(CSqlFunc::TRecordSetPtr dbset)
 // 获取固定字段的名称
 std::string CCtrApilDataBase::GetFixParmName(std::string prmName) const
 {
-    return m_attachJson.GetItem(c_RESTful_fixedParmName).GetStr(prmName.c_str(), prmName.c_str());
+    return m_attachJson.GetItem(c_RESTful_fixParmName).GetStr(prmName.c_str(), prmName.c_str());
+}
+const char* CCtrApilDataBase::GetFixParmName(const char* prmName) const
+{
+    static string sResult;
+    sResult = this->GetFixParmName(CUtilFunc::PCharSafeToStr(prmName));
+    return !sResult.empty() ? sResult.c_str() : prmName;
+}
+
+// 首个数据集为主数据集，默认为false（默认是首个数据集并且名字为vals为主数据集）
+bool CCtrApilDataBase::FirstIsMainVals(void) const
+{
+    return m_act.webapi().FirstIsMainVals();
 }
 
 // 执行结果

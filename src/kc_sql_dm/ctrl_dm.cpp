@@ -11,6 +11,12 @@ CCtrlDM::TDmdpiException::TDmdpiException(int c, string s, string p, int d)
 {
 }
 
+// 错误信息
+string CCtrlDM::TDmdpiException::Message(void)
+{
+    return (boost::format("%s\n[%d / %d] - %s") % m_pos % m_code % m_diag % m_msg).str();
+}
+
 // 检查错误
 void CCtrlDM::TDmdpiException::CheckError(CCtrlDM& own, DPIRETURN rt, sdint2 hndl_type, dhandle hndl, string sPos, string sKey)
 {
@@ -62,7 +68,7 @@ CCtrlDM::TVal::TVal(void)
 // 初始化
 void CCtrlDM::TVal::InitInds(int len)
 {
-    if (len <= 0) throw TDmdpiException(-9997, "Null Ind Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+    if (len <= 0) throw TDmdpiException(ecd_ErrCode_KCSqlDM + 6, "Null Ind Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     vinds.resize(len);
     vlens.resize(len);
     InitInds();
@@ -115,22 +121,22 @@ void CCtrlDM::TVal::InitStr(int len, int row)
 // 获取值
 slength& CCtrlDM::TVal::inds(void)
 {
-    if (vinds.empty()) throw TDmdpiException(-9998, "Null Ind Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+    if (vinds.empty()) throw TDmdpiException(ecd_ErrCode_KCSqlDM + 7, "Null Ind Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     return vinds[0];
 }
 slength& CCtrlDM::TVal::lens(void)
 {
-    if (vlens.empty()) throw TDmdpiException(-9998, "Null Len Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+    if (vlens.empty()) throw TDmdpiException(ecd_ErrCode_KCSqlDM + 7, "Null Len Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     return vlens[0];
 }
 int& CCtrlDM::TVal::intVal(void)
 {
-    if (vi.empty()) throw TDmdpiException(-9998, "Null Int Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+    if (vi.empty()) throw TDmdpiException(ecd_ErrCode_KCSqlDM + 7, "Null Int Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     return vi[0];
 }
 double& CCtrlDM::TVal::floatVal(void)
 {
-    if (vf.empty()) throw TDmdpiException(-9998, "Null Float Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+    if (vf.empty()) throw TDmdpiException(ecd_ErrCode_KCSqlDM + 7, "Null Float Buffer", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     return vf[0];
 }
 
@@ -138,7 +144,7 @@ double& CCtrlDM::TVal::floatVal(void)
 void CCtrlDM::TVal::SetARowInds(int row, slength val, bool isNull)
 {
     if (0 > row || row >= vinds.size() || row >= vlens.size())
-        throw TDmdpiException(-9997, "The Ind Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+        throw TDmdpiException(ecd_ErrCode_KCSqlDM + 6, "The Ind Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     vlens[row] = val;
     vinds[row] = isNull ? DSQL_NULL_DATA : val;
 }
@@ -151,7 +157,7 @@ void CCtrlDM::TVal::SetARowInt(int row, int val, bool /*isNull*/)
     SetARowInds(row, sizeof(int), isNull);
     */
     if (0 > row || row >= vinds.size())
-        throw TDmdpiException(-9997, "The Int Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+        throw TDmdpiException(ecd_ErrCode_KCSqlDM + 6, "The Int Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     switch(m_type)
     {
     case CSqlFunc::EDataType::edtUnknown:
@@ -182,7 +188,7 @@ void CCtrlDM::TVal::SetARowFloat(int row, double val, bool /*isNull*/)
     SetARowInds(row, sizeof(double), isNull);
     */
     if (0 > row || row >= vinds.size())
-        throw TDmdpiException(-9997, "The Float Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+        throw TDmdpiException(ecd_ErrCode_KCSqlDM + 6, "The Float Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     auto fInit = [&](void)
     {
         vf.resize(vinds.size());
@@ -223,7 +229,7 @@ void CCtrlDM::TVal::SetARowStr(int row, string val, bool /*isNull*/)
     SetARowInds(row, val.size(), isNull);
     */
     if (0 > row || row >= vinds.size())
-        throw TDmdpiException(-9997, "The String Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
+        throw TDmdpiException(ecd_ErrCode_KCSqlDM + 6, "The String Buffer Is Out Of Range", __CURR_CODE_PLACE_C__, DSQL_NULL_DATA);
     if (vs.empty()) vs.resize(vinds.size());
     switch(m_type)
     {
@@ -249,7 +255,7 @@ void CCtrlDM::TVal::SetARowStr(int row, string val, bool /*isNull*/)
         break;
     }
     m_type = CSqlFunc::EDataType::edtString;
-    if (strARowLen <= val.size()) strARowLen = val.size() + 1;
+    if (strARowLen <= val.size()) strARowLen = static_cast<unsigned>(val.size()) + 1;
     vs[row] = val;
     SetARowInds(row, val.size());
 }
@@ -259,6 +265,10 @@ CCtrlDM::TParmDM::TParmDM(TParmGrpDM& own, std::string s, unsigned p) : m_own(ow
 {
     iPos = p;
     sName = s;
+}
+CCtrlDM::TParmDM::~TParmDM(void)
+{
+    keepStmt.reset();
 }
 
 // 初始化参数值
@@ -443,8 +453,7 @@ bool CCtrlDM::TParmDM::SetNumber(double fVal)
     }
     return bResult;
 }
-
-void CCtrlDM::TParmDM::SetString(string strVal)
+void CCtrlDM::TParmDM::SetString(string strVal, sdint2 sql_type)
 {
     // 字符串值（按指定编码格式）
     const unsigned iUtf8Size = strVal.size();
@@ -490,25 +499,53 @@ void CCtrlDM::TParmDM::SetString(string strVal)
         unsigned iLen = 10;
         // 输出参数
         if (bIsOutIn)
-            iLen = m_own.m_dmParmDesc.size() >= iPos ? max(static_cast<unsigned>(m_own.m_dmParmDesc[iPos - 1].prec), 10u) : c_KCMaxParmBufSize;
+            iLen = m_own.m_dmParmDesc.size() >= iPos ? std::min(std::max(static_cast<unsigned>(m_own.m_dmParmDesc[iPos - 1].prec), 10u), c_KCMaxParmBufSize) : c_KCMaxParmBufSize;
         // 输入参数
         else
             iLen = static_cast<unsigned>(strVal.size());
         if (0 == iLen) iLen = 10;
         // 缓冲区
-        m_val.strBuf.resize(iLen + 1);
+        m_val.strBuf.resize(std::max(iLen + 1, static_cast<unsigned>(m_val.strBuf.size())));
         memset(m_val.strBuf.data(), 0, iLen + 1);
         memcpy(m_val.strBuf.data(), strVal.c_str(), std::min(static_cast<unsigned>(strVal.size()), iLen));
         m_val.inds() = strVal.size();
-        auto dmType = std::max(iLen, iUtf8Size) < c_KCMaxParmBufSize ? DSQL_VARCHAR : DSQL_CLOB;
+        // auto dmType = sql_type;
+        auto dmType = DSQL_CLOB != sql_type && std::max(iLen, iUtf8Size) < c_KCMaxParmBufSize ? DSQL_VARCHAR : DSQL_CLOB;
         DPIRETURN rt = dpi_bind_param(m_own.stmt, iPos, bIsOutIn ? DSQL_PARAM_INPUT_OUTPUT : DSQL_PARAM_INPUT,
                                       DSQL_C_NCHAR, dmType, std::max(iLen, 1u), 0, m_val.strBuf.data(), iLen, &m_val.inds());
         TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
     }
 }
+void CCtrlDM::TParmDM::SetString(string strVal)
+{
+    // if (strVal.size() >= c_KCMaxParmBufSize) strVal = strVal.substr(0, c_KCMaxParmBufSize - 1);
+    SetString(strVal, DSQL_VARCHAR);
+}
 void CCtrlDM::TParmDM::SetClob(string strVal)
 {
-    SetString(strVal);
+    /*
+    // 达梦版批量导入和输入参数，使用字符串的方式
+    if (c_RESTful_batchDM == m_own.m_own.m_method || CSqlFunc::EParmType::eptInParm == ePTp || CSqlFunc::EParmType::eptUnknown == ePTp)
+        SetString(strVal, DSQL_CLOB);
+    // 单条参数
+    else if (nullptr == clobParm.lob_locator)
+    {
+        DPIRETURN rt = dpi_alloc_lob_locator(m_own.stmt, &clobParm.lob_locator);
+        TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
+        // ulength data_writed = strVal.size();
+        // rt = dpi_lob_write(clobParm.lob_locator, 1, DSQL_C_NCHAR, strVal.data(), strVal.size(), &data_writed);
+        // TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_LOB_LOCATOR, clobParm.lob_locator, __CURR_CODE_PLACE_C__, this->sName);
+        // m_val.inds() = strVal.size();
+        m_val.inds() = c_KCMaxParmBufSize * 10;
+        rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_OUTPUT,
+                                      DSQL_C_LOB_HANDLE, DSQL_CLOB, c_KCMaxParmBufSize * 10, 0, &clobParm.lob_locator, sizeof(clobParm.lob_locator), &m_val.inds());
+        TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
+    }
+    */
+
+    // if (c_RESTful_batchDM == m_own.m_own.m_method && strVal.size() >= c_KCMaxParmBufSize)
+    //     strVal = strVal.substr(0, c_KCMaxParmBufSize - 1);
+    SetString(strVal, DSQL_CLOB);
 }
 
 void CCtrlDM::TParmDM::SetNull(void)
@@ -648,12 +685,34 @@ string CCtrlDM::TParmDM::GetString(string sDef)
     string s = BoostAnyToStdString(anyVal, sDef);
     string sRes = IsNull() ? sDef : &m_val.strBuf[0];
     if (c_RESTful_GBK == m_own.m_own.m_own.GetCharset()) sRes = CUtilFunc::GbkToUtf8(sRes);
+    // 大字段日志
+    if (CSqlFunc::EDataType::edtClob == eDTp)
+    {
+        string sMsg = (boost::format("[%s] Clob Size = %d \n%s ... %s") % this->sName % sRes.size() % sRes.substr(0, 100) % (sRes.size() > 100 ? sRes.substr(sRes.size() - 66) : "")).str();
+        cout << sMsg << endl;
+        m_own.m_own.m_own.m_own.WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
+    }
     return sRes;
 }
 
 string CCtrlDM::TParmDM::GetClob(string sDef)
 {
     return GetString(sDef);
+
+    /*
+    string sResult;
+    sdint8 rlen = 128;
+    DPIRETURN rt = dpi_lob_get_length2(clobParm.lob_locator, &rlen);
+    TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_LOB_LOCATOR, clobParm.lob_locator, __CURR_CODE_PLACE_C__, this->sName);
+    for (sdint8 val_len = 0, val_len2 = 0, step = 1; rlen > 0; rlen -= val_len, step += val_len)
+    {
+        sdbyte tmpbuf[1025] = { 0 };
+        rt = dpi_lob_read3(clobParm.lob_locator, step, DSQL_C_NCHAR, 1024, tmpbuf, 1024, &val_len, &val_len2);
+        TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_LOB_LOCATOR, clobParm.lob_locator, __CURR_CODE_PLACE_C__, this->sName);
+        sResult.append(reinterpret_cast<char*>(tmpbuf), val_len2);
+    }
+    return sResult;
+    */
 }
 
 string CCtrlDM::TParmDM::GetDate(string sDef)
@@ -680,7 +739,13 @@ double CCtrlDM::TParmDM::GetNumber(double fDef)
 CSqlFunc::TRecordSetPtr CCtrlDM::TParmDM::GetDbSet(void)
 {
     //throw TKCSqlDMException(ecd_ErrCode_KCSqlDM + 3, __CURR_CODE_PLACE_C__, "Not Support", m_own.m_own.m_own);
-    return CSqlFunc::TRecordSetPtr();
+    // return CSqlFunc::TRecordSetPtr();
+
+    if (keepStmt.get() == nullptr) return CSqlFunc::TRecordSetPtr();
+    sdint2 iColCount = 0;
+    DPIRETURN rt = dpi_number_columns(keepStmt->stmt, &iColCount);
+    TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, keepStmt->stmt, __CURR_CODE_PLACE_C__, this->sName);
+    return iColCount > 0 ? CSqlFunc::TRecordSetPtr(new TRecordSetDM(m_own.m_own.m_own, keepStmt, m_own.m_objCtrlD)) : CSqlFunc::TRecordSetPtr();
 }
 
 void CCtrlDM::TParmDM::SetDbTp(void)
@@ -691,25 +756,55 @@ void CCtrlDM::TParmDM::SetDbTp(void)
 void CCtrlDM::TParmDM::RegOutParam(void)
 {
     DPIRETURN rt = DSQL_SUCCESS;
-    if (eDTp == CSqlFunc::EDataType::edtInt)
+    switch (eDTp)
     {
+    case CSqlFunc::EDataType::edtInt:
         m_val.intVal() = 0;
         rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_SLONG, DSQL_INT, 10, 0, &m_val.intVal(), sizeof(int), &m_val.inds());
-    }
-    else if (eDTp == CSqlFunc::EDataType::edtNumber)
-    {
+        break;
+    case CSqlFunc::EDataType::edtNumber:
         m_val.floatVal() = 0;
         rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_NUMERIC, DSQL_DEC, 18, 0, &m_val.floatVal(), sizeof(double), &m_val.inds());
-    }
-    else
-    {
-        // 宽度
-        unsigned iLen = m_own.m_dmParmDesc.size() >= iPos ? max(static_cast<unsigned>(m_own.m_dmParmDesc[iPos - 1].prec), 10u) : c_KCMaxParmBufSize;
-        m_val.strBuf.resize(iLen + 1);
-        memset(m_val.strBuf.data(), 0, iLen + 1);
-        m_val.inds() = iLen;
-        auto dmType = iLen < c_KCMaxParmBufSize ? DSQL_VARCHAR : DSQL_CLOB;
-        rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_NCHAR, dmType, iLen, 0, m_val.strBuf.data(), iLen, &m_val.inds());
+        break;
+    case CSqlFunc::EDataType::edtDbSet:
+    case CSqlFunc::EDataType::edtDbSetOne:
+    case CSqlFunc::EDataType::edtDbSetArray:
+    case CSqlFunc::EDataType::edtDbSetInner:
+        {
+            dhstmt stmt = nullptr;
+            rt = dpi_alloc_stmt(m_own.conn, &stmt);
+            TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, this->sName);
+            keepStmt.reset(new KeepStmtDM(stmt));
+            rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_RSET, DSQL_RSET, 0, 0, &keepStmt->stmt, 0, &m_val.inds());
+        }
+        break;
+    case CSqlFunc::EDataType::edtClob:
+        /*
+        rt = dpi_alloc_lob_locator(m_own.stmt, &clobParm.lob_locator);
+        TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
+        rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_OUTPUT,
+                                      DSQL_C_LOB_HANDLE, DSQL_CLOB, 0, 0, &clobParm.lob_locator, 0, &m_val.inds());
+        */
+        {
+            // 宽度
+            unsigned iLen = m_own.m_own.m_own.m_clobBufSizeM;
+            m_val.strBuf.resize(iLen + 1);
+            memset(m_val.strBuf.data(), 0, iLen + 1);
+            m_val.inds() = iLen;
+            rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_NCHAR, DSQL_CLOB, iLen, 0, m_val.strBuf.data(), iLen, &m_val.inds());
+        }
+        break;
+    default:
+        {
+            // 宽度
+            unsigned iLen = m_own.m_dmParmDesc.size() >= iPos ? std::min(std::max(static_cast<unsigned>(m_own.m_dmParmDesc[iPos - 1].prec), 10u), c_KCMaxParmBufSize) : c_KCMaxParmBufSize;
+            m_val.strBuf.resize(iLen + 1);
+            memset(m_val.strBuf.data(), 0, iLen + 1);
+            m_val.inds() = iLen;
+            auto dmType = iLen < c_KCMaxParmBufSize ? DSQL_VARCHAR : DSQL_CLOB;
+            rt = dpi_bind_param(m_own.stmt, iPos, DSQL_PARAM_INPUT_OUTPUT, DSQL_C_NCHAR, dmType, iLen, 0, m_val.strBuf.data(), iLen, &m_val.inds());
+        }
+        break;
     }
     TDmdpiException::CheckError(m_own.m_own.m_own, rt, DSQL_HANDLE_STMT, m_own.stmt, __CURR_CODE_PLACE_C__, this->sName);
 }
@@ -763,7 +858,7 @@ void CCtrlDM::TParmGrpDM::UnbindParms(void)
     }
     catch (TDmdpiException &ex)
     {
-        cout << ex.m_msg << endl;
+        cout << ex.Message() << endl;
     }
     // dpointer ptr;
     // dpi_param_data(stmt, &ptr);
@@ -832,7 +927,11 @@ bool CCtrlDM::TRecordSetDM::GetColumnListMetaDataBeforeFetch(CSqlFunc::TFields &
         dpi_desc_column(stmt, i, name, 200, &name_len, &sqltype, &col_sz, &dec_digits, &nullable);
         //cout << name << "\t" << name_len << "\tsqltype=" << sqltype << "\tcol_sz=" << col_sz << "\tdec_digits=" << dec_digits << "\tnullable=" << nullable << endl;
         string sColName = (char*)(name);
-        algorithm::to_lower(sColName);
+        // algorithm::to_lower(sColName);
+        if ("lower" == m_own.m_feildCaseSensitive)
+            algorithm::to_lower(sColName);
+        else if ("upper" == m_own.m_feildCaseSensitive)
+            algorithm::to_upper(sColName);
         vecColNames.push_back(sColName);
         mapFeilds.insert(make_pair(sColName, std::shared_ptr<CSqlFunc::TField>(new TFieldDM(*this, sColName, i, (int)sqltype, static_cast<unsigned>(col_sz), dec_digits, 1 == nullable))));
     }
@@ -911,8 +1010,8 @@ CSqlFunc::TKcValVariant CCtrlDM::TRecordSetDM::GetVal(CSqlFunc::TField& fld) con
 }
 
 // CCtrlDM::TDBCommandDM类
-CCtrlDM::TDBCommandDM::TDBCommandDM(CCtrlDM& own, dhcon& cn, KeepStmtDMPtr st, ICtrlApiData& ctrlD, string sAct, string sSQL, string sMethod, string &sBack)
-    : m_own(own), conn(cn), keepStmt(st), stmt(st->stmt), m_objCtrlD(ctrlD), m_parms(*this, cn, st, m_objCtrlD, sAct), m_act(sAct), m_sql(sSQL), m_method(sMethod), m_back(sBack)
+CCtrlDM::TDBCommandDM::TDBCommandDM(CCtrlDM& own, dhcon& cn, KeepStmtDMPtr st, ICtrlApiData& ctrlD, string sAct, string sActName, string sSQL, string sMethod, string &sBack, TDmConnObj& connObj)
+    : m_own(own), conn(cn), keepStmt(st), stmt(st->stmt), m_objCtrlD(ctrlD), m_parms(*this, cn, st, m_objCtrlD, sAct), m_act(sAct), m_actName(sActName), m_sql(sSQL), m_method(sMethod), m_back(sBack), m_connObj(connObj)
     , m_nowTime(posix_time::to_iso_string(posix_time::second_clock::local_time()))
     , m_parmTmpTab((format("##__%d_%d_%s_%d__") % boost::this_process::get_id() % boost::this_thread::get_id() % m_nowTime % (rand() % 1000)).str())
 {
@@ -924,13 +1023,14 @@ CCtrlDM::TDBCommandDM::TDBCommandDM(CCtrlDM& own, dhcon& cn, KeepStmtDMPtr st, I
     string sTmp = algorithm::trim_copy(m_sql);
     sTmp = algorithm::trim_copy(algorithm::to_lower_copy(sTmp.substr(sTmp.size() - 4)));
     //cout << sTmp << endl;
-    // if ("end" != sTmp && "end;" != sTmp)
-    // {
-    //     if (sTmp.back() != ';') m_sql += ';';
+    // if ("end" != sTmp && "end;" != sTmp && sTmp.back() == ';')
     //     m_sql = "begin " + m_sql + " end;";
-    // }
-    if ("end" != sTmp && "end;" != sTmp && sTmp.back() == ';')
+    // 必须添加“begin”和“end”，否则，参数数量感应错误
+    if (c_RESTful_create != m_method && c_RESTful_package != m_method && "end" != sTmp && "end;" != sTmp)
+    {
+        if (sTmp.back() != ';') m_sql += ';';
         m_sql = "begin " + m_sql + " end;";
+    }
 }
 CCtrlDM::TDBCommandDM::~TDBCommandDM(void)
 {
@@ -947,6 +1047,10 @@ IKCSql& CCtrlDM::TDBCommandDM::Srv(void)
 string CCtrlDM::TDBCommandDM::ActInfo(void)
 {
     return m_act;
+}
+string CCtrlDM::TDBCommandDM::ActName(void)
+{
+    return m_actName;
 }
 
 // 事务
@@ -997,6 +1101,14 @@ void CCtrlDM::TDBCommandDM::PrepareSQL(void)
     // SQL语句不能为空
     if (m_sql.empty())
         throw TKCSqlDMException(ecd_ErrCode_KCSqlDM + 5, __CURR_CODE_PLACE_C__, string(m_own.m_own.getHint("SQL_Empty_")) + m_objCtrlD.ActionData().GetSingleInfo("the_request") + " - " + m_act, m_own.m_own);
+    // DDL语句，创建临时对象
+    if (CreateTmpParmPackage()) ;
+    // 非DDL语句
+    else
+    {
+        // 替换临时对象名
+        m_sql = ReplaceTmpObjName(m_sql);
+    }
     // 准备sql语句
     DPIRETURN rt = dpi_prepare(stmt, (sdbyte*)(m_sql.c_str()));
     TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "dpi_prepare");
@@ -1010,10 +1122,9 @@ void CCtrlDM::TDBCommandDM::PrepareSQL(void)
     {
         TDmParmDesc &prmDesc = m_parms.m_dmParmDesc[i - 1];
         dpi_desc_param(stmt, i, &prmDesc.sql_type, &prmDesc.prec, &prmDesc.scale, &prmDesc.nullable);
-        //cout << "sqltype=" << sql_type << "\tprec=" << prec << "\tscale=" << scale << "\tnullable=" << nullable << endl;
+        cout << "sqltype=" << prmDesc.sql_type << " \tprec=" << prmDesc.prec << " \tscale=" << prmDesc.scale << " \tnullable=" << prmDesc.nullable << endl;
         // 禁止返回游标类型
-        if (DSQL_RSET == prmDesc.sql_type)
-            throw TDmdpiException(prmDesc.sql_type, "Disable output parameter cursor", __CURR_CODE_PLACE_C__);
+        // if (DSQL_RSET == prmDesc.sql_type) throw TDmdpiException(prmDesc.sql_type, "Disable output parameter cursor", __CURR_CODE_PLACE_C__);
     }
 }
 
@@ -1111,31 +1222,130 @@ int CCtrlDM::TDBCommandDM::ExecuteProcedures(void)
 // 单独执行sql语句
 void CCtrlDM::TDBCommandDM::ExecSQL(const char* sql)
 {
+    m_connObj.ExecSQL(sql);
+}
+
+// 创建（临时或全局）对象（视图、表、存储过程、函数等）
+void CCtrlDM::TDBCommandDM::CreateDDL(void)
+{
+    /*
+    string sSQLPack, sSQLBody, sSQLAssign;
+    auto fExceptInfo = [&](void)
+    {
+        return "\n" + sSQLPack + "\n\n/\n\n" + sSQLBody + "\n\n/\n\n" + sSQLAssign + "\n\n/\n\n" + m_sql + "\n";
+    };
     try
     {
-        dhstmt _stmt;
+        // 执行
+        DPIRETURN rt = dpi_exec_direct(stmt, (sdbyte*)(m_sql.c_str()));
+        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "dpi_exec_direct");
+    }
+    catch (TDmdpiException& ex)
+    {
+        m_own.m_own.WriteLogFatal((fExceptInfo() + ex.Message()).c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+        throw;
+    }
+    */
+    CSqlFunc::TDBCommand<TDmdpiException>::CreateDDL();
+}
+
+// 针对DDL语句，创建参数临时包
+bool CCtrlDM::TDBCommandDM::CreateTmpParmPackage(void)
+{
+    const bool bResult = c_RESTful_create == m_method;
+    if (bResult)
+        m_sql = CreateTmpObjAndParmPack(m_sql);
+    return bResult;
+}
+
+// CCtrlDM::TDmConnObj类
+CCtrlDM::TDmConnObj::TDmConnObj(CCtrlDM& own, unsigned connid)
+    : CSqlFuncOra::TOraConnObjBase(connid), m_own(own)
+{
+    // 创建链接
+    DPIRETURN rt = dpi_alloc_con(own.m_henv, &m_conn);
+    TDmdpiException::CheckError(own, rt, DSQL_HANDLE_ENV, own.m_henv, __CURR_CODE_PLACE_C__, "dpi_alloc_con");
+    if (nullptr == m_conn)
+        throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, m_own.m_own.getHint("Null_Point_Data_") + string("dpi_alloc_con"), __CURR_CODE_PLACE_C__, DSQL_ERROR);
+    // 登录
+    rt = dpi_login(m_conn,
+                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_srv.c_str())),
+                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_user.c_str())),
+                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_pass.c_str()))
+    );
+    TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_login");
+    // 获取数据库字符集编码
+    try
+    {
+        // 申请语句句柄
+        dhstmt stmt = nullptr;
+        rt = dpi_alloc_stmt(m_conn, &stmt);
+        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
+        if (nullptr == stmt)
+            throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, m_own.m_own.getHint("Null_Point_Data_") + string("dpi_alloc_stmt"), __CURR_CODE_PLACE_C__, DSQL_ERROR);
+        // 释放语句句柄
+        CAutoRelease _auto([&]() { dpi_free_stmt(stmt); });
+        // 执行语句
+        rt = dpi_exec_direct(stmt, reinterpret_cast<signed char*>(const_cast<char*>("select UNICODE()")));
+        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "select UNICODE()");
+        // 绑定字段
+        slength c_ind = 0;
+        sdint4 c1 = 0;
+        rt = dpi_bind_col(stmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c_ind);
+        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "dpi_bind_col");
+        ulength row_num = 0;
+        while(dpi_fetch(stmt, &row_num) != DSQL_NO_DATA)
+        {
+            const_cast<string&>(own.m_charset) = 0 == c1 ? c_RESTful_GBK : c_RESTful_UTF8;
+            break;
+        }
+    }
+    catch (...) {}
+    // 设置默认模式
+    try
+    {
+        // 申请语句句柄
+        dhstmt stmt = nullptr;
+        rt = dpi_alloc_stmt(m_conn, &stmt);
+        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
+        if (nullptr == stmt)
+            throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, m_own.m_own.getHint("Null_Point_Data_") + string("dpi_alloc_stmt"), __CURR_CODE_PLACE_C__, DSQL_ERROR);
+        // 释放语句句柄
+        CAutoRelease _auto([&]() { dpi_free_stmt(stmt); });
+        // 执行语句
+        rt = dpi_exec_direct(stmt, reinterpret_cast<signed char*>(const_cast<char*>(("set schema " + own.m_model).c_str())));
+        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "set schema " + own.m_model);
+    }
+    catch (...) {}
+}
+
+// 单独执行sql语句
+void CCtrlDM::TDmConnObj::ExecSQL(const char* sql)
+{
+    try
+    {
         // 创建数据库执行实例
-        DPIRETURN rt = dpi_alloc_stmt(conn, &_stmt);
-        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
+        dhstmt _stmt = nullptr;
+        DPIRETURN rt = dpi_alloc_stmt(m_conn, &_stmt);
+        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
+        if (nullptr == _stmt)
+            throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, m_own.m_own.getHint("Null_Point_Data_") + string("dpi_alloc_stmt"), __CURR_CODE_PLACE_C__, DSQL_ERROR);
         // 退出时，释放执行实例
         CAutoRelease _auto([&]() {
             try
             {
                 rt = dpi_free_stmt(_stmt);
-                TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, conn, __CURR_CODE_PLACE_C__, "dpi_free_stmt");
+                TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_free_stmt");
             }
             catch (...) {}
         });
-        // 准备sql语句
-        rt = dpi_prepare(_stmt, (sdbyte*)(sql));
-        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_STMT, _stmt, __CURR_CODE_PLACE_C__, "dpi_prepare");
         // 执行
-        rt = dpi_exec(_stmt);
+        rt = dpi_exec_direct(_stmt, (sdbyte*)(sql));
         TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_STMT, _stmt, __CURR_CODE_PLACE_C__, "dpi_exec");
     }
     catch (TDmdpiException& ex)
     {
-        m_own.m_own.WriteLogFatal(ex.m_msg.c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+        m_own.m_own.WriteLogFatal(ex.Message().c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
     }
     catch(TException& ex)
     {
@@ -1152,95 +1362,56 @@ void CCtrlDM::TDBCommandDM::ExecSQL(const char* sql)
     }
 }
 
-// CCtrlDM::TDmConnObj类
-CCtrlDM::TDmConnObj::TDmConnObj(CCtrlDM& own, unsigned connid) : m_own(own), m_connid(connid)
-{
-    // 创建链接
-    DPIRETURN rt = dpi_alloc_con(own.m_henv, &m_conn);
-    TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_con");
-    // 登录
-    rt = dpi_login(m_conn,
-                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_srv.c_str())),
-                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_user.c_str())),
-                   reinterpret_cast<signed char*>(const_cast<char*>(own.m_pass.c_str()))
-    );
-    TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_login");
-    // 获取数据库字符集编码
-    try
-    {
-        // 申请语句句柄
-        dhstmt stmt = nullptr;
-        rt = dpi_alloc_stmt(m_conn, &stmt);
-        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
-        // 释放语句句柄
-        CAutoRelease _auto([&]() { dpi_free_stmt(stmt); });
-        // 执行语句
-        rt = dpi_exec_direct(stmt, reinterpret_cast<signed char*>(const_cast<char*>("select UNICODE()")));
-        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "select UNICODE()");
-        // 绑定字段
-        slength c_ind = 0;
-        sdint4 c1 = 0;
-        rt = dpi_bind_col(stmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c_ind);
-        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "dpi_bind_col");
-        ulength row_num = 0;
-        while(dpi_fetch(stmt, &row_num) != DSQL_NO_DATA)
-        {
-            own.m_charset = 0 == c1 ? c_RESTful_GBK : c_RESTful_UTF8;
-            break;
-        }
-    }
-    catch (...) {}
-    // 设置默认模式
-    try
-    {
-        // 申请语句句柄
-        dhstmt stmt = nullptr;
-        rt = dpi_alloc_stmt(m_conn, &stmt);
-        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
-        // 释放语句句柄
-        CAutoRelease _auto([&]() { dpi_free_stmt(stmt); });
-        // 执行语句
-        rt = dpi_exec_direct(stmt, reinterpret_cast<signed char*>(const_cast<char*>(("set schema " + own.m_model).c_str())));
-        TDmdpiException::CheckError(own, rt, DSQL_HANDLE_STMT, stmt, __CURR_CODE_PLACE_C__, "set schema " + own.m_model);
-    }
-    catch (...) {}
-}
 void CCtrlDM::TDmConnObj::Release(void)
 {
-    // 退出
-    DPIRETURN rt = dpi_logout(m_conn);
-    TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_logout");
-    // 释放链接
-    rt = dpi_free_con(m_conn);
-    TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_free_con");
+    try
+    {
+        m_own.m_own.WriteLogDebug("Remove DM Connect Object", __CURR_CODE_PLACE_C__, (format("Connect ID: %d") % m_connid).str().c_str());
+        // 删除临时对象
+        DropTmpObj();
+        // 退出
+        DPIRETURN rt = dpi_logout(m_conn);
+        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_logout");
+        // 释放链接
+        rt = dpi_free_con(m_conn);
+        TDmdpiException::CheckError(m_own, rt, DSQL_HANDLE_DBC, m_conn, __CURR_CODE_PLACE_C__, "dpi_free_con");
+    }
+    catch (std::exception& ex)
+    {
+        m_own.m_own.WriteLogFatal(ex.what(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+    }
+    catch (...)
+    {
+        m_own.m_own.WriteLogFatal(Srv().getHint("Unknown_exception"), __CURR_CODE_PLACE_C__);
+    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // CCtrlDM类
 CCtrlDM::CCtrlDM(IKCSqlDM& own, string sName, property_tree::ptree& pt)
     : m_own(own), m_name(sName), m_connID(0)
+    // 服务器配置
+    , m_srv(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.srv", "127.0.0.1:5236"))
+    , m_user(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.uid", "SYSDBA"))
+    , m_pass(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.pwd", "password"))
+    , m_model(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.model", "sysdba"))
+    , m_charsetCfg(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.charset", ""))
+    , m_encryptConnStr(boost::algorithm::to_lower_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.encrypt", string("false"))) == "true")
+    , m_feildCaseSensitive(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.feildCaseSensitive", ""))
+    , m_clobBufSizeM(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.clobBufSizeM", 16u) * 1024 * 1024)
 {
     // 记录函数地址
     m_own.WriteLogDebug((m_name + ": "
                             + "\nCCtrlDM::Exce: \t\t" + CUtilFunc::GetFuncAddr(&CCtrlDM::Perform)
                        ).c_str());
-    // 服务器配置
-    if (pt.get_child_optional("<xmlattr>.srv")) m_srv = pt.get<string>("<xmlattr>.srv");
-    if (pt.get_child_optional("<xmlattr>.uid")) m_user = pt.get<string>("<xmlattr>.uid");
-    if (pt.get_child_optional("<xmlattr>.pwd")) m_pass = pt.get<string>("<xmlattr>.pwd");
-    if (pt.get_child_optional("<xmlattr>.model")) m_model = pt.get<string>("<xmlattr>.model");
-    if (pt.get_child_optional("<xmlattr>.charset")) m_charsetCfg = pt.get<string>("<xmlattr>.charset");
     // 是否加密连接参数
-    if (pt.get_child_optional("<xmlattr>.encrypt"))
+    if (m_encryptConnStr)
     {
-        m_encryptConnStr = algorithm::to_lower_copy(pt.get<string>("<xmlattr>.encrypt")) == "true";
-        if (m_encryptConnStr)
-        {
-            m_srv = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_srv);
-            m_user = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_user);
-            m_pass = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_pass);
-            m_model = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_model);
-        }
+        const_cast<string&>(m_srv) = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_srv);
+        const_cast<string&>(m_user) = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_user);
+        const_cast<string&>(m_pass) = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_pass);
+        const_cast<string&>(m_model) = CCtrlCommon::DecryptConnStrDB(m_own.getContext(), m_model);
     }
     // 创建数据库环境
     DPIRETURN rt = dpi_alloc_env(&m_henv);
@@ -1341,17 +1512,28 @@ void CCtrlDM::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
             // 创建数据库执行实例
             DPIRETURN rt = dpi_alloc_stmt(conn, &stmt);
             TDmdpiException::CheckError(*this, rt, DSQL_HANDLE_DBC, conn, __CURR_CODE_PLACE_C__, "dpi_alloc_stmt");
+            if (nullptr == stmt)
+                throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, m_own.getHint("Null_Point_Data_") + string("dpi_alloc_stmt"), __CURR_CODE_PLACE_C__, DSQL_ERROR);
             // 执行
             {
                 // 保持dhstmt对象
                 KeepStmtDMPtr keepStmt(new KeepStmtDM(stmt));
                 // 数据库执行命令
-                TDBCommandDM comm(*this, conn, keepStmt, objCtrlD, pLocalFile + string("?act=") + sAct, pSQL, sMethod, sLast);
+                TDBCommandDM comm(*this, conn, keepStmt, objCtrlD, pLocalFile + string("?act=") + sAct, sAct, pSQL, sMethod, sLast, actObjWork.ActObj());
                 // 批量导入（method="batch"）
                 if (c_RESTful_batch == sMethod || c_RESTful_batchDM == sMethod || c_RESTful_batchDMcache == sMethod)
                     comm.BatchInsert();
+                // 存储过程（method="procedures"）
+                else if (c_RESTful_procedures == sMethod)
+                    comm.Procedures();
+                // 创建（method="create"）
+                else if (c_RESTful_create == sMethod)
+                    comm.CreateDDL();
+                // 临时包（method="package"）
+                else if (c_RESTful_package == sMethod)
+                    comm.CreateTmpPackage(objCtrlD, sSQL);
                 // 增删改查（method="exec"）
-                else if (sMethod.empty() || c_RESTful_exec == sMethod || c_RESTful_query == sMethod || c_RESTful_select == sMethod || c_RESTful_insert == sMethod || c_RESTful_delete == sMethod || c_RESTful_update == sMethod || c_RESTful_procedures == sMethod)
+                else if (sMethod.empty() || c_RESTful_exec == sMethod || c_RESTful_query == sMethod || c_RESTful_select == sMethod || c_RESTful_insert == sMethod || c_RESTful_delete == sMethod || c_RESTful_update == sMethod)
                     comm.Query();
                 // 方法类型错误
                 else throw TDmdpiException(ecd_ErrCode_KCSqlDM + 5, string(m_own.getHint("Request_Failed_")) + m_own.getHint("Method_Not_Allowed") + " [" + sMethod + "]", __CURR_CODE_PLACE_C__);
@@ -1370,7 +1552,7 @@ void CCtrlDM::Perform(ICtrlApiData& objCtrlD, IKCController::IAttachParm&)
     {
         string sEx = ex.m_msg;
         string sErr = sEx + fExceptInfo();
-        m_own.WriteLogFatal(sErr.c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+        m_own.WriteLogFatal(ex.Message().c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
         // if (CUtilFunc::isGBK(sEx) && !CUtilFunc::isUtf8(sEx)) sEx = CUtilFunc::GbkToUtf8(sEx);
         objCtrlD.SetJsonRespond(ex.m_code, ("[Controllers." + sAct + "] " + sEx).c_str());
     }

@@ -39,9 +39,9 @@ public:
 
     ////////////////////////////请求部分///////////////////////////
     // 得到服务器端全部信息
-    const char* CALL_TYPE GetAllInfo(const char* = "\n") override;
+    const char* CALL_TYPE GetAllInfo(const char* = "\n") const override;
     // 得到服务器端各单个请求信息
-    const char* CALL_TYPE GetSingleInfo(const char* = "the_request", const char* = "") override;
+    const char* CALL_TYPE GetSingleInfo(const char* = "the_request", const char* = "") const override;
     // 得到本地完整文件名
     const char* CALL_TYPE GetLocalFilename(void) override;
     const char* CALL_TYPE GetLocalFilename(const char*) override;
@@ -60,8 +60,8 @@ public:
     // 端口
     int CALL_TYPE GetPort(void) override;
     // GET的参数
-    const char* CALL_TYPE GetGetArgStr(void) override;
-    const char* CALL_TYPE GetGetArg(const char*, const char* = "") override;
+    const char* CALL_TYPE GetGetArgStr(void) const override;
+    const char* CALL_TYPE GetGetArg(const char*, const char* = "") const override;
     // Post的参数
     const char* CALL_TYPE GetPostArgType(void) override;
     int CALL_TYPE GetPostArgLength(void) override;
@@ -77,13 +77,16 @@ public:
     // 得到当前页本地完整根目录
     const char* CALL_TYPE GetLocalPagePath(void) override;
     // 按名称得到请求头
-    const char* CALL_TYPE GetRequestHeader(const char*) override;
+    const char* CALL_TYPE GetRequestHeader(const char*) const override;
     // 得到Cookie
     const char* CALL_TYPE GetCookieVal(const char*) override;
     // 虚拟目录
     unsigned CALL_TYPE VirtualPathCount(void) override;
     const char* CALL_TYPE GetVirtualPath(unsigned) override;
     const char* CALL_TYPE GetVirtualPathUri(unsigned) override;
+    // 全局常量
+    IActionData::EGlobalValTpe CALL_TYPE GetGlobalConstType(const char*) const override;
+    const char* CALL_TYPE GetGlobalConst(const char*, const char* = "") const override;
 
     ////////////////////////////应答部分///////////////////////////
     // 响应文本类型

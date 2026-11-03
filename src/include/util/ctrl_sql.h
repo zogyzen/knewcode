@@ -23,11 +23,11 @@
 #include <boost/lockfree/spsc_queue.hpp>
 
 #include "common/base_type.h"
+#include "kc_web/kc_request_respond.h"
+#include "kc_controller/kc_sql_i.h"
 #include "util/util_funcs.h"
 #include "util/auto_release.h"
 #include "util/backtrace_symbols.h"
-#include "kc_web/kc_request_respond.h"
-#include "kc_controller/kc_sql_i.h"
 #include "util/ctrl_common.h"
 
 namespace KC
@@ -185,18 +185,20 @@ namespace KC
             // 数据集转json
             int DataSetToJson(IKCJson& jset, bool atRoot = true)
             {
-                const char* sValsName = CtrlD().ActionData().GetValsName();
+                // const char* sValsName = CtrlD().ActionData().GetValsName();
+                const char* sValsName = CtrlD().GetFixParmName(c_RESTful_vals);
                 // 数据列表
                 jset.DelItem(sValsName);
                 IKCJson& jsonSet = jset.AddArray(sValsName);
                 // 请求的字段
                 TFields vecFields;
-                if (atRoot) CSqlFunc::RequestFeilds(CtrlD().ActionData(), vecFields);
+                if (atRoot) CSqlFunc::RequestFeilds(CtrlD(), vecFields);
                 const int iRecCount = DataSetToOut(vecFields,
                     [&](){
                         // 重置字段
-                        jset.DelItem(c_RESTful_feilds);
-                        IKCJson& jsonFds = jset.AddItem(c_RESTful_feilds);
+                        const char* sFeildsName = CtrlD().GetFixParmName(c_RESTful_feilds);
+                        jset.DelItem(sFeildsName);
+                        IKCJson& jsonFds = jset.AddItem(sFeildsName);
                         for (auto fd : vecFields) jsonFds.AddStr(fd->m_nameShow.c_str(), fd->GetTypeName().c_str());
                     }, [&](int, int){
                         // 添加行记录
@@ -204,7 +206,7 @@ namespace KC
                         for (auto fFeild : vecFields) AddVal(jsonRow, *fFeild);
                         return true;
                     });
-                jset.SetVal(c_RESTful_RecCount, iRecCount);
+                jset.SetVal(CtrlD().GetFixParmName(c_RESTful_RecCount), iRecCount);
                 return iRecCount;
             }
             int DataSetToJsonOne(IKCJson& jset)
@@ -360,7 +362,7 @@ namespace KC
             // 数据库操作类型（DML、DQL、DDL、DCL）
             std::string sSQLWorkType = c_RESTful_sql_DML;
             // 是否需要绑定参数
-            bool IsNeedParmBindInVal(void) const { return c_RESTful_sql_DQL == sSQLWorkType || c_RESTful_sql_DML == sSQLWorkType; }
+            virtual bool IsNeedParmBindInVal(void) const { return c_RESTful_sql_DQL == sSQLWorkType || c_RESTful_sql_DML == sSQLWorkType; }
             // 是否批量操作
             const bool m_isBatchOp = false;
             // 参数名是否可重复多次
@@ -902,11 +904,16 @@ namespace KC
             void ParseOutParms(void)
             {
                 // 控制器附加参数里的输出参数
-                TParmGrp<TExcept>::ParseOutParms(mapOutParms, CtrlD().ActionData().GetValsName(), CtrlD().JsonAttach().GetItem(c_RESTful_outParm),
-                                                [&](std::string sName, unsigned) -> TParmPtr{ return this->MakePram(sName); });
+                // const char* sValsName = CtrlD().ActionData().GetValsName();
+                const char* sValsName = CtrlD().GetFixParmName(c_RESTful_vals);
+                const bool firstIsMainVals = CtrlD().FirstIsMainVals();
+                TParmGrp<TExcept>::ParseOutParms(mapOutParms, sValsName, CtrlD().JsonAttach().GetItem(c_RESTful_outParm),
+                                                [&](std::string sName, unsigned) -> TParmPtr{ return this->MakePram(sName); },
+                                                nullptr, firstIsMainVals);
             }
             static void ParseOutParms(std::map<std::string, TParmPtr, TLessStr> &mapOutParms, const std::string sValsName,
-                const IKCJson& jsonOutP, std::function<TParmPtr(std::string, unsigned)> fMkPrm, std::vector<std::string> *pPath = nullptr)
+                const IKCJson& jsonOutP, std::function<TParmPtr(std::string, unsigned)> fMkPrm,
+                std::vector<std::string> *pPath = nullptr, const bool firstIsMainVals = false)
             {
                 bool bHasFirstRootDataSet = true;
                 std::vector<std::string> pth;
@@ -944,7 +951,7 @@ namespace KC
                                 if (!pth.empty()) parm->m_path.assign(pth.begin(), pth.end());
                                 mapOutParms.insert(make_pair(sName, parm));
                                 // 根节点内出现首个数据集（并且名字为vals）
-                                if (!bHasFirstRootDataSet && EDataType::edtDbSet == parm->eDTp && sValsName == sName)
+                                if (!bHasFirstRootDataSet && EDataType::edtDbSet == parm->eDTp && (firstIsMainVals || sValsName == sName))
                                     bHasFirstRootDataSet = parm->m_isFirstDataSet = true;
                             }
                             /*
@@ -1113,11 +1120,15 @@ namespace KC
             {
                 IActionData& act = CtrlD().ActionData();
                 int iRecCount = 0;
+                const char* sErrCodeName = CtrlD().GetFixParmName(c_RESTful_errCode);
+                const char* sErrMsgName = CtrlD().GetFixParmName(c_RESTful_errMsg);
                 if (!mapOutParms.empty())
                 {
                     // json应答
                     IKCJson& jsonRespond = CtrlD().JsonRespond();
-                    bool bHasCursor = jsonRespond.GetItem(CtrlD().ActionData().GetValsName()).IsValid();
+                    // const char* sValsName = CtrlD().ActionData().GetValsName();
+                    const char* sValsName = CtrlD().GetFixParmName(c_RESTful_vals);
+                    bool bHasCursor = jsonRespond.GetItem(sValsName).IsValid();
                     for (auto &op : mapOutParms)
                     {
                         // 返回SQL语句中有位置的参数（或临时表）
@@ -1201,13 +1212,13 @@ namespace KC
                             }
                         }
                         // 必须返回的参数
-                        else if (c_RESTful_errCode == op.first && op.second->m_path.empty() && EDataType::edtInt == op.second->eDTp)
+                        else if (sErrCodeName == op.first && op.second->m_path.empty() && EDataType::edtInt == op.second->eDTp)
                         {
-                            jsonRespond.SetVal(c_RESTful_errCode, 0);
+                            jsonRespond.SetVal(sErrCodeName, 0);
                         }
-                        else if (c_RESTful_errMsg == op.first && op.second->m_path.empty() && EDataType::edtString == op.second->eDTp)
+                        else if (sErrMsgName == op.first && op.second->m_path.empty() && EDataType::edtString == op.second->eDTp)
                         {
-                            jsonRespond.SetStr(c_RESTful_errMsg, "");
+                            jsonRespond.SetStr(sErrMsgName, "");
                         }
                     }
                 }
@@ -1367,6 +1378,9 @@ namespace KC
             // 预执行
             virtual void PrepareSQL(void) = 0;
 
+            // 单独执行sql语句
+            virtual void ExecSQL(const char*) = 0;
+
             // 批量操作
             virtual std::pair<int, std::string> ExecuteBatch(void) = 0;
             // 批量插入结束
@@ -1392,8 +1406,8 @@ namespace KC
                 CtrlD().SetJsonRespond(0, std::to_string(this->ExecuteUpdate()).c_str());
             }
 
-            // 创建临时对象（视图、表、存储过程、函数等，目前用于Oracle、PostgreSQL、SQL Server）
-            void CreateDDL(void)
+            // 创建（临时或全局）对象（视图、表、存储过程、函数等）
+            virtual void CreateDDL(void)
             {
                 // 执行日志
                 std::string sMsg = "<C" + m_sExecSort + ".> CreateDDL Begin. [" + CtrlD().LocalFile() + " : " + CtrlD().NodeName() + "]";
@@ -1473,10 +1487,12 @@ namespace KC
                 auto [iCountRec, __] = SelectQuery(parms);
                 // 返回状态
                 IKCJson& jsonRespond = CtrlD().JsonRespond();
-                if (!jsonRespond.HasItem(c_RESTful_errCode) || jsonRespond.IsNull(c_RESTful_errCode))
-                    jsonRespond.SetVal(c_RESTful_errCode, 0);
-                if (!jsonRespond.HasItem(c_RESTful_errMsg))
-                    jsonRespond.SetStr(c_RESTful_errMsg, std::to_string(iCountRec).c_str());
+                const char* sErrCodeName = CtrlD().GetFixParmName(c_RESTful_errCode);
+                if (!jsonRespond.HasItem(sErrCodeName) || jsonRespond.IsNull(sErrCodeName))
+                    jsonRespond.SetVal(sErrCodeName, 0);
+                const char* sErrMsgName = CtrlD().GetFixParmName(c_RESTful_errMsg);
+                if (!jsonRespond.HasItem(sErrMsgName))
+                    jsonRespond.SetStr(sErrMsgName, std::to_string(iCountRec).c_str());
             }
             // 带返回数据集json的执行（用于odbc、达梦）
             void Query(void)
@@ -1497,9 +1513,6 @@ namespace KC
                 parms.ParseSqlParms(this->GetSQL());
                 // 解析输出参数
                 parms.ParseOutParms();
-                // 注册输出参数
-                std::string sInfo = parms.RegOutParms();
-                Srv().WriteLogTrace(sInfo.c_str(), __CURR_CODE_PLACE_C__);
                 // 执行查询
                 auto [iCountRec, rows_affected] = SelectQuery(parms);
                 // 从临时表中获取参数值
@@ -1510,10 +1523,12 @@ namespace KC
                 int iRecCount = parms.OutParmsToJson();
                 // 返回
                 IKCJson& jsonRespond = CtrlD().JsonRespond();
-                if (!jsonRespond.HasItem(c_RESTful_errCode) || jsonRespond.IsNull(c_RESTful_errCode))
-                    jsonRespond.SetVal(c_RESTful_errCode, 0);
-                if (!jsonRespond.HasItem(c_RESTful_errMsg))
-                    jsonRespond.SetStr(c_RESTful_errMsg, std::to_string(std::max({iCountRec, iRecCount, rows_affected})).c_str());
+                const char* sErrCodeName = CtrlD().GetFixParmName(c_RESTful_errCode);
+                if (!jsonRespond.HasItem(sErrCodeName) || jsonRespond.IsNull(sErrCodeName))
+                    jsonRespond.SetVal(sErrCodeName, 0);
+                const char* sErrMsgName = CtrlD().GetFixParmName(c_RESTful_errMsg);
+                if (!jsonRespond.HasItem(sErrMsgName))
+                    jsonRespond.SetStr(sErrMsgName, std::to_string(std::max({iCountRec, iRecCount, rows_affected})).c_str());
             }
 
             // 存储过程
@@ -1535,16 +1550,22 @@ namespace KC
                 parms.ParseSqlParms(this->GetSQL());
                 // 解析输出参数
                 parms.ParseOutParms();
-                // 注册输出参数
-                std::string sInfo = parms.RegOutParms();
-                std::cout << "*[Knewcode] " << sInfo << std::endl;
-                Srv().WriteLogTrace(sInfo.c_str(), __CURR_CODE_PLACE_C__);
+                // 在数据库层上绑定参数
+                auto fBindParm = [&](void)
+                {
+                    // 注册输出参数
+                    std::string sInfo = parms.RegOutParms();
+                    std::cout << "*[Knewcode] " << sInfo << std::endl;
+                    Srv().WriteLogTrace(sInfo.c_str(), __CURR_CODE_PLACE_C__);
+                    // 绑定参数值
+                    parms.BindParms();
+                };
                 // 预执行前，绑定参数值
-                if (parms.m_isPrePrepareBind) parms.BindParms();
+                if (parms.m_isPrePrepareBind) fBindParm();
                 // 预执行
                 this->PrepareSQL();
                 // 预执行后，绑定参数值
-                if (!parms.m_isPrePrepareBind) parms.BindParms();
+                if (!parms.m_isPrePrepareBind) fBindParm();
                 // 执行sql
                 {
                     Srv().WriteLogTrace(("<P" + m_sExecSort + ".> Procedures ExecSQL Begin.").c_str(), __CURR_CODE_PLACE_C__);
@@ -1569,9 +1590,11 @@ namespace KC
             // 批量导入
             void BatchInsert(std::function<void(CSqlFunc::TFields&)> fFirstRowInnerDbSet = [](CSqlFunc::TFields&){})
             {
+                // const char* sValsName = CtrlD().ActionData().GetValsName();
+                std::string sValsName = CUtilFunc::PCharSafeToStr(CtrlD().GetFixParmName(c_RESTful_vals));
                 // 批量输入的json参数（或内部数据集）名称
                 std::string sBatchParm = CUtilFunc::PCharSafeToStr(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetStr(c_RESTful_batchValsName, ""));
-                std::string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : CtrlD().ActionData().GetValsName();
+                std::string sSrcDbSetName = !sBatchParm.empty() ? sBatchParm : sValsName;
                 // 出错时的处理方式。 1：出错继续（默认）；2：出错停止；3：出错回滚（只针对带事务的SQL）
                 const int iBatchMethod = static_cast<int>(CtrlD().JsonAttach().GetItem(c_RESTful_batchParm).GetVal(c_RESTful_batchMethod, 1));
                 // 是否设置保存点
@@ -1958,12 +1981,22 @@ namespace KC
             // 执行查询，查询结果的数据集到json。返回主数据集行数和执行影响行数。
             std::tuple<int, int> SelectQuery(TParms& parms)
             {
+                // 在数据库层上绑定参数
+                auto fBindParm = [&](void)
+                {
+                    // 注册输出参数
+                    std::string sInfo = parms.RegOutParms();
+                    std::cout << "*[Knewcode] " << sInfo << std::endl;
+                    Srv().WriteLogTrace(sInfo.c_str(), __CURR_CODE_PLACE_C__);
+                    // 绑定参数值
+                    parms.BindParms();
+                };
                 // 预执行前，绑定参数值
-                if (parms.m_isPrePrepareBind) parms.BindParms();
+                if (parms.m_isPrePrepareBind) fBindParm();
                 // 预执行
                 this->PrepareSQL();
                 // 预执行后，绑定参数值
-                if (!parms.m_isPrePrepareBind) parms.BindParms();
+                if (!parms.m_isPrePrepareBind) fBindParm();
                 // 执行查询
                 auto fExecQuery = [&](int &rows_affected)
                 {
@@ -1983,7 +2016,8 @@ namespace KC
                         vctRsetNames.push_back(std::make_pair(sName, sType));
                     }
                 // 默认数据集名称
-                const std::string sDefaultVals = CtrlD().ActionData().GetValsName();
+                // const std::string sDefaultVals = CtrlD().ActionData().GetValsName();
+                const std::string sDefaultVals = CUtilFunc::PCharSafeToStr(CtrlD().GetFixParmName(c_RESTful_vals));
                 // 结果
                 IKCJson& jsonRespond = CtrlD().JsonRespond();
                 int iCountSet = 0, iCountRec = 0;
@@ -2043,11 +2077,24 @@ namespace KC
         };
 
         // 请求的字段
+        /*
         static void RequestFeilds(IActionData& act, TFields& vecFields)
         {
             try
             {
                 const IKCJson& json = act.JsonRequest().GetItem(c_RESTful_feilds);
+                if (json.IsValid())
+                    for (int i = 0, c = json.GetItemCount(); i < c; ++i)
+                        vecFields.push_back(std::shared_ptr<TField>(new TField(boost::algorithm::to_lower_copy(std::string(json.GetItem(i).GetStr())))));
+            }
+            catch (...) {}
+        }
+        */
+        static void RequestFeilds(ICtrlApiData& ctrld, TFields& vecFields)
+        {
+            try
+            {
+                const IKCJson& json = ctrld.JsonRequest().GetItem(ctrld.GetFixParmName(c_RESTful_feilds));
                 if (json.IsValid())
                     for (int i = 0, c = json.GetItemCount(); i < c; ++i)
                         vecFields.push_back(std::shared_ptr<TField>(new TField(boost::algorithm::to_lower_copy(std::string(json.GetItem(i).GetStr())))));

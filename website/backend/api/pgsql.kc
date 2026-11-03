@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 
-<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="sample">
+<Controllers jsonCaseSensitive="false" charset="UTF-8" needToken="false" type="bundle" srv="SQLSrv" ctrl="kingbase">
 	<!-- 例子1：返回单个数据集 -->
-	<main method="select" content="select * from test" />	
-	<main2 method="select" ctrl="sample" content="select * from t_sys_task" attach='{"dbsetParms":{"":"dbset-one"}}' />	
+	<main method="select"  ctrl="kingbase3" content="select * from test" attach='{"fixParmName":{"recCount":"RecCount"}}' />	
+	<main2 method="select" ctrl="kingbase3" content="select * from test" attach='{"dbsetParms":{"":"dbset-one"}}' />	
 	<main3 method="select" ctrl="connectArm" content="select * from test" />	
 
 	<main4 method="select" content="select '中1中2中3中4中5中6中7中8中9中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27中1中2中3中4中5中6中7中8中9中10中11中12中13中14中15中16中17中18中19中20中21中22中23中24中25中26文27' a" />	
@@ -48,11 +48,11 @@
 	</importYSSJ>
 
 	<!-- 两次查询，测试返回同名临时表、动态临时表名等情况 -->
-	<QueryVal1 method="procedures" ctrl="kingbase3" attach='{"outParms":{"tmp_r1":"dbset-inner","errCode":"int","errMsg":"varchar2"}}'>
+	<QueryVal1 method="procedures" ctrl="kingbase3" attach='{"fixParmName":{"errCode":"Code"}, "outParms":{"tmp_r1":"dbset","Code":"int","errMsg":"varchar2"}}'>
 		begin
 			CREATE TEMP TABLE tmp_r1 as select * from test;
 
-			:errCode := 0;
+			:Code := 0;
 			:errMsg := '成功';
 		end;
 	</QueryVal1>
@@ -259,10 +259,9 @@
    <TestReplace type="bundle" srv="SQLSrv" ctrl="connect1" method="procedures" jsonCaseSensitive="false" Charset="UTF-8" needToken="false">
 		<attach>
 			{
-				"fixParms": {"errCode":"errCode", "errMsg":"errMsg"},
+				"fixParmName": {"errCode":"errCode", "errMsg":"errMsg"},
 				"outParms": {"tmp_r2":"temp-table", "errCode":"int", "errMsg":"varchar"},
-				"replace": {"tableName":"OnlyName"},
-				"fixParmName": {"errCode": "errCode"}
+				"replace": {"tableName":"OnlyName"}
 			}
 		</attach>
 		declare

@@ -133,6 +133,9 @@ struct TDBCommandODBCmssql : public CSqlFunc::TDBCommand<QSqlError>
     // 预执行
     void PrepareSQL(void) override;
 
+    // 单独执行sql语句
+    void ExecSQL(const char*) override;
+
     // 执行
     unsigned int ExecuteUpdate(void) override;
     // 批量操作

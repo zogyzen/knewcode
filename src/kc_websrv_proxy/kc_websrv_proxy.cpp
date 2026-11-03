@@ -306,6 +306,16 @@ const char* KCWebSrvProxy::GetApPath(void)
     return SrvCB().apPath();
 }
 
+// 全局常量
+IActionData::EGlobalValTpe KCWebSrvProxy::GetGlobalConstType(const char* name) const
+{
+    return IActionData::egtIsnot;
+}
+const char* KCWebSrvProxy::GetGlobalConst(const char* name, const char*) const
+{
+    return name;
+}
+
 // 链接关闭前
 void KCWebSrvProxy::PreClose(IWSProxyConnectCB& /*c*/)
 {

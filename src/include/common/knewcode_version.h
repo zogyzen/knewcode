@@ -6,5 +6,5 @@ namespace KC
     constexpr const char c_KnewcodeName[] = "Knewcode";                 // 系统名称
     constexpr int c_KnewcodeVersionMajor = 1;                           // 主版本号
     constexpr int c_KnewcodeVersionMinor = 2;                           // 次版本号
-    constexpr int c_KnewcodeVersionPatch = 1;                           // 修订号
+    constexpr int c_KnewcodeVersionPatch = 2;                           // 修订号
 }

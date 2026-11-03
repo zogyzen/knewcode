@@ -15,5 +15,5 @@
 #include "kc_controller/kc_chai_script_i.h"
 
 using namespace std;
-using namespace boost;
+//using namespace boost;
 using namespace KC;

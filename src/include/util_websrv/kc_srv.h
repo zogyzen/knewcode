@@ -445,6 +445,7 @@ namespace KCSrv
                 };
                 // 文本
                 if (fCheckMime(c_set_mime_text)) SetHead(c_WebHeader_ContentType, "text/" + sMimeType);
+                // if (fCheckMime(c_set_mime_text)) SetHead(c_WebHeader_ContentType, "text/" + sMimeType + "; charset=utf-8");
                 // 图片
                 else if (fCheckMime(c_set_mime_image)) SetHead(c_WebHeader_ContentType, "image/" + sMimeType);
                 // 视频

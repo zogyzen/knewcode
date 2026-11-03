@@ -150,6 +150,7 @@ namespace KC
         // 本次请求的活动对象
         struct TActObj : public IKCObject
         {
+            // 释放
             virtual void Release(void) = 0;
         };
         // 持久链接的活动对象
@@ -186,6 +187,9 @@ namespace KC
         // 全局标识符类型
         enum EGlobalValTpe { egtIsnot = 0, egtGloConst, egtConst, egtGetParm, egtSession, egtAction, egtJson };
         virtual EGlobalValTpe CALL_TYPE GetGlobalValType(const char*) const = 0;
+        // 全局常量
+        virtual EGlobalValTpe CALL_TYPE GetGlobalConstType(const char* name) const = 0;
+        virtual const char* CALL_TYPE GetGlobalConst(const char* name, const char* def = "") const = 0;
         // Client编号
         virtual const char* CALL_TYPE GetKCCLNID(void) = 0;
         // Session编号
@@ -270,6 +274,10 @@ namespace KC
         virtual const char* CALL_TYPE GetSubInfo(const char*, const char* = "", const char* = "") const = 0;
         // 得到其他信息
         virtual const char* CALL_TYPE GetOtherInfo(const char*, const char* = "") const = 0;
+        // 获取固定字段的名称
+        virtual const char* CALL_TYPE GetFixParmName(const char*) const = 0;
+        // 首个数据集为主数据集，默认为false（默认是首个数据集并且名字为vals为主数据集）
+        virtual bool CALL_TYPE FirstIsMainVals(void) const = 0;
 
     public:
         // 控制器返回结果json

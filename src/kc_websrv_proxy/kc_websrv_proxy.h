@@ -44,6 +44,9 @@ public:
     const char* CALL_TYPE GetPlatformRootPath(void) override;
     // 得到web服务程序或应用程序的根目录
     const char* CALL_TYPE GetApPath(void) override;
+    // 全局常量
+    IActionData::EGlobalValTpe CALL_TYPE GetGlobalConstType(const char* name) const override;
+    const char* CALL_TYPE GetGlobalConst(const char* name, const char* = "") const override;
 
     // 处理请求
     void CALL_TYPE Work(IWSProxyRequestCB&) override;

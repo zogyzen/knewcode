@@ -27,7 +27,7 @@ CMyLog::CMyLog(IBundleContext& own) : m_own(own), m_modPath(own.getPath())
 std::atomic_bool CMyLog::s_running(false);
 
 // 初始化
-const char* CMyLog::Init(const char* dir, const char* id, TLogLevel lv, int szFile, const char* eachPrefix, bool inDay)
+const char* CMyLog::Init(const char* dir, const char* id, TLogLevel lv, unsigned szFileM, const char* eachPrefix, bool inDay)
 {
     static thread_local string sResult;
     sResult.clear();
@@ -40,7 +40,7 @@ const char* CMyLog::Init(const char* dir, const char* id, TLogLevel lv, int szFi
         m_logID = CUtilFunc::PCharSafeToStr(id);
         m_logEachPrefix = CUtilFunc::PCharSafeToStr(eachPrefix);
         m_logLV = lv;
-        m_logSizeFile = szFile;
+        m_logSizeFile = szFileM;
         m_logInDay = inDay;
         // 日志目录
         if (!boost::filesystem::exists(m_logPath)) boost::filesystem::create_directories(m_logPath);

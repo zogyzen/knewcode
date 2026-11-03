@@ -2,6 +2,9 @@
 #
 # Project created by QtCreator 2026-01-06 16:59:59
 # 将Web转发的功能，从kc_request_relay插件中分离出来。
+# 引用：
+#    https://github.com/yhirose/cpp-httplib
+#    https://github.com/openssl/openssl
 #
 #-------------------------------------------------
 

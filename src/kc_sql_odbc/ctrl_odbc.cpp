@@ -88,6 +88,9 @@ void CCtrlODBC::GetConnParm(property_tree::ptree& pt)
         // 参数名称是否区分大小写
         if (pt.get_child_optional("<xmlattr>.parmCaseSensitive"))
             m_parmCaseSensitive = algorithm::to_lower_copy(pt.get<string>("<xmlattr>.parmCaseSensitive")) == "true";
+        // 参数名称是否区分大小写
+        if (pt.get_child_optional("<xmlattr>.feildCaseSensitive"))
+            m_feildCaseSensitive = algorithm::to_lower_copy(pt.get<string>("<xmlattr>.feildCaseSensitive"));
     }
     catch (QSqlError& ex)
     {

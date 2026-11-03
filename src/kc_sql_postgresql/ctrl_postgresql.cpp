@@ -281,6 +281,10 @@ void CCtrlPgSQL::TRecordSetPgSQL::GetColumnListMetaData(CSqlFunc::TFields &vecFe
         auto sTypeName = CCtrlPgSQL::GetTypeName(iColType);
         int iSize = PQfsize(&m_dbset, i);
         if (!m_own.m_parmCaseSensitive) sColName = algorithm::to_lower_copy(sColName);
+        if ("lower" == m_own.m_feildCaseSensitive)
+            algorithm::to_lower(sColName);
+        else if ("upper" == m_own.m_feildCaseSensitive)
+            algorithm::to_upper(sColName);
         mapFeilds.insert(make_pair(sColName, std::shared_ptr<CSqlFunc::TField>(
                         new CSqlFunc::TField(sColName, i + 1, iColType, sTypeName, iSize))));
     }
@@ -289,6 +293,10 @@ void CCtrlPgSQL::TRecordSetPgSQL::GetColumnListMetaData(CSqlFunc::TFields &vecFe
         {
             string sFieldName = PQfname(&m_dbset, i);
             if (!m_own.m_parmCaseSensitive) sFieldName = algorithm::to_lower_copy(sFieldName);
+            if ("lower" == m_own.m_feildCaseSensitive)
+                algorithm::to_lower(sFieldName);
+            else if ("upper" == m_own.m_feildCaseSensitive)
+                algorithm::to_upper(sFieldName);
             auto it = mapFeilds.find(sFieldName);
             if (mapFeilds.end() != it) vecFeilds.push_back(it->second);
         }
@@ -435,6 +443,12 @@ void CCtrlPgSQL::TDBCommandPgSQL::TranRollbackToSavePoint(void)
         // PQexec(&m_con, ("rollback to savepoint " + m_tranSavePnt).c_str());
     PQexecPrepared(&m_con, (sStmtName + "_roll").c_str(), 0, nullptr, nullptr, nullptr, 0);
     m_tranSavePnt.clear();
+}
+
+// 单独执行sql语句
+void CCtrlPgSQL::TDBCommandPgSQL::ExecSQL(const char* sql)
+{
+    PQexec(&m_con, sql);
 }
 
 // 预备sql语句
@@ -1263,16 +1277,17 @@ void CCtrlPgSQL::TDBCommandPgSQL::CopyFromStdinByCsv(void)
         m_own.m_own.WriteLogTrace(sMsg.c_str(), __CURR_CODE_PLACE_C__);
         cout << sMsg << endl;
         // 返回
-        m_objCtrlD.JsonRespond().SetVal(c_RESTful_errCode, iCount > 0 ? 0 : ecd_ErrCode_KCSqlPostgresql + 5);
+        m_objCtrlD.JsonRespond().SetVal(m_objCtrlD.GetFixParmName(c_RESTful_errCode), iCount > 0 ? 0 : ecd_ErrCode_KCSqlPostgresql + 5);
         if (iCount > 0)
-            m_objCtrlD.JsonRespond().SetStr(c_RESTful_errMsg, (boost::format("[Controllers.%s] %d/%d|%d [%d]") % m_actName % iCount % iSum % iCopyStatus % iUseTimeTotal).str().c_str());
+            m_objCtrlD.JsonRespond().SetStr(m_objCtrlD.GetFixParmName(c_RESTful_errMsg), (boost::format("[Controllers.%s] %d/%d|%d [%d]") % m_actName % iCount % iSum % iCopyStatus % iUseTimeTotal).str().c_str());
         else
-            m_objCtrlD.JsonRespond().SetStr(c_RESTful_errMsg, (boost::format("[Controllers.%s] No Data") % m_actName).str().c_str());
+            m_objCtrlD.JsonRespond().SetStr(m_objCtrlD.GetFixParmName(c_RESTful_errMsg), (boost::format("[Controllers.%s] No Data") % m_actName).str().c_str());
     });
     // 附加参数
     string sCopyFeildsParm = CUtilFunc::PCharSafeToPChar(m_objCtrlD.JsonAttach().GetItem("copyParm").GetStr("copyFeildsParm", ""));
     string sCopyValsParm = CUtilFunc::PCharSafeToPChar(m_objCtrlD.JsonAttach().GetItem("copyParm").GetStr("copyValsParm", ""));
-    string sSrcDbSetName = !sCopyValsParm.empty() ? sCopyValsParm : m_objCtrlD.ActionData().GetValsName();
+    // string sSrcDbSetName = !sCopyValsParm.empty() ? sCopyValsParm : m_objCtrlD.ActionData().GetValsName();
+    string sSrcDbSetName = !sCopyValsParm.empty() ? sCopyValsParm : CUtilFunc::PCharSafeToStr(m_objCtrlD.GetFixParmName(c_RESTful_vals));
     string sToTable = CUtilFunc::PCharSafeToPChar(m_objCtrlD.JsonAttach().GetItem("copyParm").GetStr("toTable", ""));
     string sTableName = !sToTable.empty() ? sToTable : sSrcDbSetName;
     string sNowTime = m_objCtrlD.ActionData().GetNowTimeFlag();
@@ -1559,7 +1574,9 @@ void CCtrlPgSQL::TPgConnObj::Release(void)
 ////////////////////////////////////////////////////////////////////////////////
 // CCtrlPgSQL类
 CCtrlPgSQL::CCtrlPgSQL(IKCSqlPgSQL& own, string sName, property_tree::ptree& pt)
-    : m_own(own), m_name(sName), m_loadType(CUtilFunc::StrToLower(CUtilFunc::PCharSafeToStr(m_own.getContext().GetSysFlag("loadType"))))
+    : m_own(own), m_name(sName)
+    , m_feildCaseSensitive(algorithm::to_lower_copy(CUtilFunc::GetXmlAttrValue(pt, "<xmlattr>.feildCaseSensitive", "")))
+    , m_loadType(CUtilFunc::StrToLower(CUtilFunc::PCharSafeToStr(m_own.getContext().GetSysFlag("loadType"))))
 {
     // 记录函数地址
     m_own.WriteLogDebug((m_name + ": "

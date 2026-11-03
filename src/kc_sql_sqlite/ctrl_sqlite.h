@@ -194,6 +194,9 @@ protected:
         // 预备sql语句
         void PrepareSQL(void) override;
 
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
+
         // 批量操作
         pair<int, string> ExecuteBatch(void) override;
 
@@ -240,4 +243,6 @@ private:
     IKCSqlite& m_own;
     // 数据库连接
     const string m_name = "connect1", m_dbFile = "./db", m_PRAGMA = "PRAGMA journal_mode = WAL;";
+    // 字段转大小写
+    const string m_feildCaseSensitive;
 };

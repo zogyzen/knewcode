@@ -50,7 +50,7 @@ namespace KC
     {
     public:
         // 在使用之前必须先调用此函数
-        void Init(std::string dir, std::string id, boost::log::trivial::severity_level lv, int szFile = 2, std::string eachPrefix = "", bool inDay = false)
+        void Init(std::string dir, std::string id, boost::log::trivial::severity_level lv, unsigned szFileM = 2, std::string eachPrefix = "", bool inDay = false)
         {
             std::cout << "*[knewcode] MyLog::Init Begin (" << lv << "): " << dir << " | " << id << std::endl;
             if (!boost::filesystem::exists(dir)) boost::filesystem::create_directories(dir);
@@ -63,7 +63,7 @@ namespace KC
             auto sinkPtr = new sink_t(sinkBack,
                 keywords::order = odAttr,
                 // keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),  // 每天轮转
-                keywords::min_free_space = 1.5 * 1024 * 1024 * 1024  // 最低磁盘空间限制
+                keywords::min_free_space = 100 * 1024 * 1024  // 最低磁盘空间限制
             );
             if (nullptr == sinkPtr) throw std::runtime_error("Can't new boost::log::sinks::asynchronous_sink.");
             m_sink.reset(sinkPtr);
@@ -73,17 +73,18 @@ namespace KC
             if (logLockPtr.get() != nullptr)
             {
                 logLockPtr->set_open_mode(std::ios_base::app);
-                logLockPtr->set_rotation_size(1024 * 1024 * szFile);
+                szFileM = std::min(std::max(szFileM, 1u), 1024u);
+                logLockPtr->set_rotation_size(1024 * 1024 * szFileM);
                 if (inDay)
                     logLockPtr->set_file_name_pattern(dir + "/" + id + "_%Y%m%d_%N.log");
                 else
                     logLockPtr->set_file_name_pattern(dir + "/" + id + "_%Y%m%d%H%M%S_%N_" + std::to_string(boost::this_process::get_id()) + ".log");
                 // std::cout << 3 << std::endl;
                 logLockPtr->set_file_collector(sinks::file::make_collector(
-                    keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),  // 每天轮转
-                    keywords::target = dir + "/bak/" + FmtPTime("%H")        //备份文件夹名
-                    //, keywords::max_size = 50 * 1024 * 1024           // 文件夹所占最大空间
-                    //, keywords::min_free_space = 100 * 1024 * 1024    // 磁盘最小预留空间
+                    keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0)  // 每天轮转
+                    , keywords::target = dir + "/bak/" + FmtPTime("%H")        //备份文件夹名
+                    // , keywords::max_size = 2 * 1024 * 1024 * 1024         // 文件夹所占最大空间（只对本次初始化后，新写入的文件有效；且只对keywords::target目录有效）
+                    , keywords::min_free_space = 100 * 1024 * 1024    // 磁盘最小预留空间
                     ));
                 // std::cout << 4 << std::endl;
                 logLockPtr->auto_flush(true);

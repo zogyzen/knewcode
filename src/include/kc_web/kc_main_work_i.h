@@ -37,6 +37,9 @@ namespace KC
         virtual const char* CALL_TYPE GetPlatformRootPath(void) = 0;
         // 得到web服务程序或应用程序的根目录
         virtual const char* CALL_TYPE GetApPath(void) = 0;
+        // 全局常量
+        virtual IActionData::EGlobalValTpe CALL_TYPE GetGlobalConstType(const char* name) const = 0;
+        virtual const char* CALL_TYPE GetGlobalConst(const char* name, const char* def = "") const = 0;
 
     protected:
         ~IKCStartWork() override = default;

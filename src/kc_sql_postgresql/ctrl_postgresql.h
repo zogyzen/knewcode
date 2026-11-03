@@ -187,6 +187,9 @@ protected:
         // 预备sql语句
         void PrepareSQL(void) override;
 
+        // 单独执行sql语句
+        void ExecSQL(const char*) override;
+
         // 批量操作
         pair<int, string> ExecuteBatch(void) override;
 
@@ -243,6 +246,8 @@ private:
     bool m_encryptConnStr = false;
     // 参数名称区分大小写
     bool m_parmCaseSensitive = false;
+    // 字段转大小写
+    const string m_feildCaseSensitive;
     // 过程返回的临时表数据集，临时表名称是否动态可变，默认不变（针对金仓数据库，建议设置为可变）
     bool m_dynTmpTableName = false;
     // 动态库的被加载类型

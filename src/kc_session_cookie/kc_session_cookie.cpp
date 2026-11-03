@@ -21,7 +21,7 @@ CKCSessionCookie::CKCSessionCookie(const IBundle& bundle)
     , m_segment(CreateOrOpenShareMem()), m_mapfile(CreateOrOpenMapFile())
 {
     if (m_segment.get() == nullptr || m_mapfile.get() == nullptr)
-        cout << "X";
+        cout << "[X] ";
 }
 
 // 初始化控制器
@@ -39,7 +39,15 @@ void CKCSessionCookie::initAllCtrl(void)
         else if ("local_ctrl" == sCCType)       // 本地控制器
             return new CCtrlLocalCtrl(*this, sName, v);
         else                                    // 共享内存
-            return m_segment.get() != nullptr ? nullptr : new CCtrlSession<interprocess::managed_shared_memory>(*this, sName, v, true, *m_segment);
+        {
+            /*
+            if (m_segment.get() == nullptr)
+                throw TKCSessionCookieException(ecd_ErrCode_KCSessionCookie + 10, __CURR_CODE_PLACE_C__, "Create Or Open ShareMemory Fail", *this);
+            // return m_segment.get() != nullptr ? nullptr : new CCtrlSession<interprocess::managed_shared_memory>(*this, sName, v, true, *m_segment);
+            return new CCtrlSession<interprocess::managed_shared_memory>(*this, sName, v, true, *m_segment);
+            */
+            return m_segment.get() == nullptr ? nullptr : new CCtrlSession<interprocess::managed_shared_memory>(*this, sName, v, true, *m_segment);
+        }
     });
 }
 
@@ -61,8 +69,8 @@ CKCSessionCookie::managed_shared_memory_ptr CKCSessionCookie::CreateOrOpenShareM
         // 共享内存名
         string sShareMemNameInfo = m_shareMemNameBase;
         // 新建或打开
-        for (int i = 0; i < 2; ++i, iShareMemSize = ciShareMemSize)
-            while (resPtr.get() == nullptr && iShareMemSize >= 1024 * 1024)
+        // for (int i = 0; i < 2; ++i, iShareMemSize = ciShareMemSize)
+            // while (resPtr.get() == nullptr && iShareMemSize >= 1024 * 1024)
                 try
                 {
                     sShareMemNameInfo = (format("%s-%dM") % m_shareMemNameBase % (iShareMemSize / 1024 / 1024)).str();
@@ -76,15 +84,23 @@ CKCSessionCookie::managed_shared_memory_ptr CKCSessionCookie::CreateOrOpenShareM
                             }
                             catch (const boost::interprocess::interprocess_exception &ex)
                             {
-                                // 打不开，先删除，再创建
-                                this->WriteLogWarning((sShareMemNameInfo + "\n" + CUtilFunc::GbkToUtf8(ex.what()) + "\n" + ex.what()).c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+                                cout << "[CreateOrOpenShareMem] Fail - " << sShareMemNameInfo << endl << "\t" << ex.what() << endl;
+                                this->WriteLogError((sShareMemNameInfo + "\n" + CUtilFunc::GbkToUtf8(ex.what()) + "\n" + ex.what()).c_str(), __CURR_CODE_PLACE_C__, typeid(ex).name());
+                                interprocess::shared_memory_object::remove(m_shareMemNameBase.c_str());
+                                /*
+                                // 打不开，删除后，再创建
                                 try
                                 {
-                                    interprocess::shared_memory_object::remove(m_shareMemNameBase.c_str());
+                                    // resPtr.reset(new interprocess::managed_shared_memory(interprocess::open_or_create, sShareMemNameInfo.c_str(), iShareMemSize));
+                                    resPtr.reset(new interprocess::managed_shared_memory(interprocess::create_only, sShareMemNameInfo.c_str(), iShareMemSize));
                                 }
-                                catch (...) {}
-                                // resPtr.reset(new interprocess::managed_shared_memory(interprocess::open_or_create, sShareMemNameInfo.c_str(), iShareMemSize));
-                                resPtr.reset(new interprocess::managed_shared_memory(interprocess::create_only, sShareMemNameInfo.c_str(), iShareMemSize));
+                                catch (const boost::interprocess::interprocess_exception &ex2)
+                                {
+                                    string sErr = ex2.what();
+                                    cout << "[CreateOrOpenShareMem] Fail - " << sShareMemNameInfo << endl << "\t" << sErr << endl;
+                                    this->WriteLogError((sShareMemNameInfo + "\n" + CUtilFunc::GbkToUtf8(sErr) + "\n" + sErr).c_str(), __CURR_CODE_PLACE_C__, typeid(ex2).name());
+                                }
+                                */
                             }
                         }, 6666))
                     {
@@ -187,7 +203,7 @@ const char* CKCSessionCookie::GetSessionVal(const char* pName, unsigned& iLen, I
             }
         }
     });
-    return pResult;
+    return CUtilFunc::PCharSafeToPChar(pResult);
 }
 const char* CKCSessionCookie::GetSessionVal(const char* pName, const char* pKCSSID, const char* pKCCLNID)
 {
@@ -261,7 +277,7 @@ const char* CKCSessionCookie::GetSessionVal(const char* pName, unsigned& iLen, c
             }
         }
     });
-    return pResult;
+    return CUtilFunc::PCharSafeToPChar(pResult);
 }
 void CKCSessionCookie::SetSessionVal(const char* pName, const char* pVal, IActionData& act)
 {
@@ -409,7 +425,7 @@ const char* CKCSessionCookie::GetSessionNextVal(const char* pName, const char* p
             pResult = sResult.c_str();
         }
     });
-    return pResult;
+    return CUtilFunc::PCharSafeToPChar(pResult);
 }
 const char* CKCSessionCookie::GetSessionNextVal(const char* pName, const char* pBegin, IActionData& act)
 {
@@ -425,5 +441,5 @@ const char* CKCSessionCookie::GetSessionNextVal(const char* pName, const char* p
             pResult = sResult.c_str();
         }
     });
-    return pResult;
+    return CUtilFunc::PCharSafeToPChar(pResult);
 }

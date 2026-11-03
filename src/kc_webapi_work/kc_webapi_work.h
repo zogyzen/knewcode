@@ -79,6 +79,9 @@ public:
     // 默认的返回数据集的名称
     const char* DefaultValsName(void) const { return m_defaultValsName.c_str(); }
 
+    // 首个数据集为主数据集，默认为false（默认是首个数据集并且名字为vals为主数据集）
+    bool FirstIsMainVals(void) const { return m_firstIsMainVals; }
+
     // 服务控制器别名
     string SrvCtrlAliasDefault(void) { return m_srvCtrlAliasDefault; }
     struct TSrvCtrlAlias
@@ -201,6 +204,8 @@ protected:
         }
     };
     const map<string, TApiUri> m_apiUriLs;
+    // 首个数据集即主数据集（名称不必是vals）
+    const bool m_firstIsMainVals = false;
     // 默认的返回数据集的名称
     const string m_defaultValsName = c_RESTful_vals;
     // 服务控制器别名

@@ -30,6 +30,7 @@ private:
     bool m_encryptConnStr = false;
     string m_dbType = "mssql";
     bool m_parmCaseSensitive = false;
+    string m_feildCaseSensitive;
     std::atomic_uint m_connID;
 
     friend class TOdbcConnObj;

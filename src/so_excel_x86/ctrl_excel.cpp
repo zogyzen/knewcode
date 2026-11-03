@@ -68,7 +68,8 @@ void CCtrlExcel::Perform(ICtrlNodeData& objCtrlD, IKCController::IAttachParm&)
         }
         jsonRoot.GC();
         // 值
-        IKCJson& jsonVals = jsonRoot.GetItem(objCtrlD.ActionData().GetValsName());
+        // IKCJson& jsonVals = jsonRoot.GetItem(objCtrlD.ActionData().GetValsName());
+        IKCJson& jsonVals = jsonRoot.GetItem(objCtrlD.objCtrlD.GetFixParmName(c_RESTful_vals));
         int iRowCount = jsonVals.GetItemCount();
         for (int r = 0; r < iRowCount; ++r)
         {

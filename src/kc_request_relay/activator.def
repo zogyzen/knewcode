@@ -3,5 +3,3 @@ LIBRARY
 EXPORTS
         InitActor
         UninitActor
-        create
-        destroy
