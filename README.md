@@ -2,4 +2,4 @@
 # Knewcode
 The Knewcode is an open-source backend API platform. 
 
-[https://kc.gl](https://kc.gl)
+https://knewcode.org/
